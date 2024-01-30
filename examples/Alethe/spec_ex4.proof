@@ -1,0 +1,12 @@
+(assume h1 (forall ((x S)) (P x)))
+(assume h2 (not (forall ((y S)) (P y))))
+(anchor :step t5 :args ((y S) (:= x y)))
+(step t3 (cl (= x y)) :rule refl)
+(step t4 (cl (= (P x) (P y))) :rule cong :premises (t3))
+(step t5 (cl (= (forall ((x S)) (P x)) (forall ((y S)) (P y))))
+                              :rule bind)
+(step t6 (cl (not (= (forall ((x S)) (P x)) (forall ((y S)) (P y))))
+             (not (forall ((x S)) (P x)))
+             (forall ((y S)) (P y))) :rule equiv_pos2)
+(step t7 (cl) :rule resolution :premises (h1 h2 t5 t6))
+
