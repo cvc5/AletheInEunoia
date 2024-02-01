@@ -1,5 +1,10 @@
 (include "./theory.smt3")
 
+(declare-rule context ((ctx Bool) (ctxOld Bool))
+  :premises (ctx ctxOld)
+  :conclusion (alf.concat @ctx.is ctx ctxOld)
+)
+
 ; Rule: assume is native
 
 ; Note: The hole here does not allow for args or premises.
@@ -150,15 +155,15 @@
 )
 
 ;TODO
-(program check_bind ((ctx @Context) (xs @VarList) (ys @VarList))
-  (@Context @VarList @VarList) Bool
+(program check_bind ((ctx Bool) (xs @VarList) (ys @VarList))
+  (Bool @VarList @VarList) Bool
   (
    ((check_bind ctx xs ys) true)
   )
 )
 
 ;TRUST
-(declare-rule bind ((ctx @Context) (xs @VarList) (ys @VarList) (T Type) (phi T) (phiP T))
+(declare-rule bind ((ctx Bool) (xs @VarList) (ys @VarList) (T Type) (phi T) (phiP T))
   :assumption ctx
   :premises ((@cl (= phi phiP)))
   :args ((@cl (= (forall xs phi) (forall ys phiP))))
@@ -167,15 +172,15 @@
 )
 
 ;TODO
-(program check_sko_ex ((ctx @Context) (xs @VarList))
-  (@Context @VarList) Bool
+(program check_sko_ex ((ctx Bool) (xs @VarList))
+  (Bool @VarList) Bool
   (
    ((check_sko_ex ctx xs) true)
   )
 )
 
 ;TRUST
-(declare-rule sko_ex ((ctx @Context) (xs @VarList) (phi Bool) (psi Bool))
+(declare-rule sko_ex ((ctx Bool) (xs @VarList) (phi Bool) (psi Bool))
   :assumption ctx
   :premises ((@cl (= phi psi)))
   :args ((@cl (= (exists xs phi) psi)))
@@ -184,15 +189,15 @@
 )
 
 ;TODO
-(program check_sko_forall ((ctx @Context) (xs @VarList))
-  (@Context @VarList) Bool
+(program check_sko_forall ((ctx Bool) (xs @VarList))
+  (Bool @VarList) Bool
   (
    ((check_sko_forall ctx xs) true)
   )
 )
 
 ;TRUST
-(declare-rule sko_forall ((ctx @Context) (xs @VarList) (phi Bool) (psi Bool))
+(declare-rule sko_forall ((ctx Bool) (xs @VarList) (phi Bool) (psi Bool))
   :assumption ctx
   :premises ((@cl (= phi psi)))
   :args ((@cl (= (forall xs phi) psi)))
@@ -216,15 +221,15 @@
 )
 
 ;TODO
-(program check_refl ((ctx @Context) (T Type) (t1 T) (t2 T))
-  (@Context T T) Bool
+(program check_refl ((ctx Bool) (T Type) (t1 T) (t2 T))
+  (Bool T T) Bool
   (
    ((check_refl ctx t1 t2) true)
   )
 )
 
 ;TRUST
-(declare-rule refl ((ctx @Context) (T Type) (t1 T) (t2 T))
+(declare-rule refl ((ctx Bool) (T Type) (t1 T) (t2 T))
   :premises (ctx)
   :args ((@cl (= t1 t2)))
   :requires (((check_refl ctx t1 t2) true))
@@ -946,15 +951,15 @@
 )
 
 ;TODO
-(program check_onepoint ((ctx @Context) (xs @VarList) (ys @VarList) (Q (-> @VarList Bool Bool)) (T Type) (phi T) (phiP T))
-  (@Context (-> @VarList Bool Bool) @VarList @VarList T T) Bool
+(program check_onepoint ((ctx Bool) (xs @VarList) (ys @VarList) (Q (-> @VarList Bool Bool)) (T Type) (phi T) (phiP T))
+  (Bool (-> @VarList Bool Bool) @VarList @VarList T T) Bool
   (
    ((check_onepoint ctx Q xs ys phi phiP) true)
   )
 )
 
 ;TRUST
-(declare-rule onepoint ((ctx @Context) (xs @VarList) (ys @VarList) (Q (-> @VarList Bool Bool)) (T Type) (phi T) (phiP T))
+(declare-rule onepoint ((ctx Bool) (xs @VarList) (ys @VarList) (Q (-> @VarList Bool Bool)) (T Type) (phi T) (phiP T))
   :assumption ctx
   :premises ((@cl (= phi phiP)))
   :args ((@cl (= (Q xs phi) (Q ys phiP))))

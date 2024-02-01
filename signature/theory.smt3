@@ -114,11 +114,11 @@
 (declare-const @varlist (-> (! Type :var T :implicit) T @VarList @VarList) :right-assoc-nil @varlist.nil)
 
 ; TODO: definie VarList
-(declare-const forall (-> @VarList Bool Bool))
-(declare-const exists (-> @VarList Bool Bool))
-(declare-const choice (-> (! Type :var T :implicit) T Bool T))
+(declare-const forall (-> Bool Bool) :binder @varlist)
+(declare-const exists (-> Bool Bool) :binder @varlist)
+(declare-const choice (-> (! Type :var T :implicit) T Bool T) :binder @varlist)
 
-(declare-sort @Context 0)
-(declare-const @ctx.nil @Context)
-; The first argument is an equality (= v t) mapping term t to the variable v.
-(declare-const @ctx.map (-> Bool @Context @Context) :right-assoc-nil @ctx.nil)
+(declare-const @ctx.nil Bool)
+; A Context is a list of equalities.
+; Context muss be asserted, hence the Bool sort
+(declare-const @ctx.is (-> Bool Bool Bool) :right-assoc-nil @ctx.nil)
