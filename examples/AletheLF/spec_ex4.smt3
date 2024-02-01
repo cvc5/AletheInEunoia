@@ -15,8 +15,9 @@
 ;     The following is the eqivalent to the `anchor` in Alethe.
 ;     The `assume-push` assumes the extension to the context, the subsequent
 ;     `context` rule expands the context.
+;     Contexts are read right to left here.
 ; We push a new context assumption
-(assume-push a1 (@ctx.is (= y y) (= x y)))
+(assume-push a1 (@ctx.is (= x y) (= y y)))
 ; Expand the context to make sure all bindings are available
 (step ctx1 :rule context :premises (a1 ctx0))
 ; ---------------
