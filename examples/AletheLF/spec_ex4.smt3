@@ -1,0 +1,33 @@
+(include "../../signature/rules.smt3")
+(declare-sort S 0)
+(declare-fun P (S) Bool)
+
+(declare-var x S)
+(declare-var y S)
+
+; Assume the empty context for consistency
+(assume ctx0 @ctx.nil)
+
+(assume h1 (forall ((x S)) (P x)))
+(assume h2 (not (forall ((y S)) (P y))))
+
+; ---------------
+;     The following is the eqivalent to the `anchor` in Alethe.
+;     The `assume-push` assumes the extension to the context, the subsequent
+;     `context` rule expands the context.
+; We push a new context assumption
+(assume-push a1 (@ctx.is (= y y) (= x y)))
+; Expand the context to make sure all bindings are available
+(step ctx1 :rule context :premises (a1 ctx0))
+; ---------------
+
+; Note that this uses the current context
+(step t3 :rule refl :premises (ctx1) :args ((@cl (= x y))))
+(step t4 :rule cong :premises (t3) :args ((@cl (= (P x) (P y)))))
+(step-pop t5 :rule bind :premises (t4) :args ((@cl (= (forall ((x S)) (P x))
+                                                     (forall ((y S)) (P y))))))
+(step t6 :rule equiv_pos2 :args ((@cl (not (= (forall ((x S)) (P x))
+                                             (forall ((y S)) (P y))))
+                                     (not (forall ((x S)) (P x)))
+                                     (forall ((y S)) (P y)))))
+(step t7 :rule resolution :premises (h1 h2 t5 t6) :args (false))
