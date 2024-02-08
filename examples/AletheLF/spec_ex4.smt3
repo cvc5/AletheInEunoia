@@ -23,8 +23,10 @@
 ; ---------------
 
 ; Note that this uses the current context
-(step t3 :rule refl :premises (ctx1) :args ((@cl (= x y))))
-(step t4 :rule cong :premises (t3) :args ((@cl (= (P x) (P y)))))
+(step t3 :rule refl :premises (ctx1) :args ((@cl (= (lambda ((x S)) x) 
+                                                    (lambda ((y S)) y)))))
+(step t4 :rule cong :premises (t3) :args ((@cl (= (lambda ((x S)) (P x)) 
+                                                  (lambda ((y S)) (P y))))))
 (step-pop t5 :rule bind :premises (t4) :args ((@cl (= (forall ((x S)) (P x))
                                                      (forall ((y S)) (P y))))))
 (step t6 :rule equiv_pos2 :args ((@cl (not (= (forall ((x S)) (P x))

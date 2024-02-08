@@ -114,9 +114,12 @@
 (declare-const @varlist (-> (! Type :var T :implicit) T @VarList @VarList) :right-assoc-nil @varlist.nil)
 
 ; TODO: definie VarList
-(declare-const forall (-> Bool Bool) :binder @varlist)
-(declare-const exists (-> Bool Bool) :binder @varlist)
-(declare-const choice (-> (! Type :var T :implicit) T Bool T) :binder @varlist)
+(declare-const forall (-> @VarList Bool Bool) :binder @varlist)
+(declare-const exists (-> @VarList Bool Bool) :binder @varlist)
+(declare-const choice (-> (! Type :var T :implicit) @VarList T Bool T) :binder @varlist)
+
+(declare-const lambda (-> (! Type :var A :implicit) (! Type :var B :implicit) @VarList A B (-> A B)) :binder @varlist)
+(declare-const @let (-> (! Type :var A :implicit) (! Type :var B :implicit) @VarList A B (-> A B)) :binder @varlist)
 
 (declare-const @ctx.nil Bool)
 ; A Context is a list of equalities.

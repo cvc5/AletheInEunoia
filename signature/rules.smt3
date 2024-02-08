@@ -1102,12 +1102,22 @@
   :conclusion (@cl (= l r))
 )
 
-; TODO: We don't have a representation of Let!
-; (declare-rule let ()
-;   :premise-list Eqs and
-;   :args ((true))
-;   :conclusion true
-; )
+;TODO
+;This has to traverse the lets and the premises
+(program check_let ((ctx Bool) (Cs Bool) (l Bool) (r Bool))
+  (Bool Bool Bool Bool) Bool
+  (
+   ((check_let ctx Cs l r) true)
+  )
+)
+
+(declare-rule bind_let ((ctx Bool) (Cs Bool) (l Bool) (r Bool))
+  :assumption ctx
+  :premise-list Cs and
+  :args ((@cl (= l r)))
+  :requires (((check_let ctx Cs l r) true))
+  :conclusion (@cl (= l r))
+)
 
 ;TODO
 (program check_distinct_elim ((l Bool) (r Bool))

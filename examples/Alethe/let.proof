@@ -1,0 +1,5 @@
+(assume h1 (= a b))
+
+(anchor :step t2 :args ((:= x b)))
+(step t1 (cl (= x b)) :rule refl)
+(step t2 (cl (= (let ((x a)) x) b)) :rule let :premises (h1))

@@ -1,0 +1,21 @@
+(include "../../signature/rules.smt3")
+
+(declare-sort S 0)
+(declare-const a S)
+(declare-const b S)
+
+(declare-var x S)
+
+(assume ctx0 @ctx.nil)
+
+(assume h1 (@cl (= a b)))
+
+(assume-push a1 (@ctx.is (= x b)))
+(step ctx1 :rule context :premises (a1 ctx0))
+(step t1 :rule refl :premises (ctx1) :args ((@cl (= x b))))
+(step t2 :rule bind_let :premises (h1 t1) 
+      :args ((@cl (= (_ (@let ((x S)) x) a)
+                     b
+                  )
+            )))
+
