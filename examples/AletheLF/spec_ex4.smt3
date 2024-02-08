@@ -28,7 +28,7 @@
 (step t4 :rule cong :premises (t3) :args ((@cl (= (lambda ((x S)) (P x)) 
                                                   (lambda ((y S)) (P y))))))
 (step-pop t5 :rule bind :premises (t4) :args ((@cl (= (forall ((x S)) (P x))
-                                                     (forall ((y S)) (P y))))))
+                                                      (forall ((y S)) (P y))))))
 (step t6 :rule equiv_pos2 :args ((@cl (not (= (forall ((x S)) (P x))
                                              (forall ((y S)) (P y))))
                                      (not (forall ((x S)) (P x)))

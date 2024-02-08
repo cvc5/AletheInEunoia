@@ -1111,7 +1111,7 @@
   )
 )
 
-(declare-rule bind_let ((ctx Bool) (Cs Bool) (l Bool) (r Bool))
+(declare-rule let_elim ((ctx Bool) (Cs Bool) (l Bool) (r Bool))
   :assumption ctx
   :premise-list Cs and
   :args ((@cl (= l r)))

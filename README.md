@@ -23,7 +23,7 @@ changing its parser.
 * Since AletheLF doesn't support `let` properly, `let` must be printed
   using a special lambda.  The a term `(let ((x t1) (y t2)) t3)`
   becomes `(_ (_ (@let ((x S1) (y S2)) t3) t1) t2)`.
-  Furthermore, the rule `let` is renamed to `bind_let`.
+  Furthermore, the rule `let` is renamed to `let_elim`.
 
 ## Contexts
 

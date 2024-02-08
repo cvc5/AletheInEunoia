@@ -12,10 +12,11 @@
 
 (assume-push a1 (@ctx.is (= x b)))
 (step ctx1 :rule context :premises (a1 ctx0))
+
 (step t1 :rule refl :premises (ctx1) :args ((@cl (= x b))))
-(step-pop t2 :rule bind_let :premises (h1 t1)
-      :args ((@cl (= (_ (@let ((x S)) x) a)
-                     b
-                  )
+
+(step-pop t2 :rule let_elim :premises (h1 t1)
+      :args ((@cl 
+                (= (_ (@let ((x S)) x) a) b)
             )))
 
