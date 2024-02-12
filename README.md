@@ -17,26 +17,40 @@ changing its parser.
   uses the term `false`.  Hence, a the simple `false` term should be parsed
   as the empty clause, and `@cl false` is the clause containing the literal
   `false`.
-* Sharing doesn't use `! .. :named`, but instead uses `define` statements.
+* Sharing doesn't use `! .. :named`, but instead uses `define` commands.
 * Since AletheLF doesn't support overloading, arithmetic negation uses
   the operator `u-`.
 * Since AletheLF doesn't support `let` properly, `let` must be printed
-  using a special lambda.  The a term `(let ((x t1) (y t2)) t3)`
+  using a special binder.  The a term `(let ((x t1) (y t2)) t3)`
   becomes `(_ (_ (@let ((x S1) (y S2)) t3) t1) t2)`.
   Furthermore, the rule `let` is renamed to `let_elim`.
+* Context handling introduces slightly more complex terms.  See below.
+
+See also `NOTE` comments in the `signature/rules.smt3` file.
 
 ## Contexts
 
 Alethe Classic has a notion of contexts used to reason about binders.
 Contexts are lists of variable assignments and shadowings (self
-assignments). In AletheLF a context is represented as a conjunction of
-equalities `= x t` where `x` is a variable and `t` a term.
+assignments).  An Alethe Classic context corresponds to a substitution
+(e.g., `σ`).  Conclusions of steps that work under contexts always have
+the form `(@cl (= L R))`. The intended meaning is that `Lσ` is equal to
+`R` in the theory.
 
-Free variables in AletheLF are limited.  It is not possible to have two
-free variables with the same name, but different sorts.  However, `bind`
-steps on different terms can introduce such free variables into the proof.
-To handle this, we introduce `lambda` binders to avoid free variables
-entirely.
+Free variables in AletheLF are limited.  It is not possible to have
+two free variables with the same name, but different sorts.  However,
+context-extending rules such as `bind` can introduce such free variables
+into the proof.  To solve this, the AletheLF embedding adds additional
+`@var`-binders to the left and right side that binds the free variable.
+That is, the conclusion `(@cl (L R))` is printed
+`(@cl (= (@var ((x1 S1) .. (xn Sn) L) (@var ((y1 S1) .. (yn Sn)) R))))`
+where `x1 .. xn` are the free variables of `L` and `y .. yn` are the free
+variables of `R`.  An Alethe Classic consumer should ignore these `@var`
+bindings and instead treat `L` and `R` like for Alethe Classic.
+For AletheLF `@var` is similar to lambda, but while
+the type of `(lambda ((x S)) x)` is `(-> S S)`, the type of
+`(@var ((x S)) x)`.   Obviously, this is only sensible if the `@var` is
+used only when an Alethe Classic context is present.
 
 Since context are scoped, we use AletheLF's scope push/pop mechanism.
 The extended contexts become assumptions of the scope and premises
@@ -44,6 +58,25 @@ of steps that use contexts.  Hence, the equivalent to an `anchor`
 is an `assume-push`.  The context-manipulating rules are rules with
 an `:assumption` attribute that check that the assumption is the
 appropriately extended context.
+
+In AletheLF a context is represented as a conjunction of equalities `= x
+T` where `x` is a variable and `T` is a term.  To build a context, we use
+the custom binder `@ctx` in AletheLF.  A context extension has the form
+`(@ctx ((x1 S1) .. (xn Sn)) (and (= x1 T1) .. (xn Tn) old_ctx))`.
+Some `Tn` might be `xn`.  To avoid repeating the old context, the new
+context is first defined as a new constant, and then assumed by the
+`assume-push`.  To simplify parsing, the `define` must come right before
+the `assume-push`.  Furthermore, the constants must be named `ctxN` where
+`N` is an increasing counter.  The context assumption must be named
+`context`.  Each Alethe Class proof starts with:
+```clojure
+(define ctx0 () true)
+(assume context ctx0)
+```
+
+To check that a context was only extended in the
+intended way, each rule context-extending rule has an additional premise:
+the old context (i.e., the assumption with the name `context`).
 
 To see an example for Alethe contexts have a look at the `space_ex4`
 example.  This is Example 4 from the Alethe specifications.  The `examples`

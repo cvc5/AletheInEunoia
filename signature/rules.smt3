@@ -1,10 +1,5 @@
 (include "./theory.smt3")
 
-(declare-rule context ((ctx Bool) (ctxOld Bool))
-  :premises (ctx ctxOld)
-  :conclusion (alf.concat @ctx.is ctx ctxOld)
-)
-
 ; Rule: assume is native
 
 ; Note: The hole here does not allow for args or premises.
@@ -154,55 +149,73 @@
   :conclusion CL
 )
 
+; NOTE: Rules like `bind` can have multiple forms: without and with
+; @var.  In the first case the bind rule is
+;                @var xs. φ = @var ys. φ'
+;              --­­------­­­­­------------­ bind
+;                   ∀ xs. φ = ∀ ys. φ'
+; This means that the variable that are free in the premise get bound by
+; a @var.  However, since `bind` and other context-extending steps can
+; be nested, it could also have the form
+;              @var xs₁ ∪ xs₂. φ = @var ys₁ ∪ ys₂. φ'
+;        --­­­­­­­--------------------------------­ bind
+;             @var xs₁. ∀ xs₂. φ = @var ys₁. ∀ ys₂. φ'
+; In situations where `bind` is combined with rules like `sko_ex`, the
+; @var could occur on only one side.
+; Since this signature would check the binders in the side condition,
+; the binders are invisible here.
+; This affects the rules `bind`, `sko_ex`, `sko_forall`, `let`,
+; and `onepoint`.
+
 ;TODO
-(program check_bind ((ctx Bool) (xs @VarList) (ys @VarList))
-  (Bool @VarList @VarList) Bool
+(program check_bind ((ctx Bool) (T Type) (l T) (r T) (l1 T) (r1 T))
+  (Bool T T T T) Bool
   (
-   ((check_bind ctx xs ys) true)
+   ((check_bind ctx l r l1 r1) true)
   )
 )
 
 ;TRUST
-(declare-rule bind ((ctx Bool) (xs @VarList) (ys @VarList) (T Type) (phi T) (phiP T))
+(declare-rule bind ((ctx Bool) (old_ctx Bool) (T Type) (l T) (r T) (l1 T) (r1 T))
   :assumption ctx
-  :premises ((@cl (= phi phiP)))
-  :args ((@cl (= (forall xs phi) (forall ys phiP))))
-  :requires (((check_bind ctx xs ys) true))
-  :conclusion (@cl (= (forall xs phi) (forall ys phiP)))
+  :premises (old_ctx (@cl (= l1 r1)))
+  :args ((@cl (= l r)))
+  :requires (((context_extended ctx old_ctx) true) ((check_bind ctx l r l1 r1) true))
+  :conclusion (@cl (= l r))
 )
 
 ;TODO
-(program check_sko_ex ((ctx Bool) (xs @VarList))
-  (Bool @VarList) Bool
+(program check_sko_ex ((ctx Bool) (T Type) (l T) (r T) (l1 T) (r1 T))
+  (Bool T T T T) Bool
   (
-   ((check_sko_ex ctx xs) true)
+   ((check_sko_ex ctx l r l1 r1) true)
   )
 )
 
 ;TRUST
-(declare-rule sko_ex ((ctx Bool) (xs @VarList) (phi Bool) (psi Bool))
+(declare-rule sko_ex ((ctx Bool) (old_ctx Bool) (T Type) (l T) (r T) (l1 T) (r1 T))
   :assumption ctx
-  :premises ((@cl (= phi psi)))
-  :args ((@cl (= (exists xs phi) psi)))
-  :requires (((check_sko_ex ctx xs) true))
-  :conclusion (@cl (= (exists xs phi) psi))
+  :premises (old_ctx (@cl (= l1 r1)))
+  :args ((@cl (= l r)))
+  :requires (((context_extended ctx old_ctx) true) ((check_sko_ex ctx l r l1 r1) true))
+  :conclusion (@cl (= l r))
 )
 
 ;TODO
-(program check_sko_forall ((ctx Bool) (xs @VarList))
-  (Bool @VarList) Bool
+(program check_sko_forall ((ctx Bool) (T Type) (l T) (r T) (l1 T) (r1 T))
+  (Bool T T T T) Bool
   (
-   ((check_sko_forall ctx xs) true)
+   ((check_sko_forall ctx l r l1 r1) true)
   )
 )
 
 ;TRUST
-(declare-rule sko_forall ((ctx Bool) (xs @VarList) (phi Bool) (psi Bool))
+(declare-rule sko_forall ((ctx Bool) (old_ctx Bool) (T Type) (l T) (r T) (l1 T) (r1 T))
   :assumption ctx
-  :premises ((@cl (= phi psi)))
-  :args ((@cl (= (forall xs phi) psi)))
-  :requires (((check_sko_forall ctx xs) true))
-  :conclusion (@cl (= (forall xs phi) psi))
+  :premises (old_ctx (@cl (= l1 r1)))
+  :args ((@cl (= l r)))
+  :requires (((context_extended ctx old_ctx) true) ((check_sko_forall ctx l r l1 r1) true))
+  :conclusion (@cl (= l r))
 )
 
 ;TODO
@@ -951,20 +964,20 @@
 )
 
 ;TODO
-(program check_onepoint ((ctx Bool) (xs @VarList) (ys @VarList) (Q (-> @VarList Bool Bool)) (T Type) (phi T) (phiP T))
-  (Bool (-> @VarList Bool Bool) @VarList @VarList T T) Bool
+(program check_onepoint ((ctx Bool) (T Type) (l T) (r T) (l1 T) (r1 T))
+  (Bool T T T T) Bool
   (
-   ((check_onepoint ctx Q xs ys phi phiP) true)
+   ((check_onepoint ctx l r l1 r1) true)
   )
 )
 
 ;TRUST
-(declare-rule onepoint ((ctx Bool) (xs @VarList) (ys @VarList) (Q (-> @VarList Bool Bool)) (T Type) (phi T) (phiP T))
+(declare-rule onepoint ((ctx Bool) (old_ctx Bool) (T Type) (l T) (r T) (l1 T) (r1 T))
   :assumption ctx
-  :premises ((@cl (= phi phiP)))
-  :args ((@cl (= (Q xs phi) (Q ys phiP))))
-  :requires (((check_onepoint ctx Q xs ys phi phiP) true))
-  :conclusion (@cl (= (Q xs phi) (Q ys phiP)))
+  :premises (old_ctx (@cl (= l1 r1)))
+  :args ((@cl (= l r)))
+  :requires (((context_extended ctx old_ctx) true) ((check_onepoint ctx l r l1 r1) true))
+  :conclusion (@cl (= l r))
 )
 
 ;TODO
@@ -1103,7 +1116,8 @@
 )
 
 ;TODO
-;This has to traverse the lets and the premises
+; This has to traverse the lets and the premises.  Also has to check the
+; context extension.
 (program check_let ((ctx Bool) (Cs Bool) (l Bool) (r Bool))
   (Bool Bool Bool Bool) Bool
   (

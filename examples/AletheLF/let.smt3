@@ -4,18 +4,17 @@
 (declare-const a S)
 (declare-const b S)
 
-(declare-var x S)
-
-(assume ctx0 @ctx.nil)
+(define ctx0 () true)
+(assume context ctx0)
 
 (assume h1 (@cl (= a b)))
 
-(assume-push a1 (@ctx.is (= x b)))
-(step ctx1 :rule context :premises (a1 ctx0))
+(define ctx1 () (@ctx ((x S)) (and (= x b) ctx0)))
+(assume-push context ctx1)
 
-(step t1 :rule refl :premises (ctx1) :args ((@cl (= x b))))
+(step t1 :rule refl :premises (context) :args ((@cl (= (@var ((x S)) x) b))))
 
-(step-pop t2 :rule let_elim :premises (h1 t1)
+(step-pop t2 :rule let_elim :premises (context h1 t1)
       :args ((@cl 
                 (= (_ (@let ((x S)) x) a) b)
             )))

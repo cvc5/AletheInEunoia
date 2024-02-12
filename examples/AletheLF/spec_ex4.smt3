@@ -2,33 +2,27 @@
 (declare-sort S 0)
 (declare-fun P (S) Bool)
 
-(declare-var x S)
-(declare-var y S)
-
 ; Assume the empty context for consistency
-(assume ctx0 @ctx.nil)
+(define ctx0 () true)
+(assume context ctx0)
 
 (assume h1 (forall ((x S)) (P x)))
 (assume h2 (not (forall ((y S)) (P y))))
 
-; ---------------
-;     The following is the eqivalent to the `anchor` in Alethe.
-;     The `assume-push` assumes the extension to the context, the subsequent
-;     `context` rule expands the context.
-;     Contexts are read right to left here.
-; We push a new context assumption
-(assume-push a1 (@ctx.is (= x y) (= y y)))
-; Expand the context to make sure all bindings are available
-(step ctx1 :rule context :premises (a1 ctx0))
-; ---------------
+; The following is the eqivalent to the `anchor` in Alethe.
+; We first define the extended context, and then assume it using an
+; `assume-push`.
+; Contexts are read right to left here.
+(define ctx1 () (@ctx ((x S) (y S)) (and (= x y) (= y y) ctx0)))
+(assume-push context ctx1)
 
 ; Note that this uses the current context
-(step t3 :rule refl :premises (ctx1) :args ((@cl (= (lambda ((x S)) x) 
-                                                    (lambda ((y S)) y)))))
-(step t4 :rule cong :premises (t3) :args ((@cl (= (lambda ((x S)) (P x)) 
-                                                  (lambda ((y S)) (P y))))))
-(step-pop t5 :rule bind :premises (t4) :args ((@cl (= (forall ((x S)) (P x))
-                                                      (forall ((y S)) (P y))))))
+(step t3 :rule refl :premises (context) :args ((@cl (= (@var ((x S)) x)
+                                                    (@var ((y S)) y)))))
+(step t4 :rule cong :premises (t3) :args ((@cl (= (@var ((x S)) (P x)) 
+                                                  (@var ((y S)) (P y))))))
+(step-pop t5 :rule bind :premises (context t4) :args ((@cl (= (forall ((x S)) (P x))
+                                                              (forall ((y S)) (P y))))))
 (step t6 :rule equiv_pos2 :args ((@cl (not (= (forall ((x S)) (P x))
                                              (forall ((y S)) (P y))))
                                      (not (forall ((x S)) (P x)))
