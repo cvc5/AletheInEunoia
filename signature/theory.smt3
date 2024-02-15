@@ -144,7 +144,6 @@
                         B
                         B) :binder @varlist)
 
-
 ; Checks that the context ctx is an extension of old_ctx.
 ;TODO
 (program context_extended ((ctx Bool) (old_ctx Bool))
