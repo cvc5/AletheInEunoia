@@ -1,0 +1,7 @@
+(assume h1 (xor (not (> a 5.0)) (! (= b 10) :named s1)))
+(assume h2 (not (= b 10)))
+(assume h3 (not (<= a 5.0)))
+
+(step t1 (cl (not (> a 5.0)) s1) :rule xor1 :premises (h1))
+(step t2 (cl (<= a 5.0) (> a 5.0)) :rule la_generic :args (1.0 1.0))
+(step t3 (cl) :rule resolution :premises (t1 t2 h2 h3))
