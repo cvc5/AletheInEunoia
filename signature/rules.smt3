@@ -102,6 +102,9 @@
   )
 )
 
+; NOTE: The coefficients are one single argument.  This means they must be
+;       be wrapped in a single function call using an n-ary function.  See
+;       the example `small.smt3`.
 ;TRUST
 (declare-rule la_generic ((CL Bool) (coeffs Real))
   :args (CL coeffs)
