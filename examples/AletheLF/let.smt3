@@ -1,4 +1,4 @@
-(include "../../signature/rules.smt3")
+(include "../../signature/Alethe.smt3")
 
 (declare-sort S 0)
 (declare-const a S)
