@@ -24,6 +24,11 @@
 (declare-consts <numeral> Int)
 (declare-consts <rational> Real)
 
+; NOTE: Arithmetic here is handled in the same way as it is handled
+; for cvc5: Real and Int can be mixed, and the return type of arithmetic
+; operators the Real, except for operations on Int only.  This could be
+; made stronger, since Alethe does not mix those types.
+
 ; arith_typeunion
 ;   @param x a type
 ;   @param y a Type
@@ -101,9 +106,9 @@
                        T))
 
 ; Currently unary negation cannot use overload.
-(declare-const u- (-> (! Type :var T :implicit)
-                      (! T :requires ((is_arith_type T) true))
-                      T))
+(declare-const - (-> (! Type :var T :implicit)
+                     (! T :requires ((is_arith_type T) true))
+                     T))
 
 ; ---------------
 ;   Quantifiers

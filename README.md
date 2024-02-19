@@ -24,8 +24,6 @@ should be necessary.
   `(assume t1 F)`, becomes `(assume t1 (@cl F))`.  However, a clause in an
   `assume` always contains exactly one literal.
 * Sharing doesn't use `! .. :named`, but instead uses `define` commands.
-* Since AletheLF doesn't support function overloading, arithmetic
-  negation uses the operator `u-`.
 * Since AletheLF doesn't support `let` properly, `let` must be printed
   using a special binder.  The a term `(let ((x t1) (y t2)) t3)`
   becomes `(_ (_ (@let ((x S1) (y S2)) t3) t1) t2)`.
@@ -35,7 +33,7 @@ should be necessary.
   coefficients of `la_generic` can be printed as `(+ c1 c2 ..)`.
 * Context handling introduces slightly more complex terms.  See below.
 
-See also `NOTE` comments in the `signature/rules.smt3` file.
+See also `NOTE` comments in the files in the `./signature/` folder.
 
 ## Contexts
 
