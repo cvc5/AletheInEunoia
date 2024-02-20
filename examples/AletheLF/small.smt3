@@ -5,10 +5,10 @@
 
 ; Instead of `:named`, we use `define` to give names to terms.
 (define s1 () (= b 10.0))
-; Assumptions must use the `@cl`.
-(assume h1 (@cl (xor (not (> a 5.0)) s1)))
-(assume h2 (@cl (not (= b 10.0))))
-(assume h3 (@cl (not (<= a 5.0))))
+
+(assume h1 (xor (not (> a 5.0)) s1))
+(assume h2 (not (= b 10.0)))
+(assume h3 (not (<= a 5.0)))
 
 ; The conclusion is always the first entry in `:args`
 (step t1 :rule xor1 :premises (h1) :args ((@cl (not (> a 5.0)) s1)))

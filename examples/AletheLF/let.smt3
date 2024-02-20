@@ -7,7 +7,7 @@
 (define ctx0 () true)
 (assume context ctx0)
 
-(assume h1 (@cl (= a b)))
+(assume h1 (= a b))
 
 (define ctx1 () (@ctx ((x S)) (and (= x b) ctx0)))
 (assume-push context ctx1)

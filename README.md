@@ -20,9 +20,6 @@ should be necessary.
   uses the term `false`.  Hence, a the simple `false` term should be parsed
   as the empty clause, and `@cl false` is the clause containing the literal
   `false`.
-* The `assume` commands must already use the `@cl`.  That is,
-  `(assume t1 F)`, becomes `(assume t1 (@cl F))`.  However, a clause in an
-  `assume` always contains exactly one literal.
 * Sharing doesn't use `! .. :named`, but instead uses `define` commands.
 * Since AletheLF doesn't support `let` properly, `let` must be printed
   using a special binder.  The a term `(let ((x t1) (y t2)) t3)`

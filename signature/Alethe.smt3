@@ -1,4 +1,5 @@
 (include "./theory.smt3")
+(include "./programs.smt3")
 
 ; Rule: assume is native
 
@@ -87,11 +88,12 @@
   :conclusion CL
 )
 
-(declare-rule subproof ((F Bool) (G Bool))
-  :assumption F
+;TODO: test if the list here works well
+(declare-rule subproof ((F Bool) (G Bool :list))
+  :assumption F ;has no cl!
   :premises (G)
-  :args ((@cl (=> F G)))
-  :conclusion (@cl (=> F G))
+  :args ((@cl (not F) G))
+  :conclusion (@cl (not F) G)
 )
 
 ;TODO
@@ -181,7 +183,7 @@
 ;TRUST
 (declare-rule bind ((ctx Bool) (old_ctx Bool) (T Type) (l T) (r T) (l1 T) (r1 T))
   :assumption ctx
-  :premises (old_ctx (@cl (= l1 r1)))
+  :premises (old_ctx (@cl (= l1 r1))) ; this is never a direct assumption
   :args ((@cl (= l r)))
   :requires (((context_extended ctx old_ctx) true) ((check_bind ctx l r l1 r1) true))
   :conclusion (@cl (= l r))
@@ -357,28 +359,28 @@
   :conclusion (@cl (or (not (forall xs phi)) (forall xsP phiP)))
 )
 
-;TODO
-(program contains ((inList Bool) (phi Bool))
-  (Bool Bool) Bool
-  (
-   ((contains inList phi) true)
-  )
-)
-
 ; TODO: this overloads PandP
 ;TRUST
-(declare-rule and ((C Bool) (CN Bool :list) (phi Bool))
-  :premises ((@cl (and C CN)))
+(declare-rule and ((CL Bool) (phi Bool))
+  :premises (CL)
   :args ((@cl phi))
-  :requires (((contains (and C CN) phi) true))
+  :requires (((contains (from_cl CL) phi) true))
   :conclusion (@cl phi)
 )
 
+;TODO
+(program check_not_or ((ors Bool) (phi Bool))
+  (Bool Bool) Bool
+  (
+   ((check_not_or (@cl (not ors)) phi) (contains ors phi))
+  )
+)
+
 ;TRUST
-(declare-rule not_or ((C Bool) (CN Bool :list) (phi Bool))
-  :premises ((@cl (not (or C CN))))
+(declare-rule not_or ((CS Bool) (phi Bool))
+  :premises (CS)
   :args ((@cl (not phi)))
-  :requires (((contains (or C CN) phi) true))
+  :requires (((check_not_or (to_cl CS) phi) true))
   :conclusion (@cl (not phi))
 )
 
@@ -390,24 +392,15 @@
   )
 )
 
-; TODO: this overloads PorP
 ;TRUST
-(declare-rule or ((C Bool) (CN Bool :list) (CP Bool) (CNP Bool :list))
-  :premises ((@cl (or C CN)))
+(declare-rule or ((CS Bool) (CP Bool) (CNP Bool :list))
+  :premises (CS)
   :args ((@cl CP CNP))
-  :requires (((check_or (or C CN) (@cl CP CNP)) true))
+  :requires (((check_or (from_cl CS) (@cl CP CNP)) true))
   :conclusion (@cl CP CNP)
 )
 
-;TODO true if CL2 is a permuation of CL1
-(program clEqual ((CL1 Bool) (CL2 Bool))
-  (Bool Bool) Bool
-  (
-   ((clEqual CL1 CL2) true)
-  )
-)
-
-;TODO: test this is likely wrong
+;TODO: test this. It is likely wrong.
 (program transform_not_and ((l Bool) (ls Bool :list))
   (Bool Bool) Bool
   (
@@ -416,87 +409,214 @@
 )
 
 ;TODO implement transform_not_and
-(declare-rule not_and ((CL Bool) (C Bool) (CN Bool :list))
-  :premises ((@cl (not (and C CN))))
-  :args (CL)
-  :requires (((clEqual (transform_not_and (and C CN)) CL) true))
-  :conclusion CL
+(program check_not_and ((C Bool) (CN Bool :list) (refCL Bool))
+  (Bool Bool) Bool
+  (
+   ((check_not_and (@cl (not (and C CN))) refCL)
+     (clEqual (transform_not_and (and C CN)) refCL)
+   )
+   ((check_not_and (not (and C CN)) refCL)
+     (clEqual (transform_not_and (and C CN)) refCL)
+   )
+  )
 )
 
-;TRUST
-(declare-rule xor1 ((CL Bool) (phi1 Bool) (phi2 Bool))
-  :premises ((@cl (xor phi1 phi2)))
-  :args (CL)
-  :requires (((clEqual (@cl phi1 phi2) CL) true))
-  :conclusion CL
+(declare-rule not_and ((refCL Bool) (CL Bool))
+  :premises (CL)
+  :args (refCL)
+  :requires (((check_not_and CL refCL) true))
+  :conclusion refCL
 )
 
-;TRUST
-(declare-rule xor2 ((CL Bool) (phi1 Bool) (phi2 Bool))
-  :premises ((@cl (xor phi1 phi2)))
-  :args (CL)
-  :requires (((clEqual (@cl (not phi1) (not phi2)) CL) true))
-  :conclusion CL
+(program check_xor1 ((phi1 Bool) (phi2 Bool) (refCL Bool))
+  (Bool Bool) Bool
+  (
+   ((check_xor1 (@cl (xor phi1 phi2)) refCL)
+     (clEqual (@cl phi1 phi2) refCL)
+   )
+   ((check_xor1 (xor phi1 phi2) refCL)
+     (clEqual (@cl phi1 phi2) refCL)
+   )
+  )
 )
 
-;TRUST
-(declare-rule not_xor1 ((CL Bool) (phi1 Bool) (phi2 Bool))
-  :premises ((@cl (not (xor phi1 phi2))))
-  :args (CL)
-  :requires (((clEqual (@cl phi1 (not phi2)) CL) true))
-  :conclusion CL
+(declare-rule xor1 ((refCL Bool) (CL Bool))
+  :premises (CL)
+  :args (refCL)
+  :requires (((check_xor1 CL refCL) true))
+  :conclusion refCL
 )
 
-;TRUST
-(declare-rule not_xor2 ((CL Bool) (phi1 Bool) (phi2 Bool))
-  :premises ((@cl (not (xor phi1 phi2))))
-  :args (CL)
-  :requires (((clEqual (@cl (not phi1) phi2) CL) true))
-  :conclusion CL
+(program check_xor2 ((phi1 Bool) (phi2 Bool) (refCL Bool))
+  (Bool Bool) Bool
+  (
+   ((check_xor2 (@cl (xor phi1 phi2)) refCL)
+     (clEqual (@cl (not phi1) (not phi2)) refCL)
+   )
+   ((check_xor2 (xor phi1 phi2) refCL)
+     (clEqual (@cl (not phi1) (not phi2)) refCL)
+   )
+  )
 )
 
-;TRUST
-(declare-rule implies ((CL Bool) (phi1 Bool) (phi2 Bool))
-  :premises ((@cl (=> phi1 phi2)))
-  :args (CL)
-  :requires (((clEqual (@cl (not phi1) phi2) CL) true))
-  :conclusion CL
+(declare-rule xor2 ((refCL Bool) (CL Bool))
+  :premises (CL)
+  :args (refCL)
+  :requires (((check_xor2 CL refCL) true))
+  :conclusion refCL
 )
 
-(declare-rule not_implies1 ((CL Bool) (phi1 Bool) (phi2 Bool))
-  :premises ((@cl (not (=> phi1 phi2))))
-  :args ((@cl phi1))
-  :conclusion (@cl phi1)
+(program check_not_xor1 ((phi1 Bool) (phi2 Bool) (refCL Bool))
+  (Bool Bool) Bool
+  (
+   ((check_not_xor1 (@cl (xor phi1 phi2)) refCL)
+     (clEqual (@cl phi1 (not phi2)) refCL)
+   )
+   ((check_not_xor1 (xor phi1 phi2) refCL)
+     (clEqual (@cl phi1 (not phi2)) refCL)
+   )
+  )
 )
 
-(declare-rule not_implies2 ((CL Bool) (phi1 Bool) (phi2 Bool))
-  :premises ((@cl (not (=> phi1 phi2))))
-  :args ((@cl (not phi2)))
-  :conclusion (@cl (not phi2))
+(declare-rule not_xor1 ((refCL Bool) (CL Bool))
+  :premises (CL)
+  :args (refCL)
+  :requires (((check_not_xor1 CL refCL) true))
+  :conclusion refCL
 )
 
-;TRUST
-(declare-rule equiv1 ((CL Bool) (phi1 Bool) (phi2 Bool))
-  :premises ((@cl (= phi1 phi2)))
-  :args (CL)
-  :requires (((clEqual (@cl (not phi1) phi2) CL) true))
-  :conclusion CL
+
+(program check_not_xor2 ((phi1 Bool) (phi2 Bool) (refCL Bool))
+  (Bool Bool) Bool
+  (
+   ((check_not_xor2 (@cl (xor phi1 phi2)) refCL)
+     (clEqual (@cl (not phi1) phi2) refCL)
+   )
+   ((check_not_xor2 (xor phi1 phi2) refCL)
+     (clEqual (@cl (not phi1) phi2) refCL)
+   )
+  )
 )
 
-;TRUST
-(declare-rule equiv2 ((CL Bool) (phi1 Bool) (phi2 Bool))
-  :premises ((@cl (= phi1 phi2)))
-  :args (CL)
-  :requires (((clEqual (@cl phi1 (not phi2)) CL) true))
-  :conclusion CL
+(declare-rule not_xor2 ((refCL Bool) (CL Bool))
+  :premises (CL)
+  :args (refCL)
+  :requires (((check_not_xor2 CL refCL) true))
+  :conclusion refCL
 )
 
-;TRUST
-(declare-rule not_equiv1 ((CL Bool) (phi1 Bool) (phi2 Bool))
-  :premises ((@cl (not (= phi1 phi2))))
-  :args (CL)
-  :requires (((clEqual (@cl phi1 phi2) CL) true))
-  :conclusion CL
+(program check_implies ((phi1 Bool) (phi2 Bool) (refCL Bool))
+  (Bool Bool) Bool
+  (
+   ((check_implies (@cl (=> phi1 phi2)) refCL)
+     (clEqual (@cl (not phi1) phi2) refCL)
+   )
+   ((check_implies (=> phi1 phi2) refCL)
+     (clEqual (@cl (not phi1) phi2) refCL)
+   )
+  )
+)
+
+(declare-rule implies ((refCL Bool) (CL Bool))
+  :premises (CL)
+  :args (refCL)
+  :requires (((check_implies CL refCL) true))
+  :conclusion refCL
+)
+
+(program check_not_implies1 ((phi1 Bool) (phi2 Bool) (refCL Bool))
+  (Bool Bool) Bool
+  (
+   ((check_not_implies1 (@cl (not (=> phi1 phi2))) refCL)
+     (clEqual (@cl phi1) refCL)
+   )
+   ((check_not_implies1 (not (=> phi1 phi2)) refCL)
+     (clEqual (@cl phi1) refCL)
+   )
+  )
+)
+
+(declare-rule not_implies1 ((refCL Bool) (CL Bool))
+  :premises (CL)
+  :args (refCL)
+  :requires (((check_not_implies1 CL refCL) true))
+  :conclusion refCL
+)
+
+(program check_not_implies2 ((phi1 Bool) (phi2 Bool) (refCL Bool))
+  (Bool Bool) Bool
+  (
+   ((check_not_implies2 (@cl (not (=> phi1 phi2))) refCL)
+     (clEqual (@cl phi1) refCL)
+   )
+   ((check_not_implies2 (not (=> phi1 phi2)) refCL)
+     (clEqual (@cl phi1) refCL)
+   )
+  )
+)
+
+(declare-rule not_implies2 ((refCL Bool) (CL Bool))
+  :premises (CL)
+  :args (refCL)
+  :requires (((check_not_implies2 CL refCL) true))
+  :conclusion refCL
+)
+
+(program check_equiv1 ((phi1 Bool) (phi2 Bool) (refCL Bool))
+  (Bool Bool) Bool
+  (
+   ((check_equiv1 (@cl (= phi1 phi2)) refCL)
+     (clEqual (@cl (not phi1) phi2) refCL)
+   )
+   ((check_equiv1 (= phi1 phi2) refCL)
+     (clEqual (@cl (not phi1) phi2) refCL)
+   )
+  )
+)
+
+(declare-rule equiv1 ((refCL Bool) (CL Bool))
+  :premises (CL)
+  :args (refCL)
+  :requires (((check_equiv1 CL refCL) true))
+  :conclusion refCL
+)
+
+(program check_equiv2 ((phi1 Bool) (phi2 Bool) (refCL Bool))
+  (Bool Bool) Bool
+  (
+   ((check_equiv2 (@cl (= phi1 phi2)) refCL)
+     (clEqual (@cl phi1 (not phi2)) refCL)
+   )
+   ((check_equiv2 (= phi1 phi2) refCL)
+     (clEqual (@cl phi1 (not phi2)) refCL)
+   )
+  )
+)
+
+(declare-rule equiv2 ((refCL Bool) (CL Bool))
+  :premises (CL)
+  :args (refCL)
+  :requires (((check_equiv2 CL refCL) true))
+  :conclusion refCL
+)
+
+(program check_not_equiv1 ((phi1 Bool) (phi2 Bool) (refCL Bool))
+  (Bool Bool) Bool
+  (
+   ((check_not_equiv1 (@cl (not (= phi1 phi2))) refCL)
+     (clEqual (@cl phi1 phi2) refCL)
+   )
+   ((check_not_equiv1 (not (= phi1 phi2)) refCL)
+     (clEqual (@cl phi1 phi2) refCL)
+   )
+  )
+)
+
+(declare-rule not_equiv1 ((refCL Bool) (CL Bool))
+  :premises (CL)
+  :args (refCL)
+  :requires (((check_not_equiv1 CL refCL) true))
+  :conclusion refCL
 )
 
 ;TODO
@@ -724,20 +844,42 @@
   :conclusion CL
 )
 
-;TRUST
-(declare-rule ite1 ((phi1 Bool) (phi2 Bool) (phi3 Bool) (CL Bool))
-  :premises ((@cl (ite phi1 phi2 phi3)))
-  :args (CL)
-  :requires (((clEqual (@cl phi1 phi3) CL) true))
-  :conclusion CL
+(program check_ite1 ((phi1 Bool) (phi2 Bool) (phi3 Bool) (refCL Bool))
+  (Bool Bool) Bool
+  (
+   ((check_ite1 (@cl (ite phi1 phi2 phi3)) refCL)
+     (clEqual (@cl phi1 phi3) refCL)
+   )
+   ((check_ite1 (ite phi1 phi2 phi3) refCL)
+     (clEqual (@cl phi1 phi3) refCL)
+   )
+  )
 )
 
-;TRUST
-(declare-rule ite2 ((phi1 Bool) (phi2 Bool) (phi3 Bool) (CL Bool))
-  :premises ((@cl (ite phi1 phi2 phi3)))
-  :args (CL)
-  :requires (((clEqual (@cl (not phi1) phi2) CL) true))
-  :conclusion CL
+(declare-rule ite1 ((refCL Bool) (CL Bool))
+  :premises (CL)
+  :args (refCL)
+  :requires (((check_ite1 CL refCL) true))
+  :conclusion refCL
+)
+
+(program check_ite2 ((phi1 Bool) (phi2 Bool) (phi3 Bool) (refCL Bool))
+  (Bool Bool) Bool
+  (
+   ((check_ite2 (@cl (ite phi1 phi2 phi3)) refCL)
+     (clEqual (@cl (not phi1) phi2) refCL)
+   )
+   ((check_ite2 (ite phi1 phi2 phi3) refCL)
+     (clEqual (@cl (not phi1) phi2) refCL)
+   )
+  )
+)
+
+(declare-rule ite2 ((refCL Bool) (CL Bool))
+  :premises (CL)
+  :args (refCL)
+  :requires (((check_ite2 CL refCL) true))
+  :conclusion refCL
 )
 
 ;TODO
@@ -800,20 +942,35 @@
   :conclusion CL
 )
 
-;TRUST
-(declare-rule not_ite1 ((phi1 Bool) (phi2 Bool) (phi3 Bool) (CL Bool))
-  :premises ((@cl (not (ite phi1 phi2 phi3))))
-  :args (CL)
-  :requires (((clEqual (@cl phi1 (not phi3)) CL) true))
-  :conclusion CL
+(program check_not_ite1 ((phi1 Bool) (phi2 Bool) (phi3 Bool) (refCL Bool))
+  (Bool Bool) Bool
+  (
+   ((check_not_ite1 (@cl (not (ite phi1 phi2 phi3))) refCL)
+     (clEqual (@cl phi1 (not phi3)) refCL)
+   )
+   ((check_not_ite1 (not (ite phi1 phi2 phi3)) refCL)
+     (clEqual (@cl phi1 (not phi3)) refCL)
+   )
+  )
 )
 
-;TRUST
-(declare-rule not_ite2 ((phi1 Bool) (phi2 Bool) (phi3 Bool) (CL Bool))
-  :premises ((@cl (not (ite phi1 phi2 phi3))))
-  :args (CL)
-  :requires (((clEqual (@cl (not phi1) (not phi2)) CL) true))
-  :conclusion CL
+(declare-rule not_ite1 ((refCL Bool) (CL Bool))
+  :premises (CL)
+  :args (refCL)
+  :requires (((check_not_ite1 CL refCL) true))
+  :conclusion refCL
+)
+
+(program check_not_ite2 ((phi1 Bool) (phi2 Bool) (phi3 Bool) (refCL Bool))
+  (Bool Bool) Bool
+  (
+   ((check_not_ite2 (@cl (not (ite phi1 phi2 phi3))) refCL)
+     (clEqual (@cl (not phi1) (not phi2)) refCL)
+   )
+   ((check_not_ite2 (not (ite phi1 phi2 phi3)) refCL)
+     (clEqual (@cl (not phi1) (not phi2)) refCL)
+   )
+  )
 )
 
 ;TODO
@@ -1176,15 +1333,15 @@
 (program check_bfun_elim ((psi Bool) (phi Bool))
   (Bool Bool) Bool
   (
-   ((check_bfun_elim psi phi) true)
+   ((check_bfun_elim (@cl psi) phi) true)
   )
 )
 
 ;TRUST
 (declare-rule bfun_elim ((psi Bool) (phi Bool))
-  :premises ((@cl psi))
+  :premises (psi)
   :args ((@cl phi))
-  :requires (((check_bfun_elim psi phi) true))
+  :requires (((check_bfun_elim (to_cl psi) phi) true))
   :conclusion (@cl phi)
 )
 
