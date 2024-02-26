@@ -1,3 +1,7 @@
+---
+title: Alethe In AletheLF
+layout: default
+---
 # The Alethe Calculus in AletheLF
 
 {: .warning }
