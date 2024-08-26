@@ -1,5 +1,5 @@
-(include "./theory.smt3")
-(include "./programs.smt3")
+(include "./theory.eo")
+(include "./programs.eo")
 
 ; Rule: assume is native
 
@@ -402,9 +402,10 @@
 
 ;TODO: test this. It is likely wrong.
 (program transform_not_and ((l Bool) (ls Bool :list))
-  (Bool Bool) Bool
+  (Bool) Bool
   (
-   ((transform_not_and l ls) (@cl (not l) (transform_not_and ls)))
+   ((transform_not_and (and l ls)) (@cl (not l) (transform_not_and ls)))
+   ((transform_not_and true) false)
   )
 )
 

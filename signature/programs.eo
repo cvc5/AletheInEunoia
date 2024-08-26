@@ -1,4 +1,4 @@
-(include "./theory.smt3")
+(include "./theory.eo")
 
 ; Removes the top @cl if any
 (program from_cl ((T Bool))

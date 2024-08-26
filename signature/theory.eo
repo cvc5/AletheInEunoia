@@ -18,8 +18,8 @@
 ;   Int and Real Arithmetic
 ; ---------------------------
 
-(declare-sort Int 0)
-(declare-sort Real 0)
+(declare-type Int ())
+(declare-type Real ())
 
 (declare-consts <numeral> Int)
 (declare-consts <rational> Real)
@@ -114,7 +114,7 @@
 ;   Quantifiers
 ; ---------------
 
-(declare-sort @VarList 0)
+(declare-type @VarList ())
 (declare-const @varlist.nil @VarList)
 (declare-const @varlist (-> (! Type :var T :implicit) T @VarList @VarList) :right-assoc-nil @varlist.nil)
 
@@ -125,7 +125,7 @@
 (program get_lambda_type ((x @VarList) (xs @VarList :list) (B Type))
   (@VarList Type) Type
   (
-    ((get_lambda_type (@varlist x xs) B) (-> (alf.typeof x) (get_lambda_type xs B)))
+    ((get_lambda_type (@varlist x xs) B) (-> (eo::typeof x) (get_lambda_type xs B)))
     ((get_lambda_type @varlist.nil B)    B)
   )
 )
