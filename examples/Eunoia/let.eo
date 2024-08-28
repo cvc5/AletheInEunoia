@@ -1,6 +1,6 @@
-(include "../../signature/Alethe.smt3")
+(include "../../signature/Alethe.eo")
 
-(declare-sort S 0)
+(declare-type S ())
 (declare-const a S)
 (declare-const b S)
 

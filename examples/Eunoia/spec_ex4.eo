@@ -1,6 +1,6 @@
-(include "../../signature/Alethe.smt3")
-(declare-sort S 0)
-(declare-fun P (S) Bool)
+(include "../../signature/Alethe.eo")
+(declare-type S ())
+(declare-const P (-> S Bool))
 
 ; Assume the empty context for consistency
 (define ctx0 () true)

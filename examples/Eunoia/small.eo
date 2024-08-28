@@ -1,4 +1,4 @@
-(include "../../signature/Alethe.smt3")
+(include "../../signature/Alethe.eo")
 
 (declare-const a Real)
 (declare-const b Real)
