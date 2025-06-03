@@ -4,6 +4,9 @@
 
 ; The famous Alethe cl
 (declare-const @cl (-> Bool Bool Bool) :right-assoc-nil false)
+; TODO: some better way to deal with empty clauses?
+(declare-const @empty_cl Bool)
+
 
 (declare-const ite (-> (! Type :var A :implicit) Bool A A A))
 (declare-const not (-> Bool Bool))
@@ -23,6 +26,9 @@
 
 (declare-consts <numeral> Int)
 (declare-consts <rational> Real)
+; TODO: to solve weird behavior with decimal numbers beings translated into
+; rational, during parsing
+(declare-consts <decimal> Real)
 
 ; NOTE: Arithmetic here is handled in the same way as it is handled
 ; for cvc5: Real and Int can be mixed, and the return type of arithmetic
@@ -34,80 +40,80 @@
 ;   @param y a Type
 ;   @return the "union" of x and y.
 ; The returned type is the type of the result of mixed arithmetic operators taking arguments x and y.
-(program arith_typeunion ()
+(program $arith_typeunion ()
     (Type Type) Type
     (
-      ((arith_typeunion Int Int) Int)
-      ((arith_typeunion Real Real) Real)
-      ((arith_typeunion Real Int) Real)
-      ((arith_typeunion Int Real) Real)
+      (($arith_typeunion Int Int) Int)
+      (($arith_typeunion Real Real) Real)
+      (($arith_typeunion Real Int) Real)
+      (($arith_typeunion Int Real) Real)
     )
 )
 
 ; is_arith_type
 ;   @param x
 ;   @returns true if x is Int or Real
-(program is_arith_type ()
+(program $is_arith_type ()
     (Type) Bool
     (
-      ((is_arith_type Int) true)
-      ((is_arith_type Real) true)
+      (($is_arith_type Int) true)
+      (($is_arith_type Real) true)
     )
 )
 
 ; Core operators of arithmetic, which are used in mixed Int/Real arithmetic.
 ; Using integer nil terminators ensures typing is accurate.
 (declare-const + (-> (! Type :var T :implicit) (! Type :var U :implicit)
-                     T U (arith_typeunion T U)) :right-assoc-nil 0)
+                     T U ($arith_typeunion T U)) :right-assoc-nil 0)
 (declare-const - (-> (! Type :var T :implicit) (! Type :var U :implicit)
-                     T U (arith_typeunion T U)) :left-assoc)
+                     T U ($arith_typeunion T U)) :left-assoc)
 (declare-const * (-> (! Type :var T :implicit) (! Type :var U :implicit)
-                     T U (arith_typeunion T U)) :right-assoc-nil 1)
+                     T U ($arith_typeunion T U)) :right-assoc-nil 1)
 (declare-const / (-> (! Type :var T :implicit) (! Type :var U :implicit)
                      T U
-                     (! Real :requires ((is_arith_type T) true)
-                             :requires ((is_arith_type U) true))) :left-assoc)
+                     (! Real :requires (($is_arith_type T) true)
+                             :requires (($is_arith_type U) true))) :left-assoc)
 (declare-const div (-> Int Int Int) :left-assoc)
 (declare-const mod (-> Int Int Int))
 
 (declare-const < (-> (! Type :var T :implicit) (! Type :var U :implicit)
-                     (! T :requires ((is_arith_type T) true))
-                     (! U :requires ((is_arith_type U) true))
+                     (! T :requires (($is_arith_type T) true))
+                     (! U :requires (($is_arith_type U) true))
                      Bool)
                      :chainable and)
 (declare-const <= (-> (! Type :var T :implicit) (! Type :var U :implicit)
-                      (! T :requires ((is_arith_type T) true))
-                      (! U :requires ((is_arith_type U) true))
+                      (! T :requires (($is_arith_type T) true))
+                      (! U :requires (($is_arith_type U) true))
                       Bool)
                       :chainable and)
 (declare-const > (-> (! Type :var T :implicit) (! Type :var U :implicit)
-                     (! T :requires ((is_arith_type T) true))
-                     (! U :requires ((is_arith_type U) true))
+                     (! T :requires (($is_arith_type T) true))
+                     (! U :requires (($is_arith_type U) true))
                      Bool)
                      :chainable and)
 (declare-const >= (-> (! Type :var T :implicit) (! Type :var U :implicit)
-                      (! T :requires ((is_arith_type T) true))
-                      (! U :requires ((is_arith_type U) true))
+                      (! T :requires (($is_arith_type T) true))
+                      (! U :requires (($is_arith_type U) true))
                       Bool)
                       :chainable and)
 
 ; Conversion functions.
 (declare-const to_real (-> (! Type :var T :implicit)
-                           (! T :requires ((is_arith_type T) true))
+                           (! T :requires (($is_arith_type T) true))
                            Real))
 (declare-const to_int (-> (! Type :var T :implicit)
-                          (! T :requires ((is_arith_type T) true))
+                          (! T :requires (($is_arith_type T) true))
                           Int))
 (declare-const is_int (-> (! Type :var T :implicit)
-                          (! T :requires ((is_arith_type T) true))
+                          (! T :requires (($is_arith_type T) true))
                           Bool))
 (declare-const abs (-> (! Type :var T :implicit)
-                       (! T :requires ((is_arith_type T) true))
+                       (! T :requires (($is_arith_type T) true))
                        T))
 
 ; Currently unary negation cannot use overload.
 (declare-const - (-> (! Type :var T :implicit)
-                     (! T :requires ((is_arith_type T) true))
+                     (! T :requires (($is_arith_type T) true))
                      T))
 
 ; ---------------
@@ -122,17 +128,36 @@
 (declare-const exists (-> @VarList Bool Bool) :binder @varlist)
 (declare-const choice (-> (! Type :var T :implicit) @VarList T Bool T) :binder @varlist)
 
-(program get_lambda_type ((x @VarList) (xs @VarList :list) (B Type))
+
+; program: get_lambda_type
+; args:
+; - (list @VarList) : 
+; - (B Type) : Return type of the function type.
+; return: >
+;   The expected function type, with domain in the product type of 
+;   and return type B.
+(program $get_lambda_type ((x @VarList) (xs @VarList :list) (B Type))
   (@VarList Type) Type
   (
-    ((get_lambda_type (@varlist x xs) B) (-> (eo::typeof x) (get_lambda_type xs B)))
-    ((get_lambda_type @varlist.nil B)    B)
+    (
+     ($get_lambda_type (@varlist x xs) B) 
+     
+     (-> (eo::typeof x) ($get_lambda_type xs B))
+     )
+
+    (
+     ($get_lambda_type @varlist.nil B)
+
+     B
+     )
   )
 )
+
 (declare-const @let (-> (! Type :var B :implicit)
-                        (! @VarList :var L)
-                        B
-                        (get_lambda_type L B)) :binder @varlist)
+                       (! @VarList :var L)
+                       B
+                       ($get_lambda_type L B)
+                       ) :binder @varlist)
 
 
 ; ------------
@@ -143,17 +168,31 @@
                         Bool
                         Bool) :binder @varlist)
 
-; Used to bind variables in a context
-(declare-const @var (-> (! Type :var B :implicit)
-                        (! @VarList :var L)
-                        B
-                        B) :binder @varlist)
+; constant: @var
+; type: (-> (! Type :var B :implicit)
+;           (! @VarList :var L)
+;           B
+;           B)
+; note: >
+;    Represents an undefined inhabitant of a given type. 
+;    Used to represent variables bound by some binder (including @ctx, forall, etc.)
+(declare-const @var (-> (! Type :var B :implicit) (! @VarList :var L) B B)
+               :binder @varlist)
 
-; Checks that the context ctx is an extension of old_ctx.
-;TODO
-(program context_extended ((ctx Bool) (old_ctx Bool))
-    (Bool Bool) Bool
-    (
-        ((context_extended ctx old_ctx) true)
-    )
- )
+; ---------------
+;   Substitutions
+; ---------------
+
+; Since some rules are defined directly in terms of a given substitution.
+; Single substitute variable -> value
+(declare-type @Substitute ())
+(declare-const @substitute (-> (! Type  :var Var :implicit) (! Type  :var Value :implicit) 
+                              Var Value @Substitute))
+
+(declare-type @Substitution ())
+
+(declare-const @substitution.nil @Substitution)
+
+; TODO: I don't want for people to directly use this constructor
+(declare-const @substitution (-> @Substitute @Substitution @Substitution)
+               :right-assoc-nil @substitution.nil)
