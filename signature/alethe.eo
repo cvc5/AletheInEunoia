@@ -813,75 +813,134 @@
 ;---------------
 ; Rule 24: cong
 ;---------------
-(program $check_cong ((premises Bool) (conclusion Bool) (A Type) (B Type)
-                      (arg_l A) (arg_r A)
-                      (args_l A :list) (args_r A :list) (fl_binary (-> A A B)) (fr_binary (-> A A B))
-                      (lhs A) (rhs A))
+; program: $mk_variadic_cong_rhs
+; args:
+; - U Type:
+; - f ->:
+; - s1 U:
+; - s2 U:
+; - t U:
+; - tail Bool:
+; - nil U:
+; note: >
+;   Taken from CPC's Eunoia mechanization: 
+;   https://github.com/cvc5/cvc5/blob/main/proofs/eo/cpc/rules/Uf.eo
+; return:
+(program $mk_variadic_cong_rhs ((U Type) (f (-> U U U)) (s1 U) (s2 U) (t U :list) (tail Bool :list) (nil U))
+    :signature (U Bool) U
+    (
+        (; TODO: remove this once we deal with embedding assumptions into
+         ; @cl
+         ($mk_variadic_cong_rhs (f s1 t) (and (= s1 s2) tail))  
+
+         (eo::cons f s2 ($mk_variadic_cong_rhs t tail))
+         )
+
+        (
+         ($mk_variadic_cong_rhs (f s1 t) (and (@cl (= s1 s2)) tail))  
+
+         (eo::cons f s2 ($mk_variadic_cong_rhs t tail))
+         )
+
+        (
+         ($mk_variadic_cong_rhs nil true)                       
+
+         nil)
+    )
+)
+
+; program: $mk_nary_cong_rhs
+; args:
+; - T Type:
+; - U Type:
+; - f ->:
+; - t1 U:
+; - t2 U:
+; - t3 U:
+; - tail Bool:
+; return:
+(program $mk_nary_cong_rhs ((T Type) (U Type) (f (-> T U)) (t1 U) (t2 U) (t3 U) (tail Bool :list))
+    :signature (U Bool) U
+    (
+        (
+         ($mk_nary_cong_rhs (f t1) (and (= t1 t2) tail))  
+
+         (_ ($mk_nary_cong_rhs f tail) t2)
+         )
+
+        (; TODO: remove this case
+         ($mk_nary_cong_rhs (f t1) (and (@cl (= t1 t2)) tail))
+
+         (_ ($mk_nary_cong_rhs f tail) t2)
+         )
+
+        (
+         ($mk_nary_cong_rhs f true)                       
+         
+         f
+         )
+    )
+)
+
+; program: $check_cong_nary
+; args:
+; - premises Bool:
+; - A Type:
+; - lhs A:
+; - rhs A:
+; return:
+(program $check_cong_nary ((premises Bool) (A Type) (lhs A) (rhs A))
   (Bool Bool) Bool
   (
    (
-    ($check_cong true conclusion)
+    ($check_cong_nary premises (@cl (= lhs rhs)))
 
-    true
-    )
-
-   (
-    ($check_cong premises (@cl (= (fl_binary arg_l args_l) (fr_binary arg_r args_r))))
-
-    (@cl premises 
-
-         (@cl (= (fl_binary arg_l args_l) (fr_binary arg_r args_r)))
-
-         (@cl (= ($f_list_last_element fl_binary (fl_binary arg_l args_l)) 
-                 ($f_list_last_element fr_binary (fr_binary arg_r args_r))))
-
-         ($f_list_last_element and premises)
-
-         ($f_list_equal @cl (@cl (= ($f_list_last_element fl_binary (fl_binary arg_l args_l)) 
-                                    ($f_list_last_element fr_binary (fr_binary arg_r args_r))))
-                        ($f_list_last_element and premises))
-
-         ($f_list_remove_elem and premises
-                                       (@cl (= ($f_list_last_element fl_binary (fl_binary arg_l args_l)) 
-                                               ($f_list_last_element fr_binary (fr_binary arg_r args_r)))) true)
-
-         (@cl (= ($f_list_remove_elem fl_binary (fl_binary arg_l args_l) 
-                                      ($f_list_last_element fl_binary (fl_binary arg_l args_l)) true)
-                 ($f_list_remove_elem fr_binary (fr_binary arg_r args_r)
-                                      ($f_list_last_element fr_binary (fr_binary arg_r args_r)) true)))
-              
-     ($check_cong ($f_list_remove_elem and premises
-                                       (@cl (= ($f_list_last_element fl_binary (fl_binary arg_l args_l)) 
-                                               ($f_list_last_element fr_binary (fr_binary arg_r args_r)))) true)
-                  (@cl (= ($f_list_remove_elem fl_binary (fl_binary arg_l args_l) 
-                                               ($f_list_last_element fl_binary (fl_binary arg_l args_l)) true)
-                          ($f_list_remove_elem fr_binary (fr_binary arg_r args_r)
-                                               ($f_list_last_element fr_binary (fr_binary arg_r args_r)) true))))
-         )
-    
-    ;; (eo::and
-    ;;  ; Check last premise
-    ;;  ($f_list_equal @cl (@cl (= ($f_list_last_element fl_binary (fl_binary arg_l args_l)) 
-    ;;                             ($f_list_last_element fr_binary (fr_binary arg_r args_r))))
-    ;;                 ($f_list_last_element and premises))
-     
-    ;;  ; Check remaining premises
-    ;;  ($check_cong ($f_list_remove_elem and premises
-    ;;                                    (@cl (= ($f_list_last_element fl_binary (fl_binary arg_l args_l)) 
-    ;;                                            ($f_list_last_element fr_binary (fr_binary arg_r args_r)))) true)
-    ;;               (@cl (= ($f_list_remove_elem fl_binary (fl_binary arg_l args_l) 
-    ;;                                            ($f_list_last_element fl_binary (fl_binary arg_l args_l)) true)
-    ;;                       ($f_list_remove_elem fr_binary (fr_binary arg_r args_r)
-    ;;                                            ($f_list_last_element fr_binary (fr_binary arg_r args_r)) true))))
-    ;;  )
+    ($f_list_equal = ($mk_nary_cong_rhs lhs (eo::list_rev and premises)) rhs)
     )
    )
-  )
+)
 
-;TRUST
-(declare-rule cong ((premises Bool))
+; program: $check_cong_variadic
+; args:
+; - premises Bool:
+; - A Type:
+; - lhs A:
+; - rhs A:
+; return:
+(program $check_cong_variadic ((premises Bool) (A Type) (lhs A) (rhs A))
+  (Bool Bool) Bool
+  (
+   (
+    ($check_cong_variadic premises (@cl (= lhs rhs)))
+
+    ($f_list_equal = ($mk_variadic_cong_rhs lhs premises) rhs)
+    )
+   )
+)
+
+; rule: cong_nary
+; implements: TODO?
+; premises:
+; - premises Bool:
+; args:
+; requires:
+; conclusion:
+(declare-rule cong_nary ((premises Bool))
   :premise-list premises and
-  :requires ((($check_cong premises eo::conclusion) true))
+  :requires ((($check_cong_nary premises eo::conclusion) true))
+  :conclusion-given
+)
+
+; rule: cong_variadic
+; implements: TODO?
+; premises:
+; - premises Bool:
+; args:
+; requires:
+; conclusion:
+(declare-rule cong_variadic ((premises Bool))
+  :premise-list premises and
+  :requires ((($check_cong_variadic premises eo::conclusion) true))
   :conclusion-given
 )
 
