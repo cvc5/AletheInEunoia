@@ -813,134 +813,176 @@
 ;---------------
 ; Rule 24: cong
 ;---------------
-; program: $mk_variadic_cong_rhs
+
+; program: $check_list_left_assoc
 ; args:
-; - U Type:
-; - f ->:
-; - s1 U:
-; - s2 U:
-; - t U:
-; - tail Bool:
-; - nil U:
-; note: >
-;   Taken from CPC's Eunoia mechanization: 
-;   https://github.com/cvc5/cvc5/blob/main/proofs/eo/cpc/rules/Uf.eo
+; - lhs U: LHS of the equality in the conclusion passed to the cong rule.
+; - rhs U: RHS of the equality in the conclusion passed to the cong rule.
+; - premises Bool: Premises passed to the cong rule, but in the reverse order.
 ; return:
-(program $mk_variadic_cong_rhs ((U Type) (f (-> U U U)) (s1 U) (s2 U) (t U :list) (tail Bool :list) (nil U))
-    :signature (U Bool) U
+(program $check_list_left_assoc ((T Type) (U Type) 
+                                          (f (-> T U U)) (f2 (-> T U U)) (t1 T) (t2 T) 
+                                          (lhs U) (rhs U) (tail Bool :list) (premises Bool))
+    :signature (U U Bool) U
     (
-        (; TODO: remove this once we deal with embedding assumptions into
-         ; @cl
-         ($mk_variadic_cong_rhs (f s1 t) (and (= s1 s2) tail))  
+     (; TODO: why?
+      ($check_list_left_assoc (f t1) (f t2) (and (= t1 t2)))
 
-         (eo::cons f s2 ($mk_variadic_cong_rhs t tail))
-         )
+      true
+      )
 
-        (
-         ($mk_variadic_cong_rhs (f s1 t) (and (@cl (= s1 s2)) tail))  
+     (
+      ($check_list_left_assoc (f t1) (f t2) (and (@cl (= t1 t2))))
 
-         (eo::cons f s2 ($mk_variadic_cong_rhs t tail))
-         )
+      true
+      )
 
-        (
-         ($mk_variadic_cong_rhs nil true)                       
+     ( ; TODO: ill-typed
+      ($check_list_left_assoc (f t1) (f2 t2) (and (@cl (= t1 t2)) tail))
 
-         nil)
+      ($check_list_left_assoc f f2 tail)
+      )
+
+     (; TODO: why?
+      ($check_list_left_assoc (f t1) (f2 t2) (and (= t1 t2) tail))
+
+      ($check_list_left_assoc f f2 tail)
+      )
+
+     (; We need for $check_list_left_assoc to be a total function.
+      ($check_list_left_assoc lhs rhs premises)
+
+      false
+      )
+     )
     )
-)
 
-; program: $mk_nary_cong_rhs
+; program: $check_list_right_assoc
 ; args:
-; - T Type:
-; - U Type:
-; - f ->:
-; - t1 U:
-; - t2 U:
-; - t3 U:
-; - tail Bool:
+; - lhs U: LHS of the equality, in the conclusion.
+; - rhs U: RHS of the equality, in the conclusion.
+; - rev_premises Bool: Premises given to the cong rule.
 ; return:
-(program $mk_nary_cong_rhs ((T Type) (U Type) (f (-> T U)) (t1 U) (t2 U) (t3 U) (tail Bool :list))
-    :signature (U Bool) U
+(program $check_list_right_assoc ((T Type) (U Type) (f (-> T U U)) 
+                                           (f2 (-> T U U)) (t1 T) (t2 T) (t3 T) (t4 T) (lhs U :list) (rhs U :list) 
+                                           (premises Bool) (tail Bool :list))
+    :signature (U U Bool) U
     (
-        (
-         ($mk_nary_cong_rhs (f t1) (and (= t1 t2) tail))  
+     (; TODO: why?
+      ($check_list_right_assoc (f t1) (f t2) (and (= t1 t2)))
 
-         (_ ($mk_nary_cong_rhs f tail) t2)
-         )
+      true
+      )
 
-        (; TODO: remove this case
-         ($mk_nary_cong_rhs (f t1) (and (@cl (= t1 t2)) tail))
+     (
+      ($check_list_right_assoc (f t1) (f t2) (and (@cl (= t1 t2))))
 
-         (_ ($mk_nary_cong_rhs f tail) t2)
-         )
+      true
+      )
 
-        (
-         ($mk_nary_cong_rhs f true)                       
-         
-         f
-         )
+     (
+      ($check_list_right_assoc t1 t2 (and (@cl (= t1 t2))))
+
+      true
+      )
+
+     (
+      ($check_list_right_assoc t1 t2 (and (= t1 t2)))
+
+      true
+      )
+
+     (
+      ($check_list_right_assoc f f tail)
+
+      true
+      )
+
+     (
+      ($check_list_right_assoc (f t1) (f t2) (and (= t1 t2) tail))
+
+      true
+      )
+
+     (
+      ($check_list_right_assoc (f t1) (f t2) (and (@cl (= t1 t2)) tail))
+      true
+      )
+
+     ( ; TODO: ill-typed
+      ($check_list_right_assoc (f t1 lhs) (f t2 rhs) (and (@cl (= t1 t2)) tail))
+
+      ($check_list_right_assoc lhs rhs tail)
+      )
+
+     ( ; TODO: ill-typed
+      ($check_list_right_assoc (f t1 lhs) (f t2 rhs) (and (= t1 t2) tail))
+
+      ($check_list_right_assoc lhs rhs tail)
+      )
+
+     ( ; We need for $check_list_right_assoc to be total 
+      ($check_list_right_assoc lhs rhs premises)
+
+      false
+      )
+     )
     )
-)
 
-; program: $check_cong_nary
+; program: $check_cong
 ; args:
-; - premises Bool:
-; - A Type:
-; - lhs A:
-; - rhs A:
-; return:
-(program $check_cong_nary ((premises Bool) (A Type) (lhs A) (rhs A))
+; - premises Bool: >
+;   Premises given to rule cong. Must be an and-list of each premise (equality).
+; - conclusion Bool: Conclusion clause given to rule cong.
+; return: >
+;   A boolean indicating if "conclusion" follows from the and-list of premises
+;   given.
+(program $check_cong ((U Type) (lhs U :list) (rhs U :list) (premises Bool))
   (Bool Bool) Bool
   (
    (
-    ($check_cong_nary premises (@cl (= lhs rhs)))
+    ($check_cong premises (@cl (= lhs rhs)))
+    
+    (eo::ite ($is_f_list lhs)
+             ; We need to distinguish: 
+             ; - n-ary from variadic operators
+             ; - left-assoc from right-assoc: 
+             ;    - since we do not have effective means to do this, we try to check
+             ;       the rule in both ways: as if the f applied were right-assoc, 
+             ;       and if it were left-assoc.
+             (eo::or 
 
-    ($f_list_equal = ($mk_nary_cong_rhs lhs (eo::list_rev and premises)) rhs)
+              ($check_list_right_assoc
+               ($f_list_remove_nil_terminator lhs) 
+               ($f_list_remove_nil_terminator rhs)
+               premises)
+
+              ($check_list_left_assoc 
+               ($f_list_remove_nil_terminator lhs) 
+               ($f_list_remove_nil_terminator rhs)
+               (eo::list_rev and premises)))
+
+             (eo::or 
+
+              ($check_list_right_assoc lhs rhs premises)
+
+              ($check_list_left_assoc lhs rhs (eo::list_rev and premises)))
+             )
     )
    )
 )
 
-; program: $check_cong_variadic
-; args:
-; - premises Bool:
-; - A Type:
-; - lhs A:
-; - rhs A:
-; return:
-(program $check_cong_variadic ((premises Bool) (A Type) (lhs A) (rhs A))
-  (Bool Bool) Bool
-  (
-   (
-    ($check_cong_variadic premises (@cl (= lhs rhs)))
-
-    ($f_list_equal = ($mk_variadic_cong_rhs lhs premises) rhs)
-    )
-   )
-)
-
-; rule: cong_nary
+; rule: cong
 ; implements: TODO?
 ; premises:
-; - premises Bool:
-; args:
-; requires:
-; conclusion:
-(declare-rule cong_nary ((premises Bool))
+; - premises Bool: An and-list of premises of the form t1 = u1, ..., tm = um.
+; requires: >
+;   For "conclusion" to be of the form:
+;   f s1 ... sn = f s1 ... sn t1 ... tm = f s1 ... sn = f s1 ... sn u1 ... um
+; conclusion-given: 
+(declare-rule cong ((premises Bool))
   :premise-list premises and
-  :requires ((($check_cong_nary premises eo::conclusion) true))
-  :conclusion-given
-)
-
-; rule: cong_variadic
-; implements: TODO?
-; premises:
-; - premises Bool:
-; args:
-; requires:
-; conclusion:
-(declare-rule cong_variadic ((premises Bool))
-  :premise-list premises and
-  :requires ((($check_cong_variadic premises eo::conclusion) true))
+  :requires ((($check_cong premises eo::conclusion) true))
   :conclusion-given
 )
 

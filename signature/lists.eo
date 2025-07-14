@@ -171,7 +171,7 @@
   )
 
 ; TODO: implement this as a higher-order program, once it becomes feasible
-; program: f_list_remove_elem
+; program: f_list_filter
 ; args:
 ; - f (-> A B B): Operator used to build the f-list.
 ; - f_nil B: The "nil" element of variadic operator f.
@@ -238,6 +238,240 @@
            )
           )
          )
+
+;-------------
+; Reflection
+;-------------
+
+; program: $f_list_operator_is_right_assoc
+; args:
+; - f (-> A A B): Operator upon which we want to reflect.
+; return: A boolean indicating if the operator is declared as right assoc.
+(program $f_list_operator_is_right_assoc ((A Type) (B Type) (f (-> A B B)))
+         :signature ((-> A B B)) Bool
+         (
+          (
+           ($f_list_operator_is_right_assoc @cl)
+
+           true
+           )
+
+          (
+           ($f_list_operator_is_right_assoc or)
+
+           true
+           )
+
+          (
+           ($f_list_operator_is_right_assoc and)
+
+           true
+           )
+
+          (
+           ($f_list_operator_is_right_assoc +)
+
+           true
+           )
+
+          (
+           ($f_list_operator_is_right_assoc *)
+
+           true
+           )
+
+          (
+           ($f_list_operator_is_right_assoc @varlist)
+           true
+           )
+
+          (; TODO : not sure about declaring @substitution as right_assoc
+           ($f_list_operator_is_right_assoc @substitution)
+           true
+           )
+
+          (
+           ($f_list_operator_is_right_assoc f)
+
+           false
+           )
+          )
+         )
+
+; program: $is_f_list
+; args:
+; - list T : >
+;    A term representing the application of some operator over a sequence of operands.
+; return: A boolean indicating if the given parameter is an actual list or not.
+(program $is_f_list ((U Type) (T Type) (f (-> U T T)) (hd U) (tail T :list))
+         :signature (T) Bool
+         (
+          (
+           ($is_f_list (@cl hd tail))
+
+           true
+           )
+
+          (
+           ($is_f_list (or hd tail))
+
+           true
+           )
+
+          (
+           ($is_f_list (and hd tail))
+
+           true
+           )
+
+          (
+           ($is_f_list (+ hd tail))
+
+           true
+           )
+
+          (
+           ($is_f_list (* hd tail))
+
+           true
+           )
+
+          (
+           ($is_f_list (@varlist hd tail))
+
+           true
+           )
+
+          (
+           ($is_f_list (@substitution hd tail))
+
+           true
+           )
+
+          (
+           ($is_f_list tail)
+
+           false
+           )
+          )
+         )
+; program: $f_list_nil_element
+; args:
+; - f (-> U T T): A left/right-assoc-nil operator.
+; return: The nil terminator of "f".
+(program $f_list_nil_element ((U Type) (T Type) (f (-> U T T)))
+         :signature ((-> U T T)) T
+         (
+          (
+           ($f_list_nil_element @cl)
+
+           false
+           )
+
+          (
+           ($f_list_nil_element or)
+
+           false
+           )
+
+          (
+           ($f_list_nil_element and)
+
+           true
+           )
+
+          (
+           ($f_list_nil_element +)
+
+           0
+           )
+
+          (
+           ($f_list_nil_element *)
+
+           1
+           )
+
+          (
+           ($f_list_nil_element @varlist)
+
+           @varlist.nil
+           )
+
+          (
+           ($f_list_nil_element @varlist)
+
+           @substitution.nil
+           )
+          )
+         )
+
+; program: $f_list_remove_nil_terminator_left_assoc
+; args:
+; - f (-> U T T): A left-assoc-nil operator.
+; - list T: A nil-terminated f-list.
+; - nil T: The nil terminated of the f-lists.
+; return: >
+;    A list that is equal to "list", without its nil terminator.
+(program $f_list_remove_nil_terminator_left_assoc ((U Type) (T Type) (f (-> U T T)) (hd U) (tail T :list) (nil T))
+         :signature ((-> U T T) T U) T
+         (
+          (;TODO: ill-typed
+           ($f_list_remove_nil_terminator_left_assoc f (f hd nil) nil)
+
+           hd
+           )
+
+          (
+           ($f_list_remove_nil_terminator_left_assoc f (f hd tail) nil)
+           
+           ($f_list_cons f ($f_list_remove_nil_terminator_left_assoc f hd nil) tail)
+           )
+          )
+         )
+
+; program: $f_list_remove_nil_terminator_right_assoc
+; args:
+; - f (-> U T T): A right-assoc-nil operator.
+; - list T: A nil-terminated f-list.
+; - nil T: The nil terminated of the f-lists.
+; return: >
+;    A list that is equal to "list", without its nil terminator.
+(program $f_list_remove_nil_terminator_right_assoc ((U Type) (T Type) (f (-> U T T)) (hd U) (tail T :list) (nil T))
+         :signature ((-> U T T) T U) T
+         (
+          (;TODO: ill-typed
+           ($f_list_remove_nil_terminator_right_assoc f (f hd nil) nil)
+
+           hd
+           )
+
+          (; { tail != nil }
+           ($f_list_remove_nil_terminator_right_assoc f (f hd tail) nil)
+           
+           ($f_list_cons f hd ($f_list_remove_nil_terminator_right_assoc f tail nil))
+           )
+          )
+         )
+
+; program: $f_list_remove_nil_terminator
+; args:
+; - list T: nil-terminated f-list .
+; return: >
+;    An f-list that is equal to "list" but without its nil-terminator.
+(program $f_list_remove_nil_terminator ((U Type) (T Type) (f (-> U T T)) (hd U) (tail T :list))
+         :signature (T) T
+         (
+          (
+           ($f_list_remove_nil_terminator (f hd tail))
+
+           (eo::ite ($f_list_operator_is_right_assoc f)
+                    ($f_list_remove_nil_terminator_right_assoc f (f hd tail) ($f_list_nil_element f))
+                    ;; { f is left-assoc }
+                    ($f_list_remove_nil_terminator_left_assoc f (f hd tail) ($f_list_nil_element f)))
+           )
+          )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; lists (built with non-variadic operators)
