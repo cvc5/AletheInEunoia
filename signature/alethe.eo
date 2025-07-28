@@ -822,7 +822,9 @@
 ; - premises Bool: Premises passed to the cong rule, but in the reverse order.
 ; return: >
 ;    A boolean indicating if lhs, rhs and premises correspond to the proper
-;    application of the cong rule, for a left-assoc operator.
+;    application of the cong rule, for a n-ary operator. Note that, in this case,
+;    we are dealing with the single application of a n-ary operator. No 
+;    associativity is involved.
 (program $check_n_ary_application ((T Type) (U Type) 
                                           (f (-> T U U)) (f2 (-> T U U)) (t1 T) (t2 T) (t3 T)
                                           (lhs U) (rhs U) (tail Bool :list) (premises Bool))
