@@ -576,11 +576,27 @@
   :conclusion-given
 )
 
-;TODO: why is type T not mentioned in the body of check_refl?
-(program $check_refl ((ctx Bool) (conclusion Bool))
+;--------------------
+; Rule 22: refl
+;--------------------
+
+; program: $check_refl
+; args:
+; - context Bool:
+; - conclusion Bool:
+; return:
+(program $check_refl ((context Bool) (conclusion Bool) (A Type) (lhs A) (rhs A))
   (Bool Bool) Bool
   (
-   (($check_refl ctx conclusion) true)
+   (
+    ($check_refl context (@cl (= lhs rhs)))
+
+    ($eo_is_eq 
+     ($substitution_apply lhs 
+                          ($substitution_build_from_pairs
+                           ($context_get_var_subst_pairs context ($context_get_variables context))))
+     rhs)
+    )
   )
 )
 

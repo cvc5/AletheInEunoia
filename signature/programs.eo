@@ -691,6 +691,28 @@
           )
 )
 
+; program: $context_get_variables
+; args:
+; - context Bool: A context built with @ctx.
+; return: >
+;   A @VarList with the variables bound by "context".
+(program $context_get_variables ((varlist @VarList) (subst Bool) (any Bool))
+         (Bool) @VarList
+         (
+          (
+           ($context_get_variables (@ctx varlist subst))
+           
+           varlist
+           )
+
+          (; A possible empty context
+           ($context_get_variables any)
+           
+           @varlist.nil
+           )
+          )
+)
+
 ; program: $context_var_is_fixed
 ; args:
 ; - context Bool: A context built with @ctx
@@ -1216,6 +1238,30 @@
           )
 )
 
+; program: $substitution_build_from_pairs
+; args:
+; - variables_values @VarList: >
+;    A @VarList of pairs of the form (variable, value), meaning that "variable"
+;    should be substituted by "value".
+; return: The corresponding @Substitution.
+(program $substitution_build_from_pairs ((Vars Type) (Values Type) (var Vars) (value Values)
+                               (pairs_tail @VarList :list))
+         (@VarList) @Substitution
+         (
+          (
+           ($substitution_build_from_pairs @varlist.nil)
+
+           @substitution.nil
+           )
+
+          (
+           ($substitution_build_from_pairs (@varlist (@varlist var value) pairs_tail))
+
+           ($substitution_extend ($substitution_build_from_pairs pairs_tail) var value)
+           )
+          )
+)
+
 ; program: $substitution_remove_substitutes
 ; args:
 ; - $substitution_remove_substitutes nil:
@@ -1280,8 +1326,9 @@
 
 ; program: $substitution_apply
 ; args:
-; - $substitution_apply nil:
-; return:
+; - term Terms: A given term upon which we want to apply the substitution.
+; - substitution @Substitution: The substitution that we want to apply.
+; return: The term resulting of applying "substitution" over "term".
 (program $substitution_apply ((Terms Type) (x Terms)
                       (vars @VarList)
                       (bool_body Bool)
