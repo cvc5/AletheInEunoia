@@ -280,6 +280,32 @@
 ;-------------
 ; Rule 18: bind
 ;-------------
+; TODO: remove this once we have higher-order programs
+; program: $embed_within_vars
+; args:
+; - varlist @VarList: A list of names of variables.
+; return: >
+;   A @VarList obtained by embedding each name within varlist
+;   within a @var construction (i.e., (@var (@varlist id) id) for a name id in 
+;   varlist).
+(program $embed_within_vars ((Var Type) (id Var) (tail @VarList :list))
+         :signature (@VarList) @VarList
+         (
+          (
+           ($embed_within_vars @varlist.nil)
+           
+           @varlist.nil
+           )
+
+          (
+           ($embed_within_vars (@varlist id tail))
+           
+           ($f_list_cons @varlist 
+                         (@var (@varlist id) id)
+                         ($embed_within_vars tail))
+           )
+          )
+)
 
 ; NOTE: Rules like `bind` can have multiple forms: without and with
 ; @var.  In the first case the bind rule is
@@ -316,20 +342,23 @@
      ; Every variable in rhs_vars appear fixed in "new_context".
      ($context_vars_are_fixed new_context rhs_vars)
 
-     ; Vars in lhs_vars are susbtitued by rhs_vars
+     ; Vars in lhs_vars are susbtitued by rhs_vars.
+     ; Note: we need to embed each var in rhs_vars within a @var construction,
+     ; since that is how they will appear within a context.
      ($f_list_equal @varlist 
-                    ($varlist_zip lhs_vars rhs_vars)
-                    ($context_get_var_subst_pairs new_context lhs_vars))
+                    ($embed_within_vars rhs_vars)
+                    ($context_get_vars_substs new_context lhs_vars))
 
-     ; rhs_vars should not appear free in (forall lhs_vars lhs_body_unbound)
-     ($f_list_equal @varlist
-                    ($fv (forall lhs_vars lhs_body))
-                    ; TODO: duplicating calculations
-                    ($f_list_filter @varlist
-                                    @varlist.nil
-                                    ($fv (forall lhs_vars lhs_body))
-                                    ($varlist_flag_members ($fv (forall lhs_vars lhs_body))
-                                                   rhs_vars)))
+     ; rhs_vars should not appear free in (forall lhs_vars lhs_body)
+     (eo::define ((lhs_free_vars ($fv (forall lhs_vars lhs_body))))
+                 ($f_list_equal @varlist
+                                lhs_free_vars
+                                ($f_list_filter @varlist
+                                                @varlist.nil
+                                                lhs_free_vars
+                                                ($varlist_flag_members 
+                                                 lhs_free_vars
+                                                 rhs_vars))))
 
      ; rhs_vars should not appear in the first part of the new_context (old_context)
      (eo::not ($context_vars_are_defined old_context rhs_vars))
@@ -353,19 +382,21 @@
      ($context_vars_are_fixed new_context rhs_vars)
 
      ; Vars in lhs_vars are susbtitued by rhs_vars
+     ; Note: we need to embed each var in rhs_vars within a @var construction,
+     ; since that is how they will appear within a context.
      ($f_list_equal @varlist 
-                    ($varlist_zip lhs_vars rhs_vars)
-                    ($context_get_var_subst_pairs new_context lhs_vars))
+                    ($embed_within_vars rhs_vars)
+                    ($context_get_vars_substs new_context lhs_vars))
 
      ; rhs_vars should not appear free in (forall lhs_vars lhs_body)
-     ($f_list_equal @varlist
-                    ($fv (forall lhs_vars lhs_body))
-                    ; TODO: duplicating calculations
-                    ($f_list_filter @varlist
-                                    @varlist.nil
-                                    ($fv (forall lhs_vars lhs_body))
-                                    ($varlist_flag_members ($fv (forall lhs_vars lhs_body))
-                                                   rhs_vars)))
+     (eo::define ((lhs_free_vars ($fv (forall lhs_vars lhs_body))))
+                 ($f_list_equal @varlist
+                                lhs_free_vars
+                                ($f_list_filter @varlist
+                                                @varlist.nil
+                                                lhs_free_vars
+                                                ($varlist_flag_members lhs_free_vars
+                                                                       rhs_vars))))
     
      ; rhs_vars should not appear in the first part of the new_context (old_context)
      (eo::not ($context_vars_are_defined old_context rhs_vars))
