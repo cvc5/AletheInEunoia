@@ -592,9 +592,10 @@
     ($check_refl context (@cl (= lhs rhs)))
 
     ($eo_is_eq 
+
      ($substitution_apply lhs 
-                          ($substitution_build_from_pairs
-                           ($context_get_var_subst_pairs context ($context_get_variables context))))
+                          ($substitution_build_from_context context))
+
      rhs)
     )
   )
