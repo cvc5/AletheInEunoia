@@ -116,7 +116,7 @@
   )
 )
 
-; program: f_list_concat
+; program: $f_list_cons
 ; args:
 ; - f (-> A B B): Operator used to build the f-list.
 ; - elem A: An element of type A.
@@ -128,7 +128,7 @@
     (f elem tail)
 )
 
-; program: f_list_remove_elem
+; program: $f_list_remove_elem
 ; args:
 ; - f (-> A B B): Operator used to build the f-list.
 ; - list B: An f-list, where f is a variadic operator with some "nil" element.
@@ -164,6 +164,48 @@
    ; TODO: this should be an error
    (; { hd =/= elem }
     ($f_list_remove_elem f hd elem f_nil)
+    
+    hd
+    )
+   )
+  )
+
+; program: $f_list_remove_every_elem
+; args:
+; - f (-> A B B): Operator used to build the f-list.
+; - list B: An f-list, where f is a variadic operator with some "nil" element.
+; - f_nil B: The "nil" element of variadic operator f.
+; - elem A: An element from "list" that we want to remove.
+; return: >
+;   Removes the every occurrence of "elem" in the given f-list. Returns
+;   the obtained f-list.
+(program $f_list_remove_every_elem ((A Type) (B Type)
+                             (f (-> A B B)) (f_nil B) (hd A) (tl B :list)
+                             (elem A))
+  ((-> A B B) B A B) B
+
+  (
+   (
+    ($f_list_remove_every_elem f (f elem tl) elem f_nil)
+    
+    ($f_list_remove_every_elem f tl elem f_nil)
+    )
+
+   (; { hd =/= elem }
+    ($f_list_remove_every_elem f (f hd tl) elem f_nil)
+    
+    ($f_list_cons f hd ($f_list_remove_every_elem f tl elem f_nil))
+    )
+
+   (
+    ($f_list_remove_every_elem f elem elem f_nil)
+    
+    f_nil
+    )
+   
+   ; TODO: this should be an error
+   (; { hd =/= elem }
+    ($f_list_remove_every_elem f hd elem f_nil)
     
     hd
     )
@@ -213,6 +255,35 @@
            )
           )
          )
+
+; program: $f_list_remove_duplicates
+; args:
+; - f (-> A B B): An Eunoia's "variadic" function.
+; - f_nil B: Nil element of "f".
+; - f_list B: An f-list from which we want to remove repeated elements.
+; return: >
+;   A f-list obtained from removing repeated elements from "f_list".
+;   Removes the first repeated occurrence of an element, traversing 
+;   "f_list" from left to right.
+(program $f_list_remove_duplicates ((A Type) (B Type) (f (-> A B B)) (hd A) 
+                                    (f_nil B) (tl B :list))
+:signature ((-> A B B) B B) B
+(
+ (
+  ($f_list_remove_duplicates f f_nil (f hd tl))
+  
+  ($f_list_cons f hd 
+                ($f_list_remove_every_elem f  ($f_list_remove_duplicates f f_nil tl)
+                                           hd f_nil))
+  )
+
+ (; { hd <> f some_element tail }
+  ($f_list_remove_duplicates f f_nil hd)
+  
+  hd
+  )
+ )
+)
 
 ; program: $f_list_last_element
 ; args:

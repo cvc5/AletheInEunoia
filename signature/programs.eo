@@ -638,8 +638,14 @@
            ($context_get_substitute subst id)
            )
 
+          (; Contexts are nested.
+           ($context_get_substitute (and (@ctx varlist subst)) id)
+           
+           ($context_get_substitute subst id)
+           )
+
           (
-           ($context_get_substitute (and (= id value) tl) id)
+           ($context_get_substitute (and (= (@var (@varlist id) id) value) tl) id)
            
            value
            )
@@ -652,7 +658,7 @@
            )
 
           (
-           ($context_get_substitute (= id value) id)
+           ($context_get_substitute (= (@var (@varlist id) id) value) id)
            
            value
            )
@@ -667,7 +673,7 @@
 ; return: >
 ;   A @VarList with the values associated with each variable from, and in the 
 ;   same order as in, "variables"; in the form of pairs (variable, value),
-;   as @VarLists.
+;   built also as @VarList.
 (program $context_get_var_subst_pairs ((A Type) (id A) (B Type)
                                       (value B) (varlist @VarList) 
                                       (context Bool) (and_list Bool)
@@ -678,8 +684,9 @@
            ($context_get_var_subst_pairs context (@varlist id ids))
            
            ($f_list_cons @varlist 
-                        ($f_list_cons @varlist id 
-                                      (@varlist ($context_get_substitute context id) @varlist.nil))
+                        ($f_list_cons @varlist id
+                                      ($f_list_cons @varlist 
+                                                    ($context_get_substitute context id) @varlist.nil))
                         ($context_get_var_subst_pairs context ids))
            )
 
@@ -696,17 +703,32 @@
 ; - context Bool: A context built with @ctx.
 ; return: >
 ;   A @VarList with the variables bound by "context".
-(program $context_get_variables ((varlist @VarList) (subst Bool) (any Bool))
+(program $context_get_variables ((varlist @VarList) (subst Bool) (any Bool) 
+                                 (eqs Bool :list))
          (Bool) @VarList
          (
           (
            ($context_get_variables (@ctx varlist subst))
            
-           varlist
+           ($f_list_remove_duplicates @varlist @varlist.nil
+                                      ($varlist_concat varlist ($context_get_variables subst)))
            )
 
-          (; A possible empty context
-           ($context_get_variables any)
+          (
+           ($context_get_variables (and (@ctx varlist subst)))
+           
+           ($f_list_remove_duplicates @varlist @varlist.nil
+                                      ($varlist_concat varlist ($context_get_variables subst)))
+           )
+
+          (; { any <> (@ctx varlist subst) }
+           ($context_get_variables (and any eqs))
+           
+           ($context_get_variables eqs)
+           )
+
+          (
+           ($context_get_variables true)
            
            @varlist.nil
            )
@@ -1244,8 +1266,8 @@
 ;    A @VarList of pairs of the form (variable, value), meaning that "variable"
 ;    should be substituted by "value".
 ; return: The corresponding @Substitution.
-(program $substitution_build_from_pairs ((Vars Type) (Values Type) (var Vars) (value Values)
-                               (pairs_tail @VarList :list))
+(program $substitution_build_from_pairs ((Vars Type) (Values Type) (var Vars) 
+                                         (value Values) (pairs_tail @VarList :list))
          (@VarList) @Substitution
          (
           (
@@ -1273,7 +1295,8 @@
            ($substitution_build_from_context context)
            
            ($substitution_build_from_pairs
-                           ($context_get_var_subst_pairs context ($context_get_variables context)))
+                           ($context_get_var_subst_pairs context 
+                                                         ($context_get_variables context)))
            )
           )
 )
