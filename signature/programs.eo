@@ -1,5 +1,5 @@
 (include "./theory.eo")
-(include "./f_lists.eo")
+(include "./lists.eo")
 
 ; Library of auxiliary programs, useful to manipulate many different
 ; Eunoia constructions.
@@ -26,6 +26,120 @@
           (; { t1 <> t2 }
            ($eo_is_eq t1 t2)
 
+           false
+           )
+          )
+)
+
+;------------------------
+; Reflection mechanisms
+;------------------------
+
+; program: $is_theory_op_left_assoc
+; args:
+; - f (-> T U): A function constant.
+; return: >
+;    A boolean indicating if f is defined in our theory as 
+;    left-assoc/left-assoc-nil. It could receive a user defined function 
+;    constant, in which case the function will just return "false", regardless 
+;    of the actual associativity of f.
+(program $is_theory_op_left_assoc ((T Type) (U Type) (f (-> T U)))
+         :signature ((-> T U)) Bool
+         (
+          (
+           ($is_theory_op_left_assoc xor)
+           
+           true
+           )
+
+          (
+           ($is_theory_op_left_assoc -)
+           
+           true
+           )
+
+          (
+           ($is_theory_op_left_assoc /)
+           
+           true
+           )
+
+          (
+           ($is_theory_op_left_assoc div)
+           
+           true
+           )
+
+          (
+           ($is_theory_op_left_assoc f)
+           
+           false
+           )
+          )
+)
+
+; program: $is_theory_op_right_assoc
+; args:
+; - f (-> T U): A function constant.
+; return: >
+;    A boolean indicating if f is defined in our theory as 
+;    right-assoc/right-assoc-nil. It could receive a user defined function 
+;    constant, in which case the function will just return "false", regardless 
+;    of the actual associativity of f.
+(program $is_theory_op_right_assoc ((T Type) (U Type) (f (-> T U)))
+         :signature ((-> T U)) Bool
+         (
+          (
+           ($is_theory_op_right_assoc @cl)
+           
+           true
+           )
+
+          (
+           ($is_theory_op_right_assoc or)
+           
+           true
+           )
+
+          (
+           ($is_theory_op_right_assoc and)
+           
+           true
+           )
+
+          (
+           ($is_theory_op_right_assoc =>)
+           
+           true
+           )
+
+          (
+           ($is_theory_op_right_assoc +)
+           
+           true
+           )
+
+          (
+           ($is_theory_op_right_assoc *)
+           
+           true
+           )
+
+          (
+           ($is_theory_op_right_assoc @varlist)
+           
+           true
+           )
+
+          (
+           ($is_theory_op_right_assoc @substitution)
+           
+           true
+           )
+
+          (
+           ($is_theory_op_right_assoc f)
+           
            false
            )
           )
