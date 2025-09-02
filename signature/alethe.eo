@@ -2,24 +2,26 @@
 (include "./programs.eo")
 
 ; Rule: assume is native
-
-; TODO: what would the checker do in this case?
-(program $check_hole ((conclusion Bool))
-    (Bool) Bool
-    (
-    (($check_hole conclusion) true)
-    )
-)
-
 ; Note: The hole here does not allow for args or premises.
-(declare-rule hole ()
-  :requires ((($check_hole eo::conclusion) true))
-  :conclusion-given
+
+; rule: hole
+; implements: TODO?
+; premises:
+; args:
+; - "conclusion" Bool: Conclusion clause given to the rule.
+; requires:
+; conclusion: Just the arbitrary conclusion passed to the rule.
+; sorry: >
+;   This models the following (taken from the standard spec.):
+;   "A proof checker must not accept as valid a proof that contains this
+;     rule even if the checkercan somehow check this rule."
+(declare-rule hole ((conclusion Bool))
+  :conclusion-explicit (@cl conclusion)
+  :sorry
 )
 
 (declare-rule true ()
-  :args ((@cl true))
-  :conclusion (@cl true)
+  :conclusion-explicit (@cl true)
 )
 
 ;-------------
@@ -29,42 +31,20 @@
 ; rule: false
 ; conclusion: Conclusion must be of the form (@cl (not false)).
 (declare-rule false ()
-  :conclusion (@cl (not false))
+  :conclusion-explicit (@cl (not false))
 )
 
 ;-------------
 ; Rule 5: not_not
 ;-------------
-
-; program: check_not_not
-; args:
-; - conclusion Bool: Conclusion given to rule not_not.
-; return: >
-;   A boolean indicating if conclusion is equivalent to the proposition
-;   ¬(¬¬𝜑), 𝜑, for some proposition 𝜑
-(program $check_not_not ((phi Bool))
-    (Bool) Bool
-    (
-    (($check_not_not (@cl (not (not (not phi))) phi)) true)
-    (($check_not_not (@cl phi (not (not (not phi))))) true)
-    )
-)
-
 ; rule: not_not
 ; implements: TODO?
-; requires: >
-;   The conclusion should be equivalent to the proposition
-;   ¬(¬¬𝜑), 𝜑, for some proposition 𝜑
-; conclusion-given: >
-;  Only the "requires" predicate checks if a proper conclusion is given.
-(declare-rule not_not ()
-  :requires ((($check_not_not eo::conclusion) true))
-  :conclusion-given
+; conclusion: >
+;   Conclusion should be of the form ¬(¬¬𝜑), 𝜑, for some proposition 𝜑.
+(declare-rule not_not ((phi Bool))
+  :conclusion-explicit (@cl (not (not (not phi))) phi)
 )
 
-;-------------
-; Rule 6: th_resolution
-;-------------
 ; TODO
 (program $check_resolution ((Cs Bool) (CL Bool))
   (Bool Bool) Bool
@@ -73,22 +53,17 @@
   )
 )
 
-(declare-rule th_resolution ((Cs Bool))
+(declare-rule th_resolution ((Cs Bool) (conclusion Bool))
   :premise-list Cs and
-  :requires ((($check_resolution Cs eo::conclusion) true))
-  :conclusion-given
+  :requires ((($check_resolution Cs conclusion) true))
+  :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 7: resolution
-;-------------
-
 ;TRUST
-(declare-rule resolution ((Cs Bool))
+(declare-rule resolution ((Cs Bool) (conclusion Bool))
   :premise-list Cs and
-  :requires ((($check_resolution Cs eo::conclusion) true))
-  :conclusion-given
-  :sorry
+  :requires ((($check_resolution Cs conclusion) true))
+  :conclusion-explicit conclusion
 )
 
 ;TODO
@@ -136,13 +111,12 @@
 ; premises:
 ; - premise Bool: A clause from which we want to eliminate duplicated literals.
 ; requires: >
-;   For the conclusion to be equivalent to premise, without duplicated disjuncts.
-; conclusion-given: >
-;  Only the "requires" predicate checks if a proper conclusion is given.
-(declare-rule contraction ((premise Bool))
+;   For the conclusion to be equivalent to premise, with removed duplicated disjuncts.
+; conclusion: The previously described conclusion.
+(declare-rule contraction ((premise Bool) (conclusion Bool))
   :premises (premise)
-  :requires ((($check_contraction premise eo::conclusion) true))
-  :conclusion-given
+  :requires ((($check_contraction premise conclusion) true))
+  :conclusion-explicit conclusion
 )
 
 ;-------------
@@ -186,17 +160,18 @@
 ; - assumption Bool: Assumption passed to "subproof".
 ; premises:
 ; - premise Bool: Last step before the application of "subproof".
+; args:
+; - conclusion Bool: Conclusion of the step.
 ; requires: >
 ;   For conclusion to be of the form (@cl (not assumption) premise).
 ;   Note that, for the cases where we have more than 1 assumption,
 ;   rule subproof is applied stepwise, discharging 1 assumption at a time.
-; conclusion-given: >
-;  Only the "requires" predicate checks if a proper conclusion is given.
-(declare-rule subproof ((assumption Bool) (premise Bool))
+; conclusion:  The previously described conclusion.
+(declare-rule subproof ((assumption Bool) (premise Bool) (conclusion Bool))
   :assumption assumption
   :premises (premise)
-  :requires ((($check_subproof assumption premise eo::conclusion) true))
-  :conclusion-given
+  :requires ((($check_subproof assumption premise conclusion) true))
+  :conclusion-explicit conclusion
 )
 
 ;TODO
@@ -217,10 +192,10 @@
 ;       be wrapped in a single function call using an n-ary function.  See
 ;       the example `small.smt3`.
 ;TRUST
-(declare-rule la_generic ((coeffs Real))
-  :args (coeffs)
-  :requires ((($check_la_generic coeffs eo::conclusion) true))
-  :conclusion-given
+(declare-rule la_generic ((coeffs Real) (conclusion Bool))
+  :args (conclusion coeffs)
+  :requires ((($check_la_generic coeffs conclusion) true))
+  :conclusion conclusion
 )
 
 ;TODO
@@ -272,9 +247,10 @@
 )
 
 ;TRUST
-(declare-rule la_mult_neg ()
-  :requires ((($check_la_mult_neg eo::conclusion) true))
-  :conclusion-given
+(declare-rule la_mult_neg ((conclusion Bool))
+  :args (conclusion)
+  :requires ((($check_la_mult_neg conclusion) true))
+  :conclusion conclusion
 )
 
 ;-------------
@@ -298,6 +274,28 @@
 ; the binders are invisible here.
 ; This affects the rules `bind`, `sko_ex`, `sko_forall`, `let`,
 ; and `onepoint`.
+
+; program: $check_bind
+; args:
+; - old_context Bool: >
+;    Context enclosing the premise passed to the application of the rule "bind".
+; - new_context Bool: >
+;    Context enclosing the conclusion passed to the application of the rule "bind".
+; - premise Bool: >
+;    Premise passed to the application of the rule "bind". Must be of the form
+;    (@cl (= lhs_body rhs_body)).
+; - conclusion Bool: >
+;    Conclusion passed to the application of the rule "bind". Must be of the form
+;    (@cl (= (Q lhs_vars lhs_body) (Q rhs_vars rhs_body))), for some quantifier Q,
+;    and bounded variables lhs_vars and rhs_vars.
+; return: >
+;    A boolean resulting from the conjunction of the following conditions:
+;    - Every variable in rhs_vars appear fixed in "new_context".
+;    - Vars in lhs_vars are susbtitued by rhs_vars
+;    - rhs_vars should not appear free in (Q lhs_vars lhs_body)
+;    - rhs_vars should not appear in the first part of the new_context (old_context)
+;    - lhs_vars should not appear in the first part of the new_context (old_context)
+;    - new_context must be just an extension of old_context
 (program $check_bind ((old_context Bool) (new_context Bool)
                       (T Type) (l T) (r T) (l1 T) (r1 T)
                       (premise Bool) 
@@ -321,7 +319,7 @@
                     ($varlist_zip lhs_vars rhs_vars)
                     ($context_get_var_subst_pairs new_context lhs_vars))
 
-     ; rhs_vars should not appear free in (forall lhs_vars lhs_body_unbound)
+     ; rhs_vars should not appear free in (forall lhs_vars lhs_body)
      ($f_list_equal @varlist
                     ($fv (forall lhs_vars lhs_body))
                     ; TODO: duplicating calculations
@@ -380,12 +378,39 @@
    )
   )
 
-(declare-rule bind ((old_context Bool) (new_context Bool) (premise Bool))
+; rule: bind
+; implements: TODO?
+; premises:
+; - premise Bool: >
+;    Premise passed to the application of the rule "bind". Must be of the form
+;    (@cl (= lhs_body rhs_body)).
+; assumption:
+; - new_context Bool: >
+;    Context enclosing the conclusion passed to the application of the rule "bind".
+; args:
+; - old_context Bool: >
+;    Context enclosing the premise passed to the application of the rule "bind".
+; - lhs_vars @VarList: >
+;    A @VarList containing each bounded variable in the left-hand side of the 
+;    conclusion clause.
+; - rhs_vars @VarList: >
+;    A @VarList containing each bounded variable in the right-hand side of the 
+;    conclusion clause.
+; - quantifier (-> @VarList Bool Bool): Quantifier used in the conclusion equality.
+; requires: >
+;    For old_context, new_context, premise and  conclusion to be well-formed with
+;    respect to the definitions enforced by $check_bind.
+; conclusion: A proper renaming of bound variables, according to $check_bind.
+(declare-rule bind ((old_context Bool) (new_context Bool) (premise Bool) (conclusion Bool) 
+                    (phi_lhs Bool) (phi_rhs Bool) (lhs_vars @VarList) (rhs_vars @VarList)
+                    (quantifier (-> @VarList Bool Bool)))
   :assumption new_context
-  :premises (premise)
-  :args (old_context)
-  :requires ((($check_bind old_context new_context premise eo::conclusion) true))
-  :conclusion-given
+  :premises ((@cl (= phi_lhs phi_rhs)))
+  :args (old_context lhs_vars rhs_vars quantifier)
+  :requires ((($check_bind old_context new_context 
+                           (@cl (= phi_lhs phi_rhs)) 
+                           (@cl (= (quantifier lhs_vars phi_lhs) (quantifier rhs_vars phi_rhs)))) true))
+  :conclusion-explicit (@cl (= (quantifier lhs_vars phi_rhs) (quantifier rhs_vars phi_rhs)))
 )
 
 ;-------------
@@ -497,19 +522,22 @@
 ; args:
 ; - old_context Bool: >
 ;    Context from the outside of current subproof, built with @ctx.
+; - existential_vars @VarList: >
+;    A list containing the variables being existentially quantified in the
+;    conclusion.
 ; requires: >
-;    Conclusion should have the form 𝑄𝑥1, … , 𝑥𝑛.𝜑 ≈ 𝑄𝑦1, … , 𝑦𝑛.𝜑′, for a 
-;    premise 𝜑 ≈ 𝜑′. Also, if the context within the subproof has the form 
-;    Γ, 𝑦1, … , 𝑦𝑛, 𝑥1 ↦ 𝑦1, … , 𝑥𝑛 ↦ 𝑦𝑛, Γ should be the context
-;    outside of the subproof being closed by sko_ex.
-; conclusion-given: >
-;    Only the "requires" predicate checks if a proper conclusion is given.
-(declare-rule sko_ex ((old_context Bool) (new_context Bool) (premise Bool))
+;    Conclusion should have the form exists 𝑥1, … , 𝑥𝑛.𝜑 ≈ 𝜓, with enclosing
+;     Γ, for a premise 𝜑 ≈ 𝜓 with enclosing context of the form.
+;     Γ, 𝑥1 ↦𝜀1, … , 𝑥𝑛↦𝜀𝑛 .
+; conclusion: Conclusion of the form exists 𝑥1, … , 𝑥𝑛.𝜑 ≈ 𝜓.
+(declare-rule sko_ex ((old_context Bool) (new_context Bool) (premise Bool) 
+                      (phi Bool) (psi Bool) (existential_vars @VarList))
   :assumption new_context
-  :premises (premise)
-  :args (old_context)
-  :requires ((($check_sko_ex old_context new_context premise eo::conclusion) true))
-  :conclusion-given
+  :premises ((@cl (= phi psi)))
+  :args (old_context existential_vars)
+  :requires ((($check_sko_ex old_context new_context (@cl (= phi psi))
+                             (@cl (= (exists existential_vars phi) psi))) true))
+  :conclusion (@cl (= (exists existential_vars phi) psi))
 )
 
 ;TODO
@@ -535,8 +563,11 @@
 
 ; program: $check_forall_inst
 ; args:
-; - Conclusion Bool:
-; return:
+; - conclusion Bool: Conclusion given to rule forall_inst.
+; - variables_substitutions @VarList: A list of the substitutes of each quantified variable.
+; return: >
+;    A boolean indicating if conclusion is of the form ¬(∀𝑥1, … , 𝑥𝑛.𝑃) ∨𝑃[𝑥1 ↦𝑡1, … , 𝑥𝑛↦𝑡𝑛],
+;    for terms t1,...,tn taken from variables_substitutions.
 (program $check_forall_inst ((forall_vars @VarList) 
                                                        (body Bool)
                                                        (instantiated_body Bool) 
@@ -556,15 +587,22 @@
 
 ; rule: forall_inst
 ; implements: TODO?
-; premises:
-; - variables_substitutions @VarList:
 ; args:
+; - variables_substitutions @VarList: A list of the substitutes of each quantified variable.
+;    Conclusion should be of the form ¬(∀𝑥1, … , 𝑥𝑛.𝑃) ∨𝑃[𝑥1 ↦𝑡1, … , 𝑥𝑛↦𝑡𝑛],
+;    for terms t1,...,tn being used in the instantiation.
 ; requires:
-; conclusion:
-(declare-rule forall_inst ((variables_substitutions @VarList))
+; conclusion: A conclusion of the form of the ¬(∀𝑥1, … , 𝑥𝑛.𝑃) ∨𝑃[𝑥1 ↦𝑡1, … , 𝑥𝑛↦𝑡𝑛].
+(declare-rule forall_inst ((variables_substitutions @VarList) (variables_quantified @VarList)
+                           (forall_body Bool) (forall_body_instantiated Bool))
+
   :args (variables_substitutions)
-  :requires ((($check_forall_inst eo::conclusion variables_substitutions) true))
-  :conclusion-given
+  :requires ((($check_forall_inst 
+               (@cl (= (forall variables_quantified forall_body) 
+                       forall_body_instantiated))
+               variables_substitutions) true))
+  :conclusion-explicit (@cl (= (forall variables_quantified forall_body) 
+                               forall_body_instantiated))
 )
 
 ;TODO: why is type T not mentioned in the body of check_refl?
@@ -576,10 +614,10 @@
 )
 
 ;TRUST
-(declare-rule refl ((ctx Bool))
+(declare-rule refl ((ctx Bool) (t1 Bool) (t2 Bool))
   :args (ctx)
-  :requires ((($check_refl ctx eo::conclusion) true))
-  :conclusion-given
+  :requires ((($check_refl ctx (@cl (= t1 t2))) true))
+  :conclusion-explicit (@cl (= t1 t2))
 )
 
 ;-------------
@@ -803,12 +841,13 @@
 ;   For "conclusion" to be the equivalence resulting from
 ;   the transitivity of equivalence, identifying the lhs of the first 
 ;   premise equivalence with the rhs of the last premise equivalence.
-; conclusion-given: >
-;  Only the "requires" predicate checks if a proper conclusion is given.
-(declare-rule trans ((premises Bool))
+; conclusion-explicit: >
+;   Conclusion should be of the form (@cl (= t1 tn)), satisfying the described
+;   side-condition.
+(declare-rule trans ((premises Bool) (premises Bool) (t1 Bool) (tn Bool))
   :premise-list premises and
-  :requires ((($check_trans premises eo::conclusion) true))
-  :conclusion-given
+  :requires ((($check_trans premises (@cl (= t1 tn))) true))
+  :conclusion-explicit (@cl (= t1 tn))
 )
 
 ;---------------
@@ -998,29 +1037,25 @@
 ;   f s1 ... sn t1 ... tm = f s1 ... sn u1 ... um
 ;   with premises: 
 ;   t1 = u1, ..., tm = um.
-; conclusion-given: 
-(declare-rule cong ((premises Bool))
+; conclusion-explicit: >
+;   A conclusion of the form f s1 ... sn t1 ... tm = f s1 ... sn u1 ... um, 
+;   satisfying the previous side-condition.
+(declare-rule cong ((premises Bool) (conclusion Bool))
   :premise-list premises and
-  :requires ((($check_cong premises eo::conclusion) true))
-  :conclusion-given
+  :requires ((($check_cong premises conclusion) true))
+  :conclusion-explicit conclusion
 )
 
-;TODO
-(program $check_eq_reflexive ((conclusion Bool))
-  (Bool) Bool
-  (
-   (($check_eq_reflexive conclusion) true)
-  )
-)
-; TODO: to preserve previous attempt
-; (declare-rule eq_reflexive ((T Type) (t T))
-;   :args ((@cl (= t t)))
-;   :conclusion (@cl (= t t))
-; )
-
-(declare-rule eq_reflexive ()
-  :requires ((($check_eq_reflexive eo::conclusion) true))
-  :conclusion-given
+;----------------------
+; Rule 25: eq_reflexive
+;----------------------
+; rule: eq_reflexive
+; implements: TODO?
+; conclusion: >
+; Conclusion should be of the form (@cl (= t t)), for some arbitrary
+; term t.
+(declare-rule eq_reflexive ((T Type) (t T))
+  :conclusion-explicit (@cl (= t t))
 )
 
 ;TODO
@@ -1032,9 +1067,9 @@
 )
 
 ;TRUST
-(declare-rule eq_transitive ()
-  :requires ((($check_eq_transitive eo::conclusion) true))
-  :conclusion-given
+(declare-rule eq_transitive ((conclusion Bool))
+  :requires ((($check_eq_transitive conclusion) true))
+  :conclusion-explicit conclusion
 )
 
 ;TODO
@@ -1046,9 +1081,9 @@
 )
 
 ;TRUST
-(declare-rule eq_congruent ()
-  :requires ((($check_eq_congruent eo::conclusion) true))
-  :conclusion-given
+(declare-rule eq_congruent ((conclusion Bool))
+  :requires ((($check_eq_congruent conclusion) true))
+  :conclusion-explicit conclusion
 )
 
 ;TODO
@@ -1060,9 +1095,9 @@
 )
 
 ;TRUST
-(declare-rule eq_congruent_pred ()
-  :requires ((($check_eq_congruent_pred eo::conclusion) true))
-  :conclusion-given
+(declare-rule eq_congruent_pred ((conclusion Bool))
+  :requires ((($check_eq_congruent_pred conclusion) true))
+  :conclusion-explicit conclusion
 )
 
 ;TODO: to preserve previous def
@@ -1090,9 +1125,9 @@
 )
 
 ;TRUST
-(declare-rule qnt_cnf ()
-  :requires ((($check_qnt_cnf eo::conclusion) true))
-  :conclusion-given
+(declare-rule qnt_cnf ((conclusion Bool))
+  :requires ((($check_qnt_cnf conclusion) true))
+  :conclusion-explicit conclusion
 )
 
 ;-------------
@@ -1134,13 +1169,12 @@
 ; requires: >
 ;   The conclusion should be one conjunct from the premise,
 ;   in the position indicated by index.
-; conclusion-given: >
-;  Only the "requires" predicate checks if a proper conclusion is given.
-(declare-rule and ((premise Bool) (index Int))
+; conclusion: A conjunct from "premise", satisfying the previous side-condition.
+(declare-rule and ((premise Bool) (index Int) (conclusion Bool))
   :premises (premise)
   :args (index)
-  :requires ((($check_and premise index eo::conclusion) true))
-  :conclusion-given
+  :requires ((($check_and premise index conclusion) true))
+  :conclusion-explicit conclusion
 )
 
 ;-------------
@@ -1186,11 +1220,11 @@
 ;   parameter
 ; conclusion-given: >
 ;  Only the "requires" predicate checks if a proper conclusion is given.
-(declare-rule not_or ((premise Bool) (index Int))
+(declare-rule not_or ((premise Bool) (index Int) (conclusion Bool))
   :premises (premise)
   :args (index)
-  :requires ((($check_not_or premise index eo::conclusion) true))
-  :conclusion-given
+  :requires ((($check_not_or premise index conclusion) true))
+  :conclusion-explicit conclusion
 )
 
 ;-------------
@@ -1228,12 +1262,12 @@
 ; requires: >
 ;   The conclusion should be a clause equivalent to "premise", 
 ;   but built with @cl.
-; conclusion-given: >
-;  Only the "requires" predicate checks if a proper conclusion is given.
-(declare-rule or ((premise Bool))
+; conclusion-explicit: >
+;   A conclusion satisfying the previous side-condition.
+(declare-rule or ((premise Bool) (conclusion Bool))
   :premises (premise)
-  :requires ((($check_or premise eo::conclusion) true))
-  :conclusion-given 
+  :requires ((($check_or premise conclusion) true))
+  :conclusion-explicit conclusion
 )
 
 ;-------------
@@ -1266,150 +1300,95 @@
 ;  DeMorgan's rule over "premise".
 ; conclusion-given: >
 ;  Only the "requires" predicate checks if a proper conclusion is given.
-(declare-rule not_and ((premise Bool))
+(declare-rule not_and ((premise Bool) (conclusion Bool))
   :premises (premise)
-  :requires ((($check_not_and ($from_cl premise) eo::conclusion) true))
-  :conclusion-given
+  :requires ((($check_not_and ($from_cl premise) conclusion) true))
+  :conclusion-explicit conclusion
 )
 
-(program $check_xor1 ((phi1 Bool) (phi2 Bool) (refCL Bool))
-  (Bool Bool) Bool
-  (
-   (($check_xor1 (@cl (xor phi1 phi2)) refCL)
-     ($cl_equal (@cl phi1 phi2) refCL)
-   )
-   (($check_xor1 (xor phi1 phi2) refCL)
-     ($cl_equal (@cl phi1 phi2) refCL)
-   )
-  )
+;-------------
+; Rule 37: xor1
+;-------------
+
+; rule: xor1
+; premises:
+; - premise Bool: A premise of the form (@cl (xor phi1 phi2)).
+; conclusion: A conclusion of the form (@cl phi1 phi2).
+(declare-rule xor1 ((phi1 Bool) (phi2 Bool))
+  :premises ((@cl (xor phi1 phi2)))
+  :conclusion-explicit (@cl phi1 phi2)
 )
 
-(declare-rule xor1 ((CL Bool))
-  :premises (CL)
-  :requires ((($check_xor1 CL eo::conclusion) true))
-  :conclusion-given
+;-------------
+; Rule 38: xor2
+;-------------
+
+; rule: xor2
+; premises:
+; - premise Bool: A premise of the form (@cl (xor phi1 phi2)).
+; conclusion: A conclusion of the form (@cl (not phi1) (not phi2)).
+(declare-rule xor2  ((phi1 Bool) (phi2 Bool))
+  :premises ((@cl (xor phi1 phi2)))
+  :conclusion-explicit (@cl (not phi1) (not phi2))
 )
 
-(program $check_xor2 ((phi1 Bool) (phi2 Bool) (refCL Bool))
-  (Bool Bool) Bool
-  (
-   (($check_xor2 (@cl (xor phi1 phi2)) refCL)
-     ($cl_equal (@cl (not phi1) (not phi2)) refCL)
-   )
-   (($check_xor2 (xor phi1 phi2) refCL)
-     ($cl_equal (@cl (not phi1) (not phi2)) refCL)
-   )
-  )
+;-------------
+; Rule 39: not_xor1
+;-------------
+
+; rule: not_xor1
+; premises:
+; - premise Bool: A premise of the form (@cl (not (xor phi1 phi2))).
+; conclusion: A conclusion of the form (@cl phi1 (not phi2)).
+(declare-rule not_xor1  ((phi1 Bool) (phi2 Bool))
+  :premises ((@cl (not (xor phi1 phi2))))
+  :conclusion-explicit (@cl phi1 (not phi2))
 )
 
-(declare-rule xor2 ((refCL Bool) (CL Bool))
-  :premises (CL)
-  :args (refCL)
-  :requires ((($check_xor2 CL refCL) true))
-  :conclusion refCL
-)
+;-------------
+; Rule 39: not_xor1
+;-------------
 
-(program $check_not_xor1 ((phi1 Bool) (phi2 Bool) (refCL Bool))
-  (Bool Bool) Bool
-  (
-   (($check_not_xor1 (@cl (xor phi1 phi2)) refCL)
-     ($cl_equal (@cl phi1 (not phi2)) refCL)
-   )
-   (($check_not_xor1 (xor phi1 phi2) refCL)
-     ($cl_equal (@cl phi1 (not phi2)) refCL)
-   )
-  )
-)
-
-(declare-rule not_xor1 ((refCL Bool) (CL Bool))
-  :premises (CL)
-  :args (refCL)
-  :requires ((($check_not_xor1 CL refCL) true))
-  :conclusion refCL
-)
-
-
-(program $check_not_xor2 ((phi1 Bool) (phi2 Bool) (refCL Bool))
-  (Bool Bool) Bool
-  (
-   (($check_not_xor2 (@cl (xor phi1 phi2)) refCL)
-     ($cl_equal (@cl (not phi1) phi2) refCL)
-   )
-   (($check_not_xor2 (xor phi1 phi2) refCL)
-     ($cl_equal (@cl (not phi1) phi2) refCL)
-   )
-  )
-)
-
-(declare-rule not_xor2 ((refCL Bool) (CL Bool))
-  :premises (CL)
-  :args (refCL)
-  :requires ((($check_not_xor2 CL refCL) true))
-  :conclusion refCL
+; rule: not_xor2
+; premises:
+; - premise Bool: A premise of the form (@cl (not (xor phi1 phi2))).
+; conclusion: A conclusion of the form (@cl (not phi1) phi2).
+(declare-rule not_xor2   ((phi1 Bool) (phi2 Bool))
+  :premises ((@cl (not (xor phi1 phi2))))
+  :conclusion-explicit (@cl (not phi1) phi2)
 )
 
 ;-------------
 ; Rule 41: implies
 ;-------------
-
-; program: check_implies
-; args:
-; - premise Bool: >
-;   Premise of the implies rule. Should be an implication,
-;   built with the => constructor. The premise could be embedded
-;   within a unit clause, built with @cl.
-; - conclusion Bool: >
-;   Conclusion provided to the rule. 
-; return: >
-;   A boolean indicating if "conclusion" is the characterization
-;   of the "premise" implication (i.e., "not antecedent or consequent" form).
-(program $check_implies ((phi1 Bool) (phi2 Bool) (conclusion Bool))
-  (Bool Bool) Bool
-  (
-   (($check_implies (@cl (=> phi1 phi2)) conclusion)
-     ($cl_equal (@cl (not phi1) phi2) conclusion)
-   )
-   (($check_implies (=> phi1 phi2) conclusion)
-     ($cl_equal (@cl (not phi1) phi2) conclusion)
-   )
-  )
-)
-
 ; rule: implies
 ; implements: TODO?
 ; premises:
 ; - premise Bool: >
 ;   Premise of the implies rule. Should be an implication,
-;   built with the => constructor. The premise could be embedded
-;   within a unit clause, built with @cl.
-; requires: >
+;   built with the => constructor.
+; conclusion-explicit: >
 ;   The conclusion should be the characterization (i.e., "not antecedent 
 ;   or consequent" form) of the implication given as premise of the rule.
-; conclusion-given: >
-;  Only the "requires" predicate checks if a proper conclusion is given.
-(declare-rule implies ((premise Bool))
-  :premises (premise)
-  :requires ((($check_implies premise eo::conclusion) true))
-  :conclusion-given
+(declare-rule implies ((phi1 Bool) (phi2 Bool))
+  :premises (@cl (=> phi1 phi2))
+  :conclusion-explicit (@cl (not phi1) phi2)
 )
 
-(program $check_not_implies1 ((phi1 Bool) (phi2 Bool) (refCL Bool))
-  (Bool Bool) Bool
-  (
-   (($check_not_implies1 (@cl (not (=> phi1 phi2))) refCL)
-     ($cl_equal (@cl phi1) refCL)
-   )
-   (($check_not_implies1 (not (=> phi1 phi2)) refCL)
-     ($cl_equal (@cl phi1) refCL)
-   )
-  )
-)
+;----------------------
+; Rule 42: not_implies1
+;----------------------
 
-(declare-rule not_implies1 ((refCL Bool) (CL Bool))
-  :premises (CL)
-  :args (refCL)
-  :requires ((($check_not_implies1 CL refCL) true))
-  :conclusion refCL
+; rule: not_implies1
+; implements: TODO?
+; premises:
+; - premise Bool: A premise of the form ((@cl (not (=> phi1 phi2)))).
+; conclusion: >
+;    Conclusion must be just the antecedent phi1 of the implication
+;    in the premise.
+(declare-rule not_implies1 ((phi1 Bool) (phi2 Bool))
+  :premises ((@cl (not (=> phi1 phi2))))
+  :conclusion-explicit phi1
 )
 
 (program $check_not_implies2 ((phi1 Bool) (phi2 Bool) (refCL Bool))
