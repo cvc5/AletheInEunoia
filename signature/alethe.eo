@@ -186,9 +186,9 @@
 ;       the example `small.smt3`.
 ;TRUST
 (declare-rule la_generic ((coeffs Real) (conclusion Bool))
-  :args (conclusion coeffs)
+  :args (coeffs)
   :requires ((($check_la_generic coeffs conclusion) true))
-  :conclusion conclusion
+  :conclusion-explicit conclusion
 )
 
 ;TODO
@@ -303,10 +303,9 @@
                          (forall rhs_vars rhs_body))))
 
     (eo::and
-
      ; Every variable in rhs_vars appear fixed in "new_context".
      ($context_vars_are_fixed new_context rhs_vars)
-
+     new_context lhs_vars
      ; Vars in lhs_vars are susbtitued by rhs_vars
      ($f_list_equal @varlist 
                     ($varlist_zip lhs_vars rhs_vars)
@@ -364,8 +363,8 @@
      ; lhs_vars should not appear in the first part of the new_context (old_context)
      (eo::not ($context_vars_are_defined old_context lhs_vars))
 
-      ; new_context must be just an extension of old_context
-      ($context_is_extended new_context old_context)
+     ; new_context must be just an extension of old_context
+     ($context_is_extended new_context old_context)
      )
     )
    )
@@ -398,11 +397,12 @@
                     (quantifier (-> @VarList Bool Bool)))
   :assumption new_context
   :premises ((@cl (= phi_lhs phi_rhs)))
-  :args (old_context lhs_vars rhs_vars quantifier)
+  ;; :args (old_context lhs_vars rhs_vars quantifier)
+  :args (old_context)
   :requires ((($check_bind old_context new_context 
                            (@cl (= phi_lhs phi_rhs)) 
                            (@cl (= (quantifier lhs_vars phi_lhs) (quantifier rhs_vars phi_rhs)))) true))
-  :conclusion-explicit (@cl (= (quantifier lhs_vars phi_rhs) (quantifier rhs_vars phi_rhs)))
+  :conclusion-explicit (@cl (= (quantifier lhs_vars phi_lhs) (quantifier rhs_vars phi_rhs)))
 )
 
 ;-------------
@@ -588,11 +588,11 @@
 
   :args (variables_substitutions)
   :requires ((($check_forall_inst 
-               (@cl (= (forall variables_quantified forall_body) 
-                       forall_body_instantiated))
+               (@cl (or (not (forall variables_quantified forall_body))
+                        forall_body_instantiated))
                variables_substitutions) true))
-  :conclusion-explicit (@cl (= (forall variables_quantified forall_body) 
-                               forall_body_instantiated))
+  :conclusion-explicit (@cl (or (not (forall variables_quantified forall_body))
+                                forall_body_instantiated))
 )
 
 ;--------------------
@@ -1329,7 +1329,7 @@
 ;   The conclusion should be the characterization (i.e., "not antecedent 
 ;   or consequent" form) of the implication given as premise of the rule.
 (declare-rule implies ((phi1 Bool) (phi2 Bool))
-  :premises (@cl (=> phi1 phi2))
+  :premises ((@cl (=> phi1 phi2)))
   :conclusion-explicit (@cl (not phi1) phi2)
 )
 
@@ -1651,10 +1651,10 @@
 
 ; rule: implies_neg1
 ; conclusion-explicit: >
-;   The conclusion should be of the form (@cl (not (=>phi1 phi2)) phi1),
+;   The conclusion should be of the form (@cl (=>phi1 phi2) phi1),
 ;   for given formulas phi1 and phi2.
 (declare-rule implies_neg1  ((phi1 Bool) (phi2 Bool))
-  :conclusion-explicit (@cl (not (=> phi1 phi2)) (not phi1) phi2)
+  :conclusion-explicit (@cl (=> phi1 phi2) phi1)
 )
 
 ;-------------
@@ -1662,10 +1662,10 @@
 ;-------------
 ; rule: implies_neg2
 ; conclusion-explicit: >
-;   The conclusion should be of the form (@cl (not (=>phi1 phi2)) (not phi2)),
+;   The conclusion should be of the form (@cl (=>phi1 phi2) (not phi2)),
 ;   for given formulas phi1 and phi2.
 (declare-rule implies_neg2 ((phi1 Bool) (phi2 Bool))
-  :conclusion-explicit (@cl (not (=> phi1 phi2)) (not phi2))
+  :conclusion-explicit (@cl (=> phi1 phi2) (not phi2))
 )
 
 ;-------------
