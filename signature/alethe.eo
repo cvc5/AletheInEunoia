@@ -601,9 +601,14 @@
 
 ; program: $check_refl
 ; args:
-; - context Bool:
-; - conclusion Bool:
-; return:
+; - context Bool: Context corresponding to the refl step.
+; - conclusion Bool: >
+;    Conclusion of the form (@cl (= lhs rhs)), provided to the application of the
+;    refl rule.
+; return: >
+;    A boolean indicating if, by applying the substitution (induced by the 
+;    context) to the left-hand side of the conclusion, we obtain a term that is
+;    equivalent (modulo alpha-conversion) to the right-hand side.
 (program $check_refl ((context Bool) (conclusion Bool) (A Type) (lhs A) (rhs A))
   (Bool Bool) Bool
   (
@@ -620,10 +625,18 @@
   )
 )
 
-;TRUST
-(declare-rule refl ((ctx Bool) (t1 Bool) (t2 Bool))
-  :args (ctx)
-  :requires ((($check_refl ctx (@cl (= t1 t2))) true))
+; rule: refl
+; implements: TODO?
+; premises:
+; - context Bool: The context that corresponds to the step applying rule refl.
+; requires: >
+;    That, by applying the substitution (induced by the context) to the left-hand 
+;    side of the conclusion, we obtain a term that is equivalent (modulo 
+;    alpha-conversion) to the right-hand side.
+; conclusion:
+(declare-rule refl ((context Bool) (t1 Bool) (t2 Bool))
+  :premises (context)
+  :requires ((($check_refl context (@cl (= t1 t2))) true))
   :conclusion-explicit (@cl (= t1 t2))
 )
 
