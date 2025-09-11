@@ -733,30 +733,6 @@
     
     (= t2 ($last_eq_right eqs t1))
     )
-
-   (; case (and (= t1 t2) true)
-    ($make_trans (and (= t1 t2)) t1) 
-    
-    (= t1 t2)
-    )
-
-   (; case (and (= t1 t2) true)
-    ($make_trans (and (= t1 t2)) t2) 
-    
-    (= t1 t2)
-    )
-
-   (; { eqs <> true }
-    ($make_trans (and (= t1 t2) eqs) t1) 
-    
-    (= t1 ($last_eq_right eqs t2))
-    )
-
-   (; { eqs <> true }
-    ($make_trans (and (= t1 t2) eqs) t2) 
-    
-    (= t2 ($last_eq_right eqs t1))
-    )
   )
 )
 
@@ -797,30 +773,6 @@
     ($check_trans (and (@cl (= lhs_1 rhs)) eqs) (@cl (= lhs_2 rhs)))
 
     ($f_list_equal = ($make_trans (and (@cl (= lhs_1 rhs)) eqs) rhs) (= lhs_2 rhs))
-    )
-
-   (
-    ($check_trans (and (= lhs rhs)) (@cl (= lhs rhs)))
-    
-    true
-    )
-
-   (
-    ($check_trans (and (= lhs rhs)) (@cl (= rhs lhs)))
-    
-    true
-    )
-
-   (
-    ($check_trans (and (= lhs rhs_2) eqs) (@cl (= lhs rhs_1)))
-
-    ($f_list_equal = ($make_trans (and (= lhs rhs_2) eqs) lhs) (= lhs rhs_1))
-    )
-
-   (
-    ($check_trans (and (= lhs_1 rhs) eqs) (@cl (= lhs_2 rhs)))
-
-    ($f_list_equal = ($make_trans (and (= lhs_1 rhs) eqs) rhs) (= lhs_2 rhs))
     )
   )
 )
@@ -1131,8 +1083,7 @@
 ; program: check_and
 ; args:
 ; - premise Bool       : >
-;   Premise of the "and" rule: a conjunction of terms. 
-;   It could be embedded within a single-term clause 
+;   Premise of the "and" rule: a conjunction of terms, embedded within a single-term clause 
 ;   (built with @cl).
 ; - index Int          : >
 ;   Conjunct index, as provided to the rule. 0 <= index <= number of conjuncts - 1
@@ -1143,9 +1094,13 @@
 ;   "premise", with index "index".
 (program $check_and ((premise Bool) (premise_non_cl Bool) (index Int) (conclusion Bool))
   (Bool Int Bool) Bool
-  ((($check_and premise index conclusion)
+  (
+   (
+    ($check_and premise index conclusion)
+
     ($cl_equal ($to_cl ($f_list_index and ($from_cl premise) index))
-               conclusion))
+               conclusion)
+    )
   )
 )
 
@@ -1233,14 +1188,13 @@
 ;   with @cl.
 (program $check_or ((premise Bool) (conclusion Bool))
   (Bool Bool) Bool
-  ((($check_or (@cl premise) conclusion)
+  (
+   (
+    ($check_or (@cl premise) conclusion)
+
     ($cl_equal ($convert_or_to_cl premise)
                conclusion)
     )
-
-   ; { premise is not built with @cl }
-   (($check_or premise conclusion)
-    ($cl_equal ($convert_or_to_cl premise) conclusion))
   )
 )
 
@@ -1275,7 +1229,7 @@
 ;   "premise".
 (program $check_not_and ((conjunction Bool) (conclusion Bool))
   (Bool Bool) Bool
-  ((($check_not_and (not conjunction) conclusion)
+  ((($check_not_and (@cl (not conjunction)) conclusion)
      ($cl_equal ($de_morgan_not_and conjunction) conclusion)
      )
   )
@@ -1458,12 +1412,18 @@
 (program $check_and_pos ((pos Int) (antecedent Bool) (consequent Bool))
   (Int Bool) Bool
   (
-   (($check_and_pos pos (@cl (not antecedent) consequent))
-    ($cl_equal ($f_list_index and antecedent pos) consequent))
+   (
+    ($check_and_pos pos (@cl (not antecedent) consequent))
+
+    ($cl_equal ($f_list_index and antecedent pos) consequent)
+    )
 
    ; To simplify the use of the checker
-   (($check_and_pos pos (@cl consequent (not antecedent)))
-    ($cl_equal ($f_list_index and antecedent pos) consequent))
+   (
+    ($check_and_pos pos (@cl consequent (not antecedent)))
+
+    ($cl_equal ($f_list_index and antecedent pos) consequent)
+    )
   )
 )
 
@@ -1499,9 +1459,11 @@
 (program $check_and_neg ((left_disjunct Bool) (right_disjunct Bool :list))
   (Bool) Bool
   (
-   (($check_and_neg (@cl left_disjunct right_disjunct))
-    ($cl_equal ($de_morgan_not_and left_disjunct)
-              right_disjunct))
+   (
+    ($check_and_neg (@cl left_disjunct right_disjunct))
+
+    ($cl_equal ($de_morgan_not_and left_disjunct) right_disjunct)
+    )
   )
 )
 
@@ -1530,7 +1492,9 @@
 (program $check_or_pos ((left_disjunct Bool) (right_disjunct Bool :list))
   (Bool) Bool
   (
-   (($check_or_pos (@cl (not left_disjunct) right_disjunct))
+   (
+    ($check_or_pos (@cl (not left_disjunct) right_disjunct))
+
     ($cl_equal ($convert_or_to_cl left_disjunct)
               (@cl right_disjunct))
     )
@@ -1566,11 +1530,17 @@
 (program $check_or_neg ((index Int) (left_disjunct Bool) (right_disjunct Bool))
   (Int Bool) Bool
   (
-   (($check_or_neg index (@cl left_disjunct (not right_disjunct)))
-    ($prop_syntax_eq ($f_list_index or left_disjunct index) right_disjunct))
+   (
+    ($check_or_neg index (@cl left_disjunct (not right_disjunct)))
+    
+    ($prop_syntax_eq ($f_list_index or left_disjunct index) right_disjunct)
+    )
    
-   (($check_or_neg index (@cl (not left_disjunct) right_disjunct))
-    ($prop_syntax_eq right_disjunct ($f_list_index or left_disjunct index)))
+   (
+    ($check_or_neg index (@cl (not left_disjunct) right_disjunct))
+    
+    ($prop_syntax_eq right_disjunct ($f_list_index or left_disjunct index))
+    )
   )
 )
 
@@ -1662,6 +1632,7 @@
 ;-------------
 ; Rule 57: implies_neg1
 ;-------------
+
 ; rule: implies_neg1
 ; conclusion-explicit: >
 ;   The conclusion should be of the form (@cl (=>phi1 phi2) phi1),
@@ -1949,11 +1920,13 @@
 (program $check_equiv_simplify ((phi_1 Bool) (phi_2 Bool) (psy Bool))
   (Bool) Bool
   (
-   (($check_equiv_simplify (@cl (= (= phi_1 phi_2) psy)))
-                            ; TODO: use proper comparison for props
-                            ($cl_equal (@cl ($rewrite_equivalence (= phi_1 phi_2)))
-                                      (@cl psy)))
-  )
+   (
+    ($check_equiv_simplify (@cl (= (= phi_1 phi_2) psy)))
+    
+                                        ; TODO: use proper comparison for props
+    ($cl_equal (@cl ($rewrite_equivalence (= phi_1 phi_2))) (@cl psy))
+    )
+   )
 )
 
 ; rule: equiv_simplify
@@ -2214,21 +2187,28 @@
    )
 )
 
-; This has to traverse the lets and the premises. Also has to check the
-; context extension.
 ; program: check_let_elim
 ; args:
-; - ctx Bool:
-; - Cs Bool:
-; - conclusion Bool:
-; return:
+; - context Bool: Context of the subproof being closed.
+; - premises Bool: And-list containing premises passed to rule let_elim.
+; - conclusion Bool: Conclusion given to rule let_elim.
+; return: >
+;    A boolean indicating if the given conclusion has the form
+;    (let 𝑥1 = 𝑡1, … , 𝑥𝑛= 𝑡𝑛 in 𝑢) ≈ 𝑢′
+;    And the premises are of the form:
+;    𝑖1. Γ ⊳ 𝑡1 ≈ 𝑠1 (… )
+;     ...
+;   𝑖𝑛. Γ ⊳ 𝑡𝑛 ≈ 𝑠𝑛 (… )
+;   𝑗. Γ, 𝑥1 ↦𝑠1, … , 𝑥𝑛 ↦ 𝑠𝑛 ⊳ 𝑢 ≈ 𝑢′ (… )
+;   Note that the context given must correspond to the one of the immediate
+;   premise j, that is, Γ, 𝑥1 ↦𝑠1, … , 𝑥𝑛 ↦ 𝑠𝑛.
 (program $check_let_elim ((context Bool) (premises Bool) 
                          (let_type Type) (let_def let_type)
                          (var_defs @VarList) 
                          (A Type) (lhs A) (rhs A)
                          (B Type)
                          (var_values B))
-  (Bool Bool let_type) Bool
+  (Bool Bool Bool) Bool
   (
    (
     ($check_let_elim context premises
@@ -2236,7 +2216,7 @@
 
     (eo::and 
      ; There should be a conclusion of the form (@cl (= lhs rhs))
-     ; TODO: this conclusion must be just of the previous step
+     ; TODO: this must be the just the conclusion of the previous step
      ($f_list_contains_elem and (@cl (= ($let_get_body let_def) rhs)) premises)
      ($verify_let_premises context premises 
                           ($let_get_vars_substitutes ($let_get_vars let_def)
@@ -2246,14 +2226,15 @@
    )
 )
 
+
 ; rule: let_elim
 ; assumption:
 ; - ctx: Context from the actual subproof.
-; premise-list:
-; - Cs: Surrounding context 
-; conclusion: >
-;   
-; note: >
+; premise-list: And-list of the premises passed to the rule.
+; requires: >
+;    For the given conclusion to be a proper elimination of a let, under the provided
+;    premises and context, as specified by predicate $check_let_elim.
+; conclusion-explicit: A conclusion satisfying the previous side-condition.
 (declare-rule let_elim ((ctx Bool) (premises Bool) (conclusion Bool))
   :assumption ctx
   :premise-list premises and
@@ -2274,25 +2255,33 @@
 (program $build_distinct_list ((A Type) (lhs A) (rhs A) (tl Bool :list))
   (Bool) Bool
   (
-   (($build_distinct_list (and (distinct lhs rhs) tl))
+   (
+    ($build_distinct_list (and (distinct lhs rhs) tl))
 
     ($f_list_cons and 
                  (not (= lhs rhs)) 
-                 ($build_distinct_list tl)))
+                 ($build_distinct_list tl))
+    )
 
    ; Only one proposition
-   (($build_distinct_list (distinct lhs rhs)) 
+   (
+    ($build_distinct_list (distinct lhs rhs)) 
 
-    (not (= lhs rhs)))
+    (not (= lhs rhs))
+    )
 
    ; Only one proposition
-   (($build_distinct_list (distinct lhs)) 
+   (
+    ($build_distinct_list (distinct lhs)) 
 
-    true)
+    true
+    )
    
-   (($build_distinct_list true) 
+   (
+    ($build_distinct_list true) 
 
-    true)
+    true
+    )
   )
 )
 
@@ -2304,37 +2293,49 @@
 ;   An inequality of the form (not (= lhs rhs)), for some terms lhs and rhs of
 ;   type A.
 ; - conjunctions Bool: A conjunctions of inequalities of the form (not (= lhs' rhs'))
-; return:
-;   A boolean indicating if ineq appears in "conjunctions".
+; return: >
+;   A boolean indicating if ineq appears in "conjunctions", modulo symmetry of the
+;   equality within ineq.
 (program $conjunction_contains_ineq ((A Type) (lhs A) (rhs A) (hd Bool) (tl Bool :list))
   (Bool Bool) Bool
   (
-   (($conjunction_contains_ineq (not (= lhs rhs)) (and (not (= lhs rhs)) tl))
+   (
+    ($conjunction_contains_ineq (not (= lhs rhs)) (and (not (= lhs rhs)) tl))
 
-    true)
+    true
+    )
 
-   (($conjunction_contains_ineq (not (= lhs rhs)) (and (not (= rhs lhs)) tl))
+   (
+    ($conjunction_contains_ineq (not (= lhs rhs)) (and (not (= rhs lhs)) tl))
 
-    true)
+    true
+    )
 
    ; { hd =/= not (= rhs lhs))}
-   (($conjunction_contains_ineq (not (= lhs rhs)) (and hd tl))
+   (
+    ($conjunction_contains_ineq (not (= lhs rhs)) (and hd tl))
 
-    ($conjunction_contains_ineq (not (= lhs rhs)) tl))
+    ($conjunction_contains_ineq (not (= lhs rhs)) tl)
+    )
 
-   
-   (($conjunction_contains_ineq (not (= lhs rhs)) (not (= lhs rhs)))
+   (
+    ($conjunction_contains_ineq (not (= lhs rhs)) (not (= lhs rhs)))
 
-    true)
+    true
+    )
 
-   (($conjunction_contains_ineq (not (= lhs rhs)) (not (= rhs lhs)))
+   (
+    ($conjunction_contains_ineq (not (= lhs rhs)) (not (= rhs lhs)))
 
-    true)
+    true
+    )
 
    ; { hd =/= (not (= lhs rhs))}
-   (($conjunction_contains_ineq (not (= lhs rhs)) hd)
+   (
+    ($conjunction_contains_ineq (not (= lhs rhs)) hd)
 
-    false)
+    false
+    )
   )
 )
 
@@ -2342,27 +2343,36 @@
 ; args:
 ; - list_1 A: An and-list, of inequalities of the form (not (= lhs rhs))
 ; - list_2 A: An and-list, of inequalities of the form (not (= lhs rhs)).
-; return:
-; A boolean indicating if the elements from list_1 also appear in list_2.
+; return: >
+;    A boolean indicating if the elements from list_1 also appear in list_2, 
+;    according to comparison predicate $conjunction_contains_ineq.
 (program $conjunction_contains_conjunction ((hd Bool) (tl Bool :list)
                                            (f_list_2 Bool))
   (Bool Bool) Bool
   (
-   (($conjunction_contains_conjunction (and hd tl) f_list_2)
+   (
+    ($conjunction_contains_conjunction (and hd tl) f_list_2)
+
     ; TODO: I need some way to build boolean values
     ; combining other boolean values, but I would like
     ; to avoid built-in operators.
     (eo::and ($conjunction_contains_ineq hd f_list_2)
-             ($conjunction_contains_conjunction tl f_list_2)))
+             ($conjunction_contains_conjunction tl f_list_2))
+    )
 
- 
    ; { f_list_1 is not an and-list}
-   (($conjunction_contains_conjunction true f_list_2)
-    true)
-   
+   (
+    ($conjunction_contains_conjunction true f_list_2)
+
+    true
+    )
+
    ; { hd must be an inequaity }
-   (($conjunction_contains_conjunction hd f_list_2)
-    ($conjunction_contains_ineq hd f_list_2))
+   (
+    ($conjunction_contains_conjunction hd f_list_2)
+
+    ($conjunction_contains_ineq hd f_list_2)
+    )
   )
 )
 
@@ -2376,9 +2386,12 @@
 (program $conjunctions_equal ((list_1 Bool) (list_2 Bool))
   (Bool Bool) Bool
   (
-   (($conjunctions_equal list_1 list_2)
+   (
+    ($conjunctions_equal list_1 list_2)
+    
     (eo::and ($conjunction_contains_conjunction list_1 list_2)
-             ($conjunction_contains_conjunction list_2 list_1)))
+             ($conjunction_contains_conjunction list_2 list_1))
+    )
   )
 )
 
@@ -2391,12 +2404,18 @@
 (program $check_distinct_elim ((A Type) (hd A) (inequalities Bool) (conjunctions Bool))
   (Bool) Bool
   (; TODO: assuming that inequalities come first
-   (($check_distinct_elim (@cl (= inequalities conjunctions)))
-    ($conjunctions_equal ($build_distinct_list inequalities)
-                        conjunctions))
+   (
+    ($check_distinct_elim (@cl (= inequalities conjunctions)))
+    
+    ($conjunctions_equal ($build_distinct_list inequalities) conjunctions)
+    )
 
    ; Only one proposition
-   (($check_distinct_elim (@cl (= (distinct hd) true))) true)
+   (
+    ($check_distinct_elim (@cl (= (distinct hd) true))) 
+    
+    true
+    )
   )
 )
 
@@ -2441,9 +2460,8 @@
 (program $check_nary_elim ((A Type) (hd A) (tl A :list))
   (Bool) Bool
   (; TODO: check that op is not /\ nor \/
-   ; TODO: do we have reflection mechanisms, useful to inspect properties
-   ; of each operator, and define this program in a generic way?
-   (($check_nary_elim (@cl (= (=> hd tl) (=> hd tl))))
+   (
+    ($check_nary_elim (@cl (= (=> hd tl) (=> hd tl))))
     ; right-assoc operator
     ; We leverage the desugaring process, that turns both lists
     ; into the folded application of the operator, already
@@ -2534,7 +2552,7 @@
     ($check_reordering (@cl hd_premise tl_premise) (@cl hd_conclusion tl_conclusion))
 
     ($check_reordering tl_premise 
-                      ($f_list_remove_elem @cl (@cl hd_conclusion tl_conclusion) hd_premise false))
+                       ($f_list_remove_elem @cl (@cl hd_conclusion tl_conclusion) hd_premise false))
     )
 
    (
