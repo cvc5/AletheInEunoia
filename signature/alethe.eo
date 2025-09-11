@@ -240,9 +240,8 @@
 
 ;TRUST
 (declare-rule la_mult_neg ((conclusion Bool))
-  :args (conclusion)
   :requires ((($check_la_mult_neg conclusion) true))
-  :conclusion conclusion
+  :conclusion-explicit conclusion
 )
 
 ;-------------
