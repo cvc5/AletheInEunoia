@@ -40,24 +40,150 @@
   :conclusion-explicit (@cl (not (not (not phi))) phi)
 )
 
-; TODO
-(program $check_resolution ((Cs Bool) (CL Bool))
-  (Bool Bool) Bool
-  (
-   (($check_resolution Cs CL) true)
-  )
+;-------------
+; Rule 6: th_resolution
+;-------------
+
+; program: $clause_contains_pivot
+; args:
+; - clause Bool: Clause within which we want to search for "pivot".
+; - pivot Bool: Pivot to search within "clause".
+; - $clause_contains_pivot nil:
+; return: A bool indicating if "pivot" is contained within "clause".
+(program $clause_contains_pivot ((hd Bool) (tail Bool :list) 
+                                               (pivot Bool))
+         :signature (Bool Bool) Bool
+         (
+          (
+           ($clause_contains_pivot (@cl pivot tail) pivot)
+
+           true
+           )
+
+          (; { hd <> pivot }
+           ($clause_contains_pivot (@cl hd tail) pivot)
+
+           ($clause_contains_pivot tail pivot)
+           )
+
+          (
+           ($clause_contains_pivot false pivot)
+
+           false
+           )
+           )
+         )
+
+; program: $remove_pivot_from_clause
+; args:
+; - pivot Bool: Pivot literal contained in "clause".
+; - clause Bool: Clause containing the pivot.
+; return: The clause obtained from removing "pivot" from "clause".
+; note: PRE : { "pivot" is contained in "clause" }
+(program $remove_pivot_from_clause ((hd Bool) (tail Bool :list) 
+                                      (pivot Bool))
+         :signature (Bool Bool) Bool
+         (
+          (
+           ($remove_pivot_from_clause pivot (@cl pivot tail))
+
+           tail
+           )
+
+          (; { hd <> pivot }
+           ($remove_pivot_from_clause pivot (@cl hd tail))
+
+           ($f_list_cons @cl 
+                         hd 
+                         ($remove_pivot_from_clause pivot tail))
+           )
+          )
+         )
+
+; program: $find_and_remove_pivot_from_clause
+; args:
+; - pivot Bool: >
+;   Pivot to be found and removed from the corresponding clause, if it exists.
+; - clauses Bool: And-list of clauses.
+; return: The clause containing "pivot", without "pivot" itself.
+; note: PRE : { "pivot" is contained in some clause from "clauses" }
+(program $find_and_remove_pivot_from_clause ((clause Bool) (clauses Bool :list) 
+                                               (pivot Bool))
+         :signature (Bool Bool) Bool
+         (
+          (
+           ($find_and_remove_pivot_from_clause pivot (and clause clauses))
+
+           (eo::ite ($clause_contains_pivot clause pivot)
+
+                  ($remove_pivot_from_clause pivot clause)
+
+                  ($find_and_remove_pivot_from_clause pivot clauses)
+                  )
+           )
+          )
 )
 
-(declare-rule th_resolution ((Cs Bool) (conclusion Bool))
-  :premise-list Cs and
-  :requires ((($check_resolution Cs conclusion) true))
+; program: $check_resolution
+; args:
+; - $check_resolution nil:
+; - clauses Bool: And-list of normalized clauses (double negation is simplified).
+; return:
+(program $check_resolution ((clauses Bool) (pivot @VarList) (pivots @VarList :list)
+                            (conclusion Bool))
+  (Bool @VarList Bool) Bool
+  (
+   (; TODO: Still don't know the purpose of these "false" pivots
+    ($check_resolution clauses (@varlist false pivots) conclusion)
+    
+    ($check_resolution clauses pivots conclusion)
+    )
+
+   (; TODO: Sometimes with might get a pivot that is in its negated form
+    ($check_resolution clauses (@varlist pivot pivots) conclusion)
+
+    (eo::define 
+     (
+      (new_clause 
+       ($f_list_cons @cl
+                     ($find_and_remove_pivot_from_clause pivot clauses)
+                     ($f_list_cons @cl
+                                   ($find_and_remove_pivot_from_clause (not pivot) clauses)
+                                   false)))
+      )
+
+     ; eo::define's body:
+     (eo::ite ($cl_equal new_clause conclusion)
+
+              true
+
+              ;; {not ($cl_equal new_clause conclusion) }
+              ($check_resolution ($f_list_cons and new_clause clauses) 
+                                 pivots conclusion)
+              )
+     )
+    )
+
+   (
+    ($check_resolution clauses @varlist.nil conclusion)
+
+    false
+    )
+   )
+)
+
+(declare-rule th_resolution ((premises Bool) (conclusion Bool) (pivots @VarList))
+  :premise-list premises and
+  :args (pivots)
+  :requires ((($check_resolution premises pivots conclusion) true))
   :conclusion-explicit conclusion
 )
 
 ;TRUST
-(declare-rule resolution ((Cs Bool) (conclusion Bool))
-  :premise-list Cs and
-  :requires ((($check_resolution Cs conclusion) true))
+(declare-rule resolution ((premises Bool) (conclusion Bool) (pivots @VarList))
+  :premise-list premises and
+  :args (pivots)
+  :requires ((($check_resolution premises pivots conclusion) true))
   :conclusion-explicit conclusion
 )
 
