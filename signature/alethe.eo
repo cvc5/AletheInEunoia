@@ -626,7 +626,6 @@
 )
 
 ; rule: refl
-; implements: TODO?
 ; premises:
 ; - context Bool: The context that corresponds to the step applying rule refl.
 ; requires: >
