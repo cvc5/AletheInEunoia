@@ -1276,7 +1276,7 @@
 ;  A conclusion satisfying the previous side-condition.
 (declare-rule not_and ((premise Bool) (conclusion Bool))
   :premises (premise)
-  :requires ((($check_not_and ($from_cl premise) conclusion) true))
+  :requires ((($check_not_and premise conclusion) true))
   :conclusion-explicit conclusion
 )
 
