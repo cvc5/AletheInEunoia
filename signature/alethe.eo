@@ -979,6 +979,7 @@
   (
    (
     ($check_cong premises (@cl (= (f_lhs lhs) (f_rhs rhs))))
+
     (eo::define ((operator ($cong_extract_operator f_lhs f_rhs)))
                 (eo::ite ($is_theory_f_list operator)
                          ; Operator is variadic. It must be left or right assoc.
@@ -1259,7 +1260,10 @@
 ;   "premise".
 (program $check_not_and ((conjunction Bool) (conclusion Bool))
   (Bool Bool) Bool
-  ((($check_not_and (@cl (not conjunction)) conclusion)
+  (
+   (
+    ($check_not_and (@cl (not conjunction)) conclusion)
+
      ($cl_equal ($de_morgan_not_and conjunction) conclusion)
      )
   )
@@ -1317,7 +1321,7 @@
 (declare-rule not_xor1  ((phi1 Bool) (phi2 Bool))
   :premises ((@cl (not (xor phi1 phi2))))
   :conclusion-explicit (@cl phi1 (not phi2))
-)
+
 
 ;-------------
 ; Rule 39: not_xor1
@@ -1845,6 +1849,7 @@
 (declare-rule not_ite2  ((phi1 Bool) (phi2 Bool) (phi3 Bool))
   :premises ((@cl (not (ite phi1 phi2 phi3))))
   :conclusion-explicit (@cl (not phi1) (not phi2))
+
 )
 
 ;TODO
@@ -1918,11 +1923,14 @@
 (program $check_implies_simplify ((phi_1 Bool) (phi_2 Bool) (psy Bool))
   (Bool) Bool
   (
-   (($check_implies_simplify (@cl (= (=> phi_1 phi_2) psy)))
-                            ; TODO: use proper comparison for props
-                            ($cl_equal (@cl ($rewrite_implication (=> phi_1 phi_2)))
-                                      (@cl psy)))
-  )
+   (
+    ($check_implies_simplify (@cl (= (=> phi_1 phi_2) psy)))
+
+                                        ; TODO: use proper comparison for props
+    ($cl_equal (@cl ($rewrite_implication (=> phi_1 phi_2)))
+               (@cl psy))
+    )
+   )
 )
 
 ; rule: implies_simplify
@@ -2201,6 +2209,7 @@
                          ($f_list_cons @varlist 
                                       ($f_list_cons @varlist var value) 
                                       tl))
+
     (eo::or ($f_list_contains_elem 
              and 
              (@cl (= value ($context_get_substitute context var)))
