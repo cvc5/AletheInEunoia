@@ -1331,7 +1331,6 @@
 ;-------------
 ; Rule 41: implies
 ;-------------
-
 ; rule: implies
 ; premises:
 ; - premise Bool: >
@@ -1648,7 +1647,6 @@
 ;-------------
 ; Rule 56: implies_pos
 ;-------------
-
 ; rule: implies_pos
 ; conclusion-explicit: >
 ;   The conclusion should be an instance of excluded middle,
@@ -2254,6 +2252,7 @@
    )
 )
 
+
 ; rule: let_elim
 ; assumption:
 ; - ctx: Context from the actual subproof.
@@ -2261,8 +2260,7 @@
 ; requires: >
 ;    For the given conclusion to be a proper elimination of a let, under the provided
 ;    premises and context, as specified by predicate $check_let_elim.
-; conclusion-explicit: >
-;    A conclusion satisfying the previous side-condition.
+; conclusion-explicit: A conclusion satisfying the previous side-condition.
 (declare-rule let_elim ((ctx Bool) (premises Bool) (conclusion Bool))
   :assumption ctx
   :premise-list premises and
