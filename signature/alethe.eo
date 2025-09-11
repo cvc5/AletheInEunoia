@@ -1347,6 +1347,7 @@
 (declare-rule not_xor1  ((phi1 Bool) (phi2 Bool))
   :premises ((@cl (not (xor phi1 phi2))))
   :conclusion-explicit (@cl phi1 (not phi2))
+)
 
 
 ;-------------
