@@ -51,24 +51,32 @@
                                (elem A) (hd A) (tl B :list))
   ((-> A B B) A B) Bool
   (
-   (($f_list_contains_elem f elem (f elem tl))
+   (
+    ($f_list_contains_elem f elem (f elem tl))
 
-    true)
+    true
+    )
 
    ; { hd =/= elem}
-   (($f_list_contains_elem f elem (f hd tl))
+   (
+    ($f_list_contains_elem f elem (f hd tl))
 
-    ($f_list_contains_elem f elem tl))
+    ($f_list_contains_elem f elem tl)
+    )
 
    ; { elem is not an f-list}
-   (($f_list_contains_elem f elem elem)
+   (
+    ($f_list_contains_elem f elem elem)
 
-    true)
+    true
+    )
    
    ; { hd =/= elem}
-   (($f_list_contains_elem f elem hd)
+   (
+    ($f_list_contains_elem f elem hd)
 
-    false)
+    false
+    )
   )
 )
 
@@ -84,17 +92,21 @@
                                  (f_list_2 B))
   ((-> A B B) B B) Bool
   (
-   (($f_list_contains_f_list f (f hd tl) f_list_2)
+   (
+    ($f_list_contains_f_list f (f hd tl) f_list_2)
     ;; TODO: I need some way to build boolean values
     ;; combining other boolean values, but I would like
     ;; to avoid built-in operators.
     (eo::and ($f_list_contains_elem f hd f_list_2)
-             ($f_list_contains_f_list f tl f_list_2)))
+             ($f_list_contains_f_list f tl f_list_2))
+    )
 
- 
    ;; { f_list_1 is not a term built with f }
-   (($f_list_contains_f_list f hd f_list_2)
-    ($f_list_contains_elem f hd f_list_2))
+   (
+    ($f_list_contains_f_list f hd f_list_2)
+
+    ($f_list_contains_elem f hd f_list_2)
+    )
   )
 )
 
@@ -110,9 +122,12 @@
                        (f_list_1 B) (f_list_2 B))
   ((-> A B B) B B) Bool
   (
-   (($f_list_equal f f_list_1 f_list_2)
+   (
+    ($f_list_equal f f_list_1 f_list_2)
+
     (eo::and ($f_list_contains_f_list f f_list_1 f_list_2)
-             ($f_list_contains_f_list f f_list_2 f_list_1)))
+             ($f_list_contains_f_list f f_list_2 f_list_1))
+    )
   )
 )
 
