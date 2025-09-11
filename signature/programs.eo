@@ -375,10 +375,19 @@
 (program $from_cl ((T Bool))
     (Bool) Bool
     (
-        (($from_cl (@cl T)) T)
-        (($from_cl T) T)
+     (
+
+      ($from_cl (@cl T)) 
+      T
+      )
+
+     (
+      ($from_cl T) 
+
+      T
+      )
+     )
     )
-)
 
 ; program: to_cl
 ; args:
@@ -389,8 +398,17 @@
 (program $to_cl ((T Bool))
     (Bool) Bool
     (
-        (($to_cl (@cl T)) (@cl T))
-        (($to_cl T) (@cl T))
+     (
+      ($to_cl (@cl T))
+
+      (@cl T)
+      )
+
+     (
+      ($to_cl T) 
+
+      (@cl T)
+      )
     )
 )
 
@@ -426,8 +444,11 @@
 (program $cl_equal ((cl_1 Bool) (cl_2 Bool))
   (Bool Bool) Bool
   (
-   (($cl_equal cl_1 cl_2)
-    ($f_list_equal @cl cl_1 cl_2))
+   (
+    ($cl_equal cl_1 cl_2)
+
+    ($f_list_equal @cl cl_1 cl_2)
+    )
   )
 )
 
@@ -440,11 +461,19 @@
 ;   A clause equivalent to "or_clause", built exclusively with @cl.
 (program $convert_or_to_cl ((or_clause Bool) (disjunct_1 Bool) (disjunct_2 Bool :list))
   (Bool) Bool
-  ((($convert_or_to_cl (or disjunct_1 disjunct_2))
-    ($f_list_cons @cl disjunct_1 ($convert_or_to_cl disjunct_2)))
+  (
+   (
+    ($convert_or_to_cl (or disjunct_1 disjunct_2))
+
+    ($f_list_cons @cl disjunct_1 ($convert_or_to_cl disjunct_2))
+    )
+
    ; { disjunct_1 is not built with "or" }
-   (($convert_or_to_cl disjunct_1)
-    disjunct_1))
+   (
+    ($convert_or_to_cl disjunct_1)
+
+    disjunct_1)
+   )
 )
 
 ; program: transform_not_and
@@ -456,11 +485,17 @@
 (program $de_morgan_not_and ((l Bool) (ls Bool))
   (Bool) Bool
   (
-   (($de_morgan_not_and (and l ls))
+   (
+    ($de_morgan_not_and (and l ls))
+
     (@cl (not l) ($from_cl ($de_morgan_not_and ls)))
     )
 
-   (($de_morgan_not_and l) (@cl (not l)))
+   (
+    ($de_morgan_not_and l) 
+
+    (@cl (not l))
+    )
   )
 )
 
@@ -535,38 +570,53 @@
 (program $rewrite_implication ((phi_1 Bool) (phi_2 Bool))
          (Bool) Bool
          (; We apply semantics preserving rewrites.
-          (($rewrite_implication (=> (not phi_1) (not phi_2)))
+          (
+           ($rewrite_implication (=> (not phi_1) (not phi_2)))
           
-          ($rewrite_implication (=> phi_2 phi_1)))
+          ($rewrite_implication (=> phi_2 phi_1))
+          )
 
+          (
+           ($rewrite_implication (=> false phi_1))
           
-          (($rewrite_implication (=> false phi_1))
-          
-          true)
+          true
+          )
 
-          (($rewrite_implication (=> phi_1 true))
-          
-          true)
+          (
+           ($rewrite_implication (=> phi_1 true))
 
-          (($rewrite_implication (=> true phi_1))
-          
-          phi_1)
+          true
+          )
 
-          (($rewrite_implication (=> phi_1 false))
-          
-          (not phi_1))
+          (
+           ($rewrite_implication (=> true phi_1))
 
-          (($rewrite_implication (=> phi_1 phi_1))
-          
-          true)
+          phi_1
+          )
 
-          (($rewrite_implication (=> (not phi_1) phi_1))
-          
-          phi_1)
+          (
+           ($rewrite_implication (=> phi_1 false))
 
-          (($rewrite_implication (=> (not phi_1) (not phi_1)))
-          
-          (not phi_1))
+          (not phi_1)
+          )
+
+          (
+           ($rewrite_implication (=> phi_1 phi_1))
+
+          true
+          )
+
+          (
+           ($rewrite_implication (=> (not phi_1) phi_1))
+ 
+          phi_1
+          )
+
+          (
+           ($rewrite_implication (=> (not phi_1) (not phi_1)))
+
+          (not phi_1)
+          )
           )
 )
 
@@ -580,41 +630,55 @@
 (program $rewrite_equivalence ((phi_1 Bool) (phi_2 Bool))
          (Bool) Bool
          (; We apply semantics preserving rewrites.
-          (($rewrite_equivalence (= (not phi_1) (not phi_2)))
+          (
+           ($rewrite_equivalence (= (not phi_1) (not phi_2)))
           
-          ($rewrite_equivalence (= phi_2 phi_1)))
-
-          
-          (($rewrite_equivalence (= phi_1 phi_1))
-          
-          true)
-
-          (($rewrite_equivalence (= phi_1 (not phi_1)))
-          
-          false)
-
-          (($rewrite_equivalence (= (not phi_1) phi_1))
-          
-          false)
-
-          (($rewrite_equivalence (= true phi_1))
-          
-          phi_1)
-
-          (($rewrite_equivalence (= phi_1 true))
-          
-          phi_1)
-
-          (($rewrite_equivalence (= phi_1 false))
-          
-          (not phi_1))
-
-          (($rewrite_equivalence (= false phi_1))
-          
-          (not phi_1))
-
+          ($rewrite_equivalence (= phi_2 phi_1))
           )
-)
+
+          (
+           ($rewrite_equivalence (= phi_1 phi_1))
+
+          true
+          )
+
+          (
+           ($rewrite_equivalence (= phi_1 (not phi_1)))
+
+          false
+          )
+
+          (
+           ($rewrite_equivalence (= (not phi_1) phi_1))
+
+          false
+          )
+
+          (
+           ($rewrite_equivalence (= true phi_1))
+
+          phi_1
+          )
+
+          (
+           ($rewrite_equivalence (= phi_1 true))
+
+          phi_1
+          )
+
+          (
+           ($rewrite_equivalence (= phi_1 false))
+
+          (not phi_1)
+          )
+
+          (
+           ($rewrite_equivalence (= false phi_1))
+
+          (not phi_1)
+          )
+          )
+         )
 
 
 ;-------------
