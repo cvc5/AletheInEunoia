@@ -7,9 +7,12 @@
 (program $check_hole ((conclusion Bool))
     (Bool) Bool
     (
-    (($check_hole conclusion) true)
+     (
+      ($check_hole conclusion) 
+      true
+      )
+     )
     )
-)
 
 ; Note: The hole here does not allow for args or premises.
 (declare-rule hole ()
@@ -927,6 +930,7 @@
   (
    (
     ($check_cong premises (@cl (= (f_lhs lhs) (f_rhs rhs))))
+
     (eo::define ((operator ($cong_extract_operator f_lhs f_rhs)))
                 (eo::ite ($is_theory_f_list operator)
                          ; Operator is variadic. It must be left or right assoc.
@@ -1214,7 +1218,10 @@
 ;   "premise".
 (program $check_not_and ((conjunction Bool) (conclusion Bool))
   (Bool Bool) Bool
-  ((($check_not_and (@cl (not conjunction)) conclusion)
+  (
+   (
+    ($check_not_and (@cl (not conjunction)) conclusion)
+
      ($cl_equal ($de_morgan_not_and conjunction) conclusion)
      )
   )
@@ -1238,10 +1245,15 @@
 (program $check_xor1 ((phi1 Bool) (phi2 Bool) (refCL Bool))
   (Bool Bool) Bool
   (
-   (($check_xor1 (@cl (xor phi1 phi2)) refCL)
+   (
+    ($check_xor1 (@cl (xor phi1 phi2)) refCL)
+
      ($cl_equal (@cl phi1 phi2) refCL)
    )
-   (($check_xor1 (xor phi1 phi2) refCL)
+
+   (
+    ($check_xor1 (xor phi1 phi2) refCL)
+
      ($cl_equal (@cl phi1 phi2) refCL)
    )
   )
@@ -1256,11 +1268,16 @@
 (program $check_xor2 ((phi1 Bool) (phi2 Bool) (refCL Bool))
   (Bool Bool) Bool
   (
-   (($check_xor2 (@cl (xor phi1 phi2)) refCL)
+   (
+    ($check_xor2 (@cl (xor phi1 phi2)) refCL)
+
      ($cl_equal (@cl (not phi1) (not phi2)) refCL)
-   )
-   (($check_xor2 (xor phi1 phi2) refCL)
-     ($cl_equal (@cl (not phi1) (not phi2)) refCL)
+     )
+
+   (
+    ($check_xor2 (xor phi1 phi2) refCL)
+    
+    ($cl_equal (@cl (not phi1) (not phi2)) refCL)
    )
   )
 )
@@ -1275,14 +1292,19 @@
 (program $check_not_xor1 ((phi1 Bool) (phi2 Bool) (refCL Bool))
   (Bool Bool) Bool
   (
-   (($check_not_xor1 (@cl (xor phi1 phi2)) refCL)
+   (
+    ($check_not_xor1 (@cl (xor phi1 phi2)) refCL)
+
      ($cl_equal (@cl phi1 (not phi2)) refCL)
    )
-   (($check_not_xor1 (xor phi1 phi2) refCL)
-     ($cl_equal (@cl phi1 (not phi2)) refCL)
+
+   (
+    ($check_not_xor1 (xor phi1 phi2) refCL)
+
+    ($cl_equal (@cl phi1 (not phi2)) refCL)
+    )
    )
   )
-)
 
 (declare-rule not_xor1 ((refCL Bool) (CL Bool))
   :premises (CL)
@@ -1295,14 +1317,19 @@
 (program $check_not_xor2 ((phi1 Bool) (phi2 Bool) (refCL Bool))
   (Bool Bool) Bool
   (
-   (($check_not_xor2 (@cl (xor phi1 phi2)) refCL)
+   (
+    ($check_not_xor2 (@cl (xor phi1 phi2)) refCL)
+
      ($cl_equal (@cl (not phi1) phi2) refCL)
    )
-   (($check_not_xor2 (xor phi1 phi2) refCL)
-     ($cl_equal (@cl (not phi1) phi2) refCL)
+
+   (
+    ($check_not_xor2 (xor phi1 phi2) refCL)
+
+    ($cl_equal (@cl (not phi1) phi2) refCL)
+    )
    )
   )
-)
 
 (declare-rule not_xor2 ((refCL Bool) (CL Bool))
   :premises (CL)
@@ -1358,10 +1385,15 @@
 (program $check_not_implies1 ((phi1 Bool) (phi2 Bool) (refCL Bool))
   (Bool Bool) Bool
   (
-   (($check_not_implies1 (@cl (not (=> phi1 phi2))) refCL)
+   (
+    ($check_not_implies1 (@cl (not (=> phi1 phi2))) refCL)
+
      ($cl_equal (@cl phi1) refCL)
    )
-   (($check_not_implies1 (not (=> phi1 phi2)) refCL)
+
+   (
+    ($check_not_implies1 (not (=> phi1 phi2)) refCL)
+
      ($cl_equal (@cl phi1) refCL)
    )
   )
@@ -1377,10 +1409,15 @@
 (program $check_not_implies2 ((phi1 Bool) (phi2 Bool) (refCL Bool))
   (Bool Bool) Bool
   (
-   (($check_not_implies2 (@cl (not (=> phi1 phi2))) refCL)
+   (
+    ($check_not_implies2 (@cl (not (=> phi1 phi2))) refCL)
+
      ($cl_equal (@cl phi1) refCL)
    )
-   (($check_not_implies2 (not (=> phi1 phi2)) refCL)
+
+   (
+    ($check_not_implies2 (not (=> phi1 phi2)) refCL)
+
      ($cl_equal (@cl phi1) refCL)
    )
   )
@@ -1411,10 +1448,15 @@
 (program $check_equiv1 ((phi1 Bool) (phi2 Bool) (conclusion Bool))
   (Bool Bool) Bool
   (
-   (($check_equiv1 (@cl (= phi1 phi2)) conclusion)
+   (
+    ($check_equiv1 (@cl (= phi1 phi2)) conclusion)
+
      ($cl_equal (@cl (not phi1) phi2) conclusion)
    )
-   (($check_equiv1 (= phi1 phi2) conclusion)
+
+   (
+    ($check_equiv1 (= phi1 phi2) conclusion)
+
      ($cl_equal (@cl (not phi1) phi2) conclusion)
    )
   )
@@ -1456,10 +1498,15 @@
 (program $check_equiv2 ((phi1 Bool) (phi2 Bool) (conclusion Bool))
   (Bool Bool) Bool
   (
-   (($check_equiv2 (@cl (= phi1 phi2)) conclusion)
+   (
+    ($check_equiv2 (@cl (= phi1 phi2)) conclusion)
+
      ($cl_equal (@cl phi1 (not phi2)) conclusion)
    )
-   (($check_equiv2 (= phi1 phi2) conclusion)
+
+   (
+    ($check_equiv2 (= phi1 phi2) conclusion)
+
      ($cl_equal (@cl phi1 (not phi2)) conclusion)
    )
   )
@@ -1486,10 +1533,15 @@
 (program $check_not_equiv1 ((phi1 Bool) (phi2 Bool) (refCL Bool))
   (Bool Bool) Bool
   (
-   (($check_not_equiv1 (@cl (not (= phi1 phi2))) refCL)
+   (
+    ($check_not_equiv1 (@cl (not (= phi1 phi2))) refCL)
+
      ($cl_equal (@cl phi1 phi2) refCL)
    )
-   (($check_not_equiv1 (not (= phi1 phi2)) refCL)
+
+   (
+    ($check_not_equiv1 (not (= phi1 phi2)) refCL)
+
      ($cl_equal (@cl phi1 phi2) refCL)
    )
   )
@@ -1839,14 +1891,23 @@
 (program $check_implies_neg2 ((phi_1 Bool) (phi_2 Bool))
   (Bool) Bool
   (
-   (($check_implies_neg2 (@cl (=> phi_1 phi_2) (not phi_2)))
-    true)
+   (
+    ($check_implies_neg2 (@cl (=> phi_1 phi_2) (not phi_2)))
 
-   (($check_implies_neg2 (@cl (not phi_2) (=> phi_1 phi_2)))
-    true)
+    true
+    )
 
-   (($check_implies_neg2 phi_1)
-    false)
+   (
+    ($check_implies_neg2 (@cl (not phi_2) (=> phi_1 phi_2)))
+
+    true
+    )
+
+   (
+    ($check_implies_neg2 phi_1)
+
+    false
+    )
   )
 )
 
@@ -1877,17 +1938,29 @@
 (program $check_equiv_pos1 ((phi_1 Bool) (phi_2 Bool) (phi_3 Bool) (phi_4 Bool))
   (Bool) Bool
   (; TODO: simplify this
-   (($check_equiv_pos1 (@cl (not (= phi_1 phi_2)) phi_3 phi_4))
-    ($cl_equal (@cl phi_1 (not phi_2)) (@cl phi_3 phi_4)))
-   
-   (($check_equiv_pos1 (@cl phi_3 (not (= phi_1 phi_2)) phi_4))
-    ($cl_equal (@cl phi_1 (not phi_2)) (@cl phi_3 phi_4)))
-   
-   (($check_equiv_pos1 (@cl phi_3 phi_4 (not (= phi_1 phi_2))))
-    ($cl_equal (@cl phi_1 (not phi_2)) (@cl phi_3 phi_4)))
+   (
+    ($check_equiv_pos1 (@cl (not (= phi_1 phi_2)) phi_3 phi_4))
 
-   (($check_equiv_pos1 phi_1)
-    false)
+    ($cl_equal (@cl phi_1 (not phi_2)) (@cl phi_3 phi_4))
+    )
+   
+   (
+    ($check_equiv_pos1 (@cl phi_3 (not (= phi_1 phi_2)) phi_4))
+
+    ($cl_equal (@cl phi_1 (not phi_2)) (@cl phi_3 phi_4))
+    )
+   
+   (
+    ($check_equiv_pos1 (@cl phi_3 phi_4 (not (= phi_1 phi_2))))
+
+    ($cl_equal (@cl phi_1 (not phi_2)) (@cl phi_3 phi_4))
+    )
+
+   (
+    ($check_equiv_pos1 phi_1)
+
+    false
+    )
   )
 )
 
@@ -1989,10 +2062,15 @@
 (program $check_ite1 ((phi1 Bool) (phi2 Bool) (phi3 Bool) (refCL Bool))
   (Bool Bool) Bool
   (
-   (($check_ite1 (@cl (ite phi1 phi2 phi3)) refCL)
+   (
+    ($check_ite1 (@cl (ite phi1 phi2 phi3)) refCL)
+
      ($cl_equal (@cl phi1 phi3) refCL)
    )
-   (($check_ite1 (ite phi1 phi2 phi3) refCL)
+
+   (
+    ($check_ite1 (ite phi1 phi2 phi3) refCL)
+
      ($cl_equal (@cl phi1 phi3) refCL)
    )
   )
@@ -2008,11 +2086,16 @@
 (program $check_ite2 ((phi1 Bool) (phi2 Bool) (phi3 Bool) (refCL Bool))
   (Bool Bool) Bool
   (
-   (($check_ite2 (@cl (ite phi1 phi2 phi3)) refCL)
+   (
+    ($check_ite2 (@cl (ite phi1 phi2 phi3)) refCL)
+
      ($cl_equal (@cl (not phi1) phi2) refCL)
    )
-   (($check_ite2 (ite phi1 phi2 phi3) refCL)
-     ($cl_equal (@cl (not phi1) phi2) refCL)
+
+   (
+    ($check_ite2 (ite phi1 phi2 phi3) refCL)
+
+    ($cl_equal (@cl (not phi1) phi2) refCL)
    )
   )
 )
@@ -2086,10 +2169,15 @@
 (program $check_not_ite1 ((phi1 Bool) (phi2 Bool) (phi3 Bool) (refCL Bool))
   (Bool Bool) Bool
   (
-   (($check_not_ite1 (@cl (not (ite phi1 phi2 phi3))) refCL)
+   (
+    ($check_not_ite1 (@cl (not (ite phi1 phi2 phi3))) refCL)
+
      ($cl_equal (@cl phi1 (not phi3)) refCL)
    )
-   (($check_not_ite1 (not (ite phi1 phi2 phi3)) refCL)
+
+   (
+    ($check_not_ite1 (not (ite phi1 phi2 phi3)) refCL)
+
      ($cl_equal (@cl phi1 (not phi3)) refCL)
    )
   )
@@ -2105,10 +2193,15 @@
 (program $check_not_ite2 ((phi1 Bool) (phi2 Bool) (phi3 Bool) (refCL Bool))
   (Bool Bool) Bool
   (
-   (($check_not_ite2 (@cl (not (ite phi1 phi2 phi3))) refCL)
+   (
+    ($check_not_ite2 (@cl (not (ite phi1 phi2 phi3))) refCL)
+
      ($cl_equal (@cl (not phi1) (not phi2)) refCL)
    )
-   (($check_not_ite2 (not (ite phi1 phi2 phi3)) refCL)
+
+   (
+    ($check_not_ite2 (not (ite phi1 phi2 phi3)) refCL)
+
      ($cl_equal (@cl (not phi1) (not phi2)) refCL)
    )
   )
@@ -2185,11 +2278,14 @@
 (program $check_implies_simplify ((phi_1 Bool) (phi_2 Bool) (psy Bool))
   (Bool) Bool
   (
-   (($check_implies_simplify (@cl (= (=> phi_1 phi_2) psy)))
-                            ; TODO: use proper comparison for props
-                            ($cl_equal (@cl ($rewrite_implication (=> phi_1 phi_2)))
-                                      (@cl psy)))
-  )
+   (
+    ($check_implies_simplify (@cl (= (=> phi_1 phi_2) psy)))
+
+                                        ; TODO: use proper comparison for props
+    ($cl_equal (@cl ($rewrite_implication (=> phi_1 phi_2)))
+               (@cl psy))
+    )
+   )
 )
 
 ; rule: implies_simplify
@@ -2469,6 +2565,7 @@
                          ($f_list_cons @varlist 
                                       ($f_list_cons @varlist var value) 
                                       tl))
+
     (eo::or ($f_list_contains_elem 
              and 
              (@cl (= value ($context_get_substitute context var)))
