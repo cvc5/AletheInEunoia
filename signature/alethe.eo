@@ -9,7 +9,7 @@
 ; sorry: >
 ;   This models the following (taken from the standard spec.):
 ;   "A proof checker must not accept as valid a proof that contains this
-;     rule even if the checkercan somehow check this rule."
+;     rule even if the checker can somehow check this rule."
 (declare-rule hole ((conclusion Bool))
   :conclusion-explicit (@cl conclusion)
   :sorry
@@ -308,7 +308,7 @@
 ; return: >
 ;    A boolean resulting from the conjunction of the following conditions:
 ;    - Every variable in rhs_vars appear fixed in "new_context".
-;    - Vars in lhs_vars are susbtitued by rhs_vars
+;    - Vars in lhs_vars are substituted by rhs_vars
 ;    - rhs_vars should not appear free in (Q lhs_vars lhs_body)
 ;    - rhs_vars should not appear in the first part of the new_context (old_context)
 ;    - lhs_vars should not appear in the first part of the new_context (old_context)
@@ -330,7 +330,7 @@
      ; Every variable in rhs_vars appear fixed in "new_context".
      ($context_vars_are_fixed new_context rhs_vars)
 
-     ; Vars in lhs_vars are susbtitued by rhs_vars.
+     ; Vars in lhs_vars are substituted by rhs_vars.
      ; Note: we need to embed each var in rhs_vars within a @var construction,
      ; since that is how they will appear within a context.
      ($f_list_equal @varlist 
@@ -369,7 +369,7 @@
      ; Every variable in rhs_vars appear fixed in "context".
      ($context_vars_are_fixed new_context rhs_vars)
 
-     ; Vars in lhs_vars are susbtitued by rhs_vars
+     ; Vars in lhs_vars are substituted by rhs_vars
      ; Note: we need to embed each var in rhs_vars within a @var construction,
      ; since that is how they will appear within a context.
      ($f_list_equal @varlist 
