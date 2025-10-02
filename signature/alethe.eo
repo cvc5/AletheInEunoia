@@ -537,13 +537,6 @@
 ; args:
 ; - old_context Bool: >
 ;    Context enclosing the premise passed to the application of the rule "bind".
-; - lhs_vars @VarList: >
-;    A @VarList containing each bounded variable in the left-hand side of the 
-;    conclusion clause.
-; - rhs_vars @VarList: >
-;    A @VarList containing each bounded variable in the right-hand side of the 
-;    conclusion clause.
-; - quantifier (-> @VarList Bool Bool): Quantifier used in the conclusion equality.
 ; requires: >
 ;    For old_context, new_context, premise and  conclusion to be well-formed with
 ;    respect to the definitions enforced by $check_bind.
@@ -553,7 +546,6 @@
                     (quantifier (-> @VarList Bool Bool)))
   :assumption new_context
   :premises ((@cl (= phi_lhs phi_rhs)))
-  ;; :args (old_context lhs_vars rhs_vars quantifier)
   :args (old_context)
   :requires ((($check_bind old_context new_context 
                            (@cl (= phi_lhs phi_rhs)) 
@@ -669,9 +661,6 @@
 ; args:
 ; - old_context Bool: >
 ;    Context from the outside of current subproof, built with @ctx.
-; - existential_vars @VarList: >
-;    A list containing the variables being existentially quantified in the
-;    conclusion.
 ; requires: >
 ;    Conclusion should have the form exists 𝑥1, … , 𝑥𝑛.𝜑 ≈ 𝜓, with enclosing
 ;     Γ, for a premise 𝜑 ≈ 𝜓 with enclosing context of the form.
@@ -681,7 +670,7 @@
                       (phi Bool) (psi Bool) (existential_vars @VarList))
   :assumption new_context
   :premises ((@cl (= phi psi)))
-  :args (old_context existential_vars)
+  :args (old_context)
   :requires ((($check_sko_ex old_context new_context (@cl (= phi psi))
                              (@cl (= (exists existential_vars phi) psi))) true))
   :conclusion (@cl (= (exists existential_vars phi) psi))
@@ -1477,7 +1466,7 @@
 
 
 ;-------------
-; Rule 39: not_xor1
+; Rule 40: not_xor2
 ;-------------
 
 ; rule: not_xor2
