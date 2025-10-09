@@ -192,7 +192,7 @@
 ; - f_nil B: The "nil" element of variadic operator f.
 ; - elem A: An element from "list" that we want to remove.
 ; return: >
-;   Removes the every occurrence of "elem" in the given f-list. Returns
+;   Removes every occurrence of "elem" in the given f-list. Returns
 ;   the obtained f-list.
 (program $f_list_remove_every_elem ((A Type) (B Type)
                              (f (-> A B B)) (f_nil B) (hd A) (tl B :list)
