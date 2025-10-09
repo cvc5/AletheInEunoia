@@ -256,7 +256,7 @@
 ;   A @VarList obtained by embedding each name within varlist
 ;   within a @var construction (i.e., (@var (@varlist id) id) for a name id in 
 ;   varlist).
-(program $embed_within_vars ((Var Type) (id Var) (tail @VarList :list))
+(program $embed_within_vars ((T Type) (id T) (tail @VarList :list))
          :signature (@VarList) @VarList
          (
           (
