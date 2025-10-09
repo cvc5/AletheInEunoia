@@ -10,7 +10,7 @@
 ;   This models the following (taken from the standard spec.):
 ;   "A proof checker must not accept as valid a proof that contains this
 ;     rule even if the checker can somehow check this rule."
-(declare-rule hole ((conclusion Bool))
+(declare-rule hole ((conclusion Bool :list))
   :conclusion-explicit (@cl conclusion)
   :sorry
 )
@@ -44,33 +44,138 @@
 ; Rule 6: th_resolution
 ;-------------
 
+(program $normalize_formula ((formula Bool))
+         :signature (Bool) Bool
+         (
+          (
+           ($normalize_formula (not (not formula)))
+
+           formula
+           )
+
+          (; { "formula" does not begin with a double negation }
+           ($normalize_formula formula)
+
+           formula
+           )
+          )
+         )
+
+
+; program: $normalize_single_clause
+; args:
+; - clause Bool: A clause built with @cl.
+; return: >
+;    A clause logically equivalent to "clause", where leading double negations
+;    in disjuncts are removed.
+(program $normalize_single_clause ((formula Bool) (formulas Bool :list))
+         :signature (Bool) Bool
+         (
+          (
+           ($normalize_single_clause (@cl formula))
+
+           (@cl ($normalize_formula formula))
+           )
+
+          (; { literals != false }
+           ($normalize_single_clause (@cl formula formulas))
+
+           ($f_list_cons @cl ($normalize_formula formula) 
+                         ($normalize_single_clause formulas))
+           )
+
+          ;; (
+          ;;  ($normalize_single_clause false)
+
+          ;;  @empty_cl
+          ;;  )
+
+          (
+           ($normalize_single_clause @empty_cl)
+
+           @empty_cl
+           )
+          )
+         )
+
+; program: $normalize_clauses
+; args:
+; - clauses Bool: And-list of clauses.
+; return: >
+;    An and-list of clauses logically equivalent to "clauses", where each single
+;    "clause" is normalized, according to $normalize_single_clause.
+(program $normalize_clauses ((clause Bool) (clauses Bool :list))
+         :signature (Bool) Bool
+         (
+          (
+           ($normalize_clauses (and clause))
+           
+           ($normalize_single_clause clause)
+           )
+
+          ( ; { clauses != true }
+           ($normalize_clauses (and clause clauses))
+
+           ($f_list_cons and ($normalize_single_clause clause)
+                         ($normalize_clauses clauses))
+           )
+
+          ;; (
+          ;;  ($normalize_clauses true)
+
+          ;;  true
+          ;;  )
+          )
+         )
+
 ; program: $clause_contains_pivot
 ; args:
 ; - clause Bool: Clause within which we want to search for "pivot".
 ; - pivot Bool: Pivot to search within "clause".
 ; - $clause_contains_pivot nil:
 ; return: A bool indicating if "pivot" is contained within "clause".
+; note: PRE : { "pivot" is normalized
+;                && 
+;               "clause" is normalized }
 (program $clause_contains_pivot ((hd Bool) (tail Bool :list) 
-                                               (pivot Bool))
+                                 (pivot Bool))
          :signature (Bool Bool) Bool
          (
           (
+           ($clause_contains_pivot (@cl pivot) pivot)
+
+           true
+           )
+
+          (; {tail != false}
            ($clause_contains_pivot (@cl pivot tail) pivot)
 
            true
            )
 
-          (; { hd <> pivot }
+          (; { hd != pivot }
+           ($clause_contains_pivot (@cl hd) pivot)
+
+           false
+           )
+
+          (; { hd != pivot, pivot != false }
            ($clause_contains_pivot (@cl hd tail) pivot)
 
            ($clause_contains_pivot tail pivot)
            )
 
           (
-           ($clause_contains_pivot false pivot)
+           ($clause_contains_pivot @empty_cl pivot)
 
            false
            )
+
+          ;; (
+          ;;  ($clause_contains_pivot false pivot)
+
+          ;;  false
+          ;;  )
            )
          )
 
@@ -79,99 +184,210 @@
 ; - pivot Bool: Pivot literal contained in "clause".
 ; - clause Bool: Clause containing the pivot.
 ; return: The clause obtained from removing "pivot" from "clause".
-; note: PRE : { "pivot" is contained in "clause" }
+; note: PRE : { "pivot" is contained in "clause" 
+;                && 
+;               "pivot" is normalized
+;                && 
+;               "clause" is normalized }
 (program $remove_pivot_from_clause ((hd Bool) (tail Bool :list) 
                                       (pivot Bool))
          :signature (Bool Bool) Bool
          (
           (
+           ($remove_pivot_from_clause pivot (@cl pivot))
+
+           @empty_cl
+           )
+
+          (; { tail != false }
            ($remove_pivot_from_clause pivot (@cl pivot tail))
 
            tail
            )
 
-          (; { hd <> pivot }
+          ;; (; { hd != pivot }
+          ;;  ($remove_pivot_from_clause pivot (@cl hd))
+
+          ;;  (@cl hd)
+          ;;  )
+
+          (; { hd != pivot, tail != false }
            ($remove_pivot_from_clause pivot (@cl hd tail))
 
-           ($f_list_cons @cl 
-                         hd 
+           ; $remove_pivot_from_clause could return @empty_cl,
+           ; we need to resort to $cl_disjunct semantics to
+           ; build the result clause.
+           ($cl_disjunct (@cl hd)
                          ($remove_pivot_from_clause pivot tail))
            )
           )
          )
 
-; program: $find_and_remove_pivot_from_clause
+; program: $find_and_remove_pivot_from_clauses
 ; args:
 ; - pivot Bool: >
 ;   Pivot to be found and removed from the corresponding clause, if it exists.
 ; - clauses Bool: And-list of clauses.
 ; return: The clause containing "pivot", without "pivot" itself.
-; note: PRE : { "pivot" is contained in some clause from "clauses" }
-(program $find_and_remove_pivot_from_clause ((clause Bool) (clauses Bool :list) 
+; note: PRE : { "pivot" is contained in some clause from "clauses"
+;                && 
+;               "pivot" is normalized
+;                && 
+;               "clause" is normalized }
+(program $find_and_remove_pivot_from_clauses ((clause Bool) (clauses Bool :list) 
                                                (pivot Bool))
          :signature (Bool Bool) Bool
          (
-          (
-           ($find_and_remove_pivot_from_clause pivot (and clause clauses))
+          (; By pre, "clause" should contain "pivot".
+           ($find_and_remove_pivot_from_clauses pivot (and clause))
+           
+           ($remove_pivot_from_clause pivot clause)
+           )
+
+          (; {clauses != true}
+           ($find_and_remove_pivot_from_clauses pivot (and clause clauses))
 
            (eo::ite ($clause_contains_pivot clause pivot)
 
-                  ($remove_pivot_from_clause pivot clause)
+                    ($remove_pivot_from_clause pivot clause)
+                    
+                    ($find_and_remove_pivot_from_clauses pivot clauses)
+                    )
+           )
 
-                  ($find_and_remove_pivot_from_clause pivot clauses)
-                  )
+          (; By pre, "clause" should contain "pivot".
+           ; { clause is just a single @cl clause }
+           ($find_and_remove_pivot_from_clauses pivot clause)
+
+           ($remove_pivot_from_clause pivot clause)
            )
           )
 )
 
-; program: $check_resolution
+; program: $check_resolution_with_normalized_clauses 
 ; args:
-; - $check_resolution nil:
 ; - clauses Bool: And-list of normalized clauses (double negation is simplified).
-; return:
-(program $check_resolution ((clauses Bool) (pivot @VarList) (pivots @VarList :list)
+; - pivots @VarList: A list of pivots used during resolution.
+; - conclusion Bool: Conclusion provided to the rule.
+; return: >
+;   A boolean indicating if "conclusion" is a resolvent that can be
+;   obtained from applying resolution over "clauses", using the pivots
+;   contained in "pivots", in the same order of their appearance in the list.
+; note: PRE : { "clauses" are normalized: double negation is simplified }
+(program $check_resolution_with_normalized_clauses  ((clauses Bool)
+                                                     (polarity Bool)
+                                                     (pivot Bool) (pivots @VarList :list)
                             (conclusion Bool))
   (Bool @VarList Bool) Bool
   (
-   (; TODO: Still don't know the purpose of these "false" pivots
-    ($check_resolution clauses (@varlist false pivots) conclusion)
+   ;; (; TODO: Still don't know the purpose of these "false" pivots
+   ;;  ($check_resolution_with_normalized_clauses clauses (@varlist false pivots)
+   ;;                                             conclusion)
     
-    ($check_resolution clauses pivots conclusion)
-    )
+   ;;  ($check_resolution_with_normalized_clauses clauses pivots conclusion)
+   ;;  )
 
-   (; TODO: Sometimes with might get a pivot that is in its negated form
-    ($check_resolution clauses (@varlist pivot pivots) conclusion)
+   (; TODO: Sometimes we might get a pivot that is in its negated form
+    ($check_resolution_with_normalized_clauses clauses (@varlist pivot polarity pivots)
+                                               conclusion)
 
-    (eo::define 
+    (eo::define
+     
      (
-      (new_clause 
-       ($f_list_cons @cl
-                     ($find_and_remove_pivot_from_clause pivot clauses)
-                     ($f_list_cons @cl
-                                   ($find_and_remove_pivot_from_clause (not pivot) clauses)
-                                   false)))
+      (clause_without_pivot
+       ;; TODO: not being able to save normalized pivot
+       ;; We normalize the result to remove repeated occurrences of "false"
+       ;; ($normalize_single_clause
+        ($find_and_remove_pivot_from_clauses ($normalize_formula pivot) clauses)
+       ;)
+       )
+
+      (clause_without_not_pivot
+       ;; ($normalize_single_clause
+        ($find_and_remove_pivot_from_clauses ($normalize_formula (not pivot)) 
+                                             clauses)
+       ;)
+       )
+
+      ;; TODO: cannot refer to previous variable clause_without_pivot
+      ;; (new_clause 
+      ;;  ($normalize_single_clause ($f_list_cons @cl 
+      ;;                                          clause_without_pivot
+      ;;                                          clause_without_not_pivot))
+      ;;  )
       )
 
      ; eo::define's body:
-     (eo::ite ($cl_equal new_clause conclusion)
+     (eo::ite ;; (eo::or ($cl_equal clause_without_pivot conclusion)
+              ;;         ($cl_equal clause_without_not_pivot conclusion))
+              ($cl_equal conclusion ($cl_disjunct clause_without_pivot
+                                                  clause_without_not_pivot))
 
               true
 
               ;; {not ($cl_equal new_clause conclusion) }
-              ($check_resolution ($f_list_cons and new_clause clauses) 
-                                 pivots conclusion)
+              ;; (@cl (eo::var "normalized pivot" (eo::typeof conclusion))
+              ;;      ($normalize_formula pivot)
+              ;;      (eo::var "conclusion" (eo::typeof conclusion))
+              ;;      conclusion
+              ;;      (eo::var "clause_without_pivot:" (eo::typeof conclusion))
+              ;;      clause_without_pivot
+              ;;      (eo::var "clause_without_not_pivot:" (eo::typeof conclusion))
+              ;;      clause_without_not_pivot                                      
+              ;;      (eo::var "new_clause:" (eo::typeof conclusion))
+              ;;      ($cl_disjunct clause_without_pivot
+              ;;                                     clause_without_not_pivot)
+
+              ($check_resolution_with_normalized_clauses
+               ($f_list_cons and 
+                             ($cl_disjunct clause_without_pivot
+                                                  clause_without_not_pivot)
+                             clauses)
+               pivots conclusion)
+              ;)
               )
      )
     )
 
    (
-    ($check_resolution clauses @varlist.nil conclusion)
+    ($check_resolution_with_normalized_clauses clauses @varlist.nil conclusion)
 
     false
     )
    )
 )
 
+; program: $check_resolution
+; args:
+; - clauses Bool: And-list of clauses.
+; - pivots @VarList: A list of pivots used during resolution.
+; - conclusion Bool: Conclusion provided to the rule.
+; return: >
+;   A boolean indicating if "conclusion" is a resolvent that can be
+;   obtained from applying chain resolution over "clauses", using the pivots
+;   contained in "pivots", in the same order of their appearance in the list.
+(program $check_resolution ((clauses Bool) (pivots @VarList)
+                            (conclusion Bool))
+  (Bool @VarList Bool) Bool
+  (
+   (
+    ($check_resolution clauses pivots conclusion)
+
+    ($check_resolution_with_normalized_clauses 
+     ($normalize_clauses clauses) pivots conclusion)
+    )
+   )
+)
+
+; rule: th_resolution
+; implements: TODO?
+; premises:
+; - premises Bool:
+; - conclusion Bool:
+; - pivots @VarList:
+; args:
+; requires:
+; conclusion:
 (declare-rule th_resolution ((premises Bool) (conclusion Bool) (pivots @VarList))
   :premise-list premises and
   :args (pivots)
@@ -179,7 +395,19 @@
   :conclusion-explicit conclusion
 )
 
-;TRUST
+;-------------
+; Rule 7: resolution
+;-------------
+
+; rule: resolution
+; implements: TODO?
+; premises:
+; - premises Bool:
+; - conclusion Bool:
+; - pivots @VarList:
+; args:
+; requires:
+; conclusion:
 (declare-rule resolution ((premises Bool) (conclusion Bool) (pivots @VarList))
   :premise-list premises and
   :args (pivots)
@@ -578,7 +806,7 @@
                          @varlist.nil)
            )
 
-          (; { tail <> @varlist.nil }
+          (; { tail != @varlist.nil }
            ($check_sko_ex_build_skolem_vars choice_body (@varlist x tail))
 
            ($f_list_cons @varlist 
@@ -589,7 +817,7 @@
                          ($check_sko_ex_build_skolem_vars choice_body tail))
            )
 
-          (; { tail <> @varlist.nil }
+          (; { tail != @varlist.nil }
            ($check_sko_ex_build_skolem_vars choice_body @varlist.nil)
 
            @varlist.nil
@@ -673,7 +901,7 @@
   :args (old_context)
   :requires ((($check_sko_ex old_context new_context (@cl (= phi psi))
                              (@cl (= (exists existential_vars phi) psi))) true))
-  :conclusion (@cl (= (exists existential_vars phi) psi))
+  :conclusion-explicit (@cl (= (exists existential_vars phi) psi))
 )
 
 ;TODO
@@ -824,14 +1052,14 @@
     t1
     )
 
-    (; { eqs <> true}
+    (; { eqs != true}
      ; case (and (@cl (= t1 t2) false) eqs)
      ($last_eq_right (and (@cl (= t1 t2)) eqs) t1) 
 
      ($last_eq_right eqs t2)
      )
 
-    (; { eqs <> true}
+    (; { eqs != true}
      ; case (and (@cl (= t1 t2) false) eqs)
      ($last_eq_right (and (@cl (= t1 t2)) eqs) t2)
 
@@ -852,14 +1080,14 @@
      t1
      )
 
-    (; { eqs <> true}
+    (; { eqs != true}
      ; case (and (= t1 t2) eqs)
      ($last_eq_right (and (= t1 t2) eqs) t1)
      
      ($last_eq_right eqs t2)
      )
 
-    (; { eqs <> true}
+    (; { eqs != true}
      ; case (and (= t1 t2) eqs)
      ($last_eq_right (and (= t1 t2) eqs) t2)
      
@@ -893,13 +1121,13 @@
     (= t1 t2)
     )
 
-   (; { eqs <> true }
+   (; { eqs != true }
     ($make_trans (and (@cl (= t1 t2)) eqs) t1) 
     
     (= t1 ($last_eq_right eqs t2))
     )
 
-   (; { eqs <> true }
+   (; { eqs != true }
     ($make_trans (and (@cl (= t1 t2)) eqs) t2) 
     
     (= t2 ($last_eq_right eqs t1))
