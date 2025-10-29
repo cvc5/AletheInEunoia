@@ -547,7 +547,7 @@
   :args (old_context)
   :requires ((($check_sko_ex old_context new_context (@cl (= phi psi))
                              (@cl (= (exists existential_vars phi) psi))) true))
-  :conclusion (@cl (= (exists existential_vars phi) psi))
+  :conclusion-explicit (@cl (= (exists existential_vars phi) psi))
 )
 
 ;TODO
