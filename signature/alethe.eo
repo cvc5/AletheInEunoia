@@ -32,6 +32,7 @@
 ;-------------
 ; Rule 5: not_not
 ;-------------
+
 ; rule: not_not
 ; conclusion: >
 ;   Conclusion should be of the form ¬(¬¬𝜑), 𝜑, for some proposition 𝜑.
@@ -613,22 +614,47 @@
                                 forall_body_instantiated))
 )
 
-;-------------
+;--------------------
 ; Rule 22: refl
-;-------------
+;--------------------
 
-;TODO: why is type T not mentioned in the body of check_refl?
-(program $check_refl ((ctx Bool) (conclusion Bool))
+; program: $check_refl
+; args:
+; - context Bool: Context corresponding to the refl step.
+; - conclusion Bool: >
+;    Conclusion of the form (@cl (= lhs rhs)), provided to the application of the
+;    refl rule.
+; return: >
+;    A boolean indicating if, by applying the substitution (induced by the 
+;    context) to the left-hand side of the conclusion, we obtain a term that is
+;    equivalent (modulo alpha-conversion) to the right-hand side.
+(program $check_refl ((context Bool) (conclusion Bool) (A Type) (lhs A) (rhs A))
   (Bool Bool) Bool
   (
-   (($check_refl ctx conclusion) true)
+   (
+    ($check_refl context (@cl (= lhs rhs)))
+
+    ($eo_is_eq 
+
+     ($substitution_apply lhs 
+                          ($substitution_build_from_context context))
+
+     rhs)
+    )
   )
 )
 
-;TRUST
-(declare-rule refl ((ctx Bool) (t1 Bool) (t2 Bool))
-  :args (ctx)
-  :requires ((($check_refl ctx (@cl (= t1 t2))) true))
+; rule: refl
+; premises:
+; - context Bool: The context that corresponds to the step applying rule refl.
+; requires: >
+;    That, by applying the substitution (induced by the context) to the left-hand 
+;    side of the conclusion, we obtain a term that is equivalent (modulo 
+;    alpha-conversion) to the right-hand side.
+; conclusion:
+(declare-rule refl ((context Bool) (t1 Bool) (t2 Bool))
+  :premises (context)
+  :requires ((($check_refl context (@cl (= t1 t2))) true))
   :conclusion-explicit (@cl (= t1 t2))
 )
 
@@ -2551,6 +2577,7 @@
 ;-------------
 ; Rule 101: symm
 ;-------------
+
 ; rule: symm
 ; premises: >
 ;   An equality of the form (@cl (= phi psy)), for arbitrary formulas phi and psy.

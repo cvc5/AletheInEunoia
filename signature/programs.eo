@@ -696,8 +696,14 @@
                     (subst Bool))
          (Bool A) B
          (
-          (; Just do discard possible leading @ctx constructor
+          (; Just to discard possible leading @ctx constructor
            ($context_get_substitute (@ctx varlist subst) id)
+           
+           ($context_get_substitute subst id)
+           )
+
+          (; Contexts are nested.
+           ($context_get_substitute (and (@ctx varlist subst)) id)
            
            ($context_get_substitute subst id)
            )
@@ -733,7 +739,7 @@
 ; return: >
 ;   A @VarList with the values associated with each variable from, and in the 
 ;   same order as in, "variables"; in the form of pairs (variable, value),
-;   as @VarLists.
+;   built also as @VarList.
 (program $context_get_var_subst_pairs ((A Type) (id A) (B Type)
                                       (value B) (varlist @VarList) 
                                       (context Bool) (and_list Bool)
@@ -744,8 +750,9 @@
            ($context_get_var_subst_pairs context (@varlist id ids))
            
            ($f_list_cons @varlist 
-                        ($f_list_cons @varlist id 
-                                      (@varlist ($context_get_substitute context id) @varlist.nil))
+                        ($f_list_cons @varlist id
+                                      ($f_list_cons @varlist 
+                                                    ($context_get_substitute context id) @varlist.nil))
                         ($context_get_var_subst_pairs context ids))
            )
 
@@ -753,6 +760,43 @@
            ($context_get_var_subst_pairs context @varlist.nil)
            
            @varlist.nil
+           )
+          )
+)
+
+; program: $context_get_variables
+; args:
+; - context Bool: A context built with @ctx.
+; return: >
+;   A @VarList with the variables bound by "context".
+(program $context_get_variables ((varlist @VarList) (subst Bool) (any Bool) 
+                                 (eqs Bool :list))
+         (Bool) @VarList
+         (
+          (
+           ($context_get_variables (@ctx varlist subst))
+           
+           ($f_list_remove_duplicates @varlist @varlist.nil
+                                      ($varlist_concat varlist ($context_get_variables subst)))
+           )
+
+          (
+           ($context_get_variables (and (@ctx varlist subst)))
+           
+           ($f_list_remove_duplicates @varlist @varlist.nil
+                                      ($varlist_concat varlist ($context_get_variables subst)))
+           )
+
+          (; { any <> (@ctx varlist subst) }
+           ($context_get_variables (and any eqs))
+           
+           ($context_get_variables eqs)
+           )
+
+          (
+           ($context_get_variables true)
+
+                      @varlist.nil
            )
           )
 )
@@ -1312,6 +1356,47 @@
           )
 )
 
+; program: $substitution_build_from_pairs
+; args:
+; - variables_values @VarList: >
+;    A @VarList of pairs of the form (variable, value), meaning that "variable"
+;    should be substituted by "value".
+; return: The corresponding @Substitution.
+(program $substitution_build_from_pairs ((Vars Type) (Values Type) (var Vars) 
+                                         (value Values) (pairs_tail @VarList :list))
+         (@VarList) @Substitution
+         (
+          (
+           ($substitution_build_from_pairs @varlist.nil)
+
+           @substitution.nil
+           )
+
+          (
+           ($substitution_build_from_pairs (@varlist (@varlist var value) pairs_tail))
+
+           ($substitution_extend ($substitution_build_from_pairs pairs_tail) var value)
+           )
+          )
+)
+
+; program: $substitution_build_from_context
+; args:
+; - context Bool: A context from which we want to build a substitution function.
+; return: The corresponding @Substitution.
+(program $substitution_build_from_context ((context Bool))
+         (Bool) @Substitution
+         (
+          (
+           ($substitution_build_from_context context)
+           
+           ($substitution_build_from_pairs
+                           ($context_get_var_subst_pairs context 
+                                                         ($context_get_variables context)))
+           )
+          )
+)
+
 ; program: $substitution_remove_substitutes
 ; args:
 ; - $substitution_remove_substitutes nil:
@@ -1376,8 +1461,9 @@
 
 ; program: $substitution_apply
 ; args:
-; - $substitution_apply nil:
-; return:
+; - term Terms: A given term upon which we want to apply the substitution.
+; - substitution @Substitution: The substitution that we want to apply.
+; return: The term resulting of applying "substitution" over "term".
 (program $substitution_apply ((Terms Type) (x Terms)
                       (vars @VarList)
                       (bool_body Bool)
