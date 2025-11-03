@@ -22,8 +22,8 @@
 ;   Int and Real Arithmetic
 ; ---------------------------
 
-(declare-type Int ())
-(declare-type Real ())
+(declare-const Int Type)
+(declare-const Real Type)
 
 (declare-consts <numeral> Int)
 (declare-consts <rational> Real)
@@ -127,7 +127,7 @@
 ;   Quantifiers
 ; ---------------
 
-(declare-type @VarList ())
+(declare-const @VarList Type)
 (declare-const @varlist.nil @VarList)
 (declare-parameterized-const @varlist ((T Type :implicit)) 
                              (-> T @VarList @VarList) :right-assoc-nil @varlist.nil)
@@ -188,12 +188,12 @@
 
 ; Since some rules are defined directly in terms of a given substitution.
 ; Single substitute variable -> value
-(declare-type @Substitute ())
+(declare-const @Substitute Type)
 (declare-parameterized-const @substitute ((Var Type :implicit) 
                                           (Value Type :implicit))
                              (-> Var Value @Substitute))
 
-(declare-type @Substitution ())
+(declare-const @Substitution Type)
 
 (declare-const @substitution.nil @Substitution)
 
