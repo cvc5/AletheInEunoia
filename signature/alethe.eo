@@ -10,8 +10,8 @@
 ;   This models the following (taken from the standard spec.):
 ;   "A proof checker must not accept as valid a proof that contains this
 ;     rule even if the checker can somehow check this rule."
-(declare-rule hole ((conclusion Bool :list))
-  :conclusion-explicit (@cl conclusion)
+(declare-rule hole ((hd Bool) (tail Bool :list))
+  :conclusion-explicit (@cl hd tail)
   :sorry
 )
 
