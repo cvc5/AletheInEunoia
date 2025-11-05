@@ -600,15 +600,103 @@
   :conclusion CL
 )
 
-;TODO
-(program $check_la_mult_neg ((CL Bool))
-  (Bool) Bool
-  (
-   (($check_la_mult_neg CL) true)
-  )
+;---------------------
+; Rule 17: la_mult_neg
+;---------------------
+
+; program: $check_inverse_relations
+; args:
+; - rel (-> A A A): A relation over numbers.
+; - inv_rel (-> A A A): A relation over numbers.
+; return: >
+;   A boolean indicating if "inv_rel" is the inverse, as a relation, of "rel"
+(program $check_inverse_relations ((A Type) (rel (-> A A A)) (inv_rel (-> A A A)))
+         :signature ((-> A A A) (-> A A A)) Bool
+         (
+          (
+           ($check_inverse_relations < >)
+
+           true
+           )
+
+          (
+           ($check_inverse_relations <= >=)
+
+           true
+           )
+
+          (
+           ($check_inverse_relations = =)
+
+           true
+           )
+
+          (
+           ($check_inverse_relations > <)
+
+           true
+           )
+
+          (
+           ($check_inverse_relations >= <=)
+
+           true
+           )
+
+          (
+           ($check_inverse_relations rel inv_rel)
+
+           false
+           )
+          )
 )
 
-;TRUST
+; program: $check_la_mult_neg
+; args:
+; - conclusion Bool: Conclusion given to rule "la_mult_neg".
+; return: >
+;   A boolean indicating if "conclusion" is an implication of the form, either:
+;   - (𝑡1 < 0 ∧𝑡2 ⋈ 𝑡3) → 𝑡1∗𝑡2 ⋈_𝑖𝑛𝑣 𝑡1∗𝑡3
+;   where ⋈ and ⋈_𝑖𝑛𝑣 are relations over numbers, one being the inverse
+;   of the other, as captured by the predicate $check_inverse_relations.
+;   - (𝑡1 < 0 ∧ ¬(𝑡2 ≈ 𝑡3)) → ¬(𝑡1∗𝑡2 ≈ 𝑡1∗𝑡3)
+(program $check_la_mult_neg ((A Type) (rel (-> A A A)) (inv_rel (-> A A A))
+                             (t1 A) (t2 A) (t3 A)
+                             (conclusion Bool))
+  (Bool) Bool
+  (
+   (
+    ($check_la_mult_neg (-> (and (< t1 0) (rel t2 t3)) 
+                           (inv_rel (* t1 t2) (* t1 t3))))
+
+    (eo::ite ($check_inverse_relations rel inv_rel)
+
+             true
+
+             false)
+    )
+
+   (
+    ($check_la_mult_neg (-> (and (< t1 0) (not (= t2 t3))) 
+                           (not (= (* t1 t2) (* t1 t3)))))
+
+    true
+    )
+
+   (
+
+    ($check_la_mult_neg conclusion)
+    
+    false
+    )
+   )
+)
+
+; rule: la_mult_neg
+; requires: >
+;   For conclusion to satisfy the criteria defined by the checker 
+;   $check_la_mult_neg.
+; conclusion-explicit: A conclusion satisfying the previous side-condition.
 (declare-rule la_mult_neg ((conclusion Bool))
   :requires ((($check_la_mult_neg conclusion) true))
   :conclusion-explicit conclusion
@@ -2994,7 +3082,6 @@
   )
 )
 
-;TRUST
 ; rule: reordering
 ; premises:
 ; - premise Bool: >
