@@ -536,25 +536,379 @@
   :conclusion-explicit conclusion
 )
 
-;TODO
+;--------------------
+; Rule 11: la_generic
+;--------------------
+
 ; From "The Alethe Proof Format":
 ; "Checking the validity of this clause amounts to checking the unsatisfiability 
 ; of the system of linear equations 𝜑1, 𝜑2, … , 𝜑𝑛. The annotation of an 
 ; la_generic step contains a coefficient for each (in)equality. The result of 
 ; forming the linear combination of the literals with the coefficients is a trivial 
 ; inequality between constants".
-(program $check_la_generic ((coeffs Real) (CL Bool))
-  (Real Bool) Bool
+
+; program: $invert_order
+; args:
+; - order (-> A A A): An order over numeric types.
+; return: >
+;   The order that can be obtained by inverting the pairs of relation "order".
+(program $invert_order ((A Type) (rel (-> A A Bool)))
+         :signature ((-> A A Bool)) (-> A A Bool)
+         (
+          (
+           ($invert_order <)
+
+           >
+           )
+
+          (
+           ($invert_order <=)
+
+           >=
+           )
+
+          (
+           ($invert_order =)
+
+           =
+           )
+
+          (
+           ($invert_order >)
+
+           <
+           )
+
+          (
+           ($invert_order >=)
+
+           <=
+           )
+          )
+)
+
+; program: $negate_inequality
+; args:
+; - inequality Bool: A linear inequaity that we want to negate.
+; return: The negated form of "inequality", according to $invert_order.
+(program $negate_inequality ()
+         :signature (Bool) Bool
+         (
+          (
+           ($negate_inequality (not inequality))
+
+           inequality
+           )
+
+          (
+           ($negate_inequality (order lhs rhs))
+
+           (($invert_order order) lhs rhs)
+           )
+          )
+)
+
+; program: $manipulate_inequality
+; args:
+; - inequality Bool: The inequality to be manipulated.
+; return: >
+;   An inequality that is equivalent to "inequality", resulting from
+;   manipulations that preserve the solutions of "inequality":
+;   - it subtracts the right-hand side summatory, from both sides
+;   - it subtracts the right-hand side additive constant, from both sides
+;   - for the resultant right-hand side constant "d", it corrects it to 
+;     floor(d) + 1, and converts >, < to >= or <=, respectively.
+; note: >
+;   PRE : { "inequality" is already in its negated form, according to 
+;           $negate_inequality }
+(program $manipulate_inequality ()
+         :signature (Bool) Bool
+         (
+          (
+           ($manipulate_inequality (> (+ d1 summatory1) (+ d2 summatory2)))
+
+           (>= (- summatory1 summatory2)
+                  ;; Floor function, as a result of converting to Z.
+                  (+ (eo::to_z (- d2 d1)) 1))
+           )
+
+          (
+           ($manipulate_inequality (< (+ d1 summatory1) (+ d2 summatory2)))
+
+           (<= (- summatory1 summatory2)
+                  ;; Floor function, as a result of converting to Z.
+                  (+ (eo::to_z (- d2 d1)) 1))
+           )
+
+          (
+           ($manipulate_inequality (order (+ d1 summatory1) (+ d2 summatory2)))
+
+           (order (- summatory1 summatory2)
+                  ;; Floor function, as a result of converting to Z.
+                  (+ (eo::to_z (- d2 d1)) 1))
+           )
+          )
+)
+
+; program: $abs
+; args:
+; - constant A: A numeric constant.
+; return: The absolute value of "constant".
+(program $abs ((A type))
+         :signature (A) A
+
+         (
+          (
+           ($abs constant)
+
+           (eo::ite (eo::is_neg constant)
+                    (eo::neg constant)
+                    constant)
+          )
+          )
+)
+
+; program: $apply_coefficients
+; args:
+; - inequality Bool: A linear inequality.
+; - coeff A: A numeric coefficient.
+; return: >
+;   An inequality that is equivalent to "inequality", but where "coeff"
+;   has been multiplied in both sides of "inequality".
+(program $apply_coefficients ((A type))
+         :signature (Bool A) Bool
+         (
+          (
+           ($apply_coefficients (= lhs rhs) coeff)
+
+           (= (* coeff lhs) (* coeff rhs))
+           )
+
+          (
+           ($apply_coefficients (order lhs rhs) coeff)
+
+           (order (* ($abs coeff) lhs) (* ($abs coeff) rhs))
+           )
+          )
+)
+
+; program: $decide_order
+; args:
+; - lhs_order (-> A A A):
+; - rhs_order (-> A A A):
+; return: 
+; note: PRE : { lhs_order and rhs_order are not the inverse order from each 
+;               other }
+(program $decide_order ((A Type) (lhs_order (-> A A Bool)) (rhs_order (-> A A Bool)))
+         :signature ((-> A A Bool) (-> A A Bool)) (-> A A Bool)
+         (
+          (
+           ($decide_order = =)
+
+           =
+           )
+
+          (
+           ($decide_order = >)
+
+           >
+           )
+
+          (
+           ($decide_order = >=)
+
+           >=
+           )
+
+          (
+           ($decide_order = <)
+
+           <
+           )
+
+          (
+           ($decide_order = <=)
+
+           <=
+           )
+
+          (
+           ($decide_order order1 order1)
+
+           order1
+           )
+
+          (; TODO: ugly patch to avoid repeating previous equations
+           ($decide_order order1 order2)
+
+           ($decide_order order2 order1)
+           )
+          )
+)
+
+(program $add_terms ((A Type))
+         :signature (A A) A
+         (
+          (
+           ($add_terms (+ 0 rhs))
+           
+           rhs
+           )
+
+          (
+           ($add_terms (+ lhs 0))
+           
+           lhs
+           )
+          
+          (
+           ($add_terms (+ lhs (- lhs)))
+           
+           0
+           )
+
+          (
+           ($add_terms (+ lhs rhs))
+           (eo::ite (eo::and ($is_numeric_constant lhs)
+                             ($is_numeric_constant rhs))
+
+                    (eo::add lhs rhs)
+
+                    ;; { not ($is_numeric_constant lhs) or 
+                    ;;   not ($is_numeric_constant rhs) }
+                    (eo::define 
+                     (
+                      (add_lhs ($add_terms lhs))
+
+                      (add_rhs ($add_terms rhs))
+                      )
+
+                     (eo::ite (eo::and ($is_numeric_constant add_lhs)
+                                       ($is_numeric_constant add_rhs))
+
+                              (eo::add add_lhs add_rhs)
+
+                              (+ lhs rhs))
+                     )
+                    )
+           )
+          )
+         )
+
+(program $add_inequalities ()
+         :signature (Bool Bool) Bool
+         (
+          (
+           ($add_inequalities (lhs_order lhs_lhs lhs_rhs)
+                              (rhs_order rhs_lhs rhs_rhs))
+
+           (($decide_order lhs_order rhs_order) 
+            ($add_terms (+ lhs_lhs rhs_lhs))
+            ($add_terms (+ lhs_rhs rhs_rhs)))
+           )
+          )
+)
+
+(program $process_inequalities ()
+         :signature (@Varlist Bool) Bool
+         (
+          (
+           ($process_inequalities (@varlist coeff coeffs)
+                                  (@cl ineq ineqs))
+
+           ($f_list_cons
+
+            and
+
+            ($apply_coefficients 
+             ($manipulate_inequality ($negate_inequality ineq))
+             coeff)
+
+            ($process_inequalities coeffs ineqs))
+           )
+
+          (
+           ($process_inequalities @varlist.nil false)
+
+           true
+          )
+          )
+)
+
+(program $add_processed_inequalities ()
+         :signature (Bool) Bool
+         (
+          (
+           ($add_processed_inequalities (and ineq ineqs))
+
+           ($add_inequalities
+            ineq
+            ($add_processed_inequalities ineqs))
+            )
+
+          (
+           ($add_processed_inequalities true)
+           ;; TODO: would this suffice?
+           (= 0 0)
+            )
+          )
+)
+
+(program $verify_contradiction ()
+         :signature (Bool) Bool
+
+         (
+          (
+           ($verify_contradiction (> lhs rhs))
+
+           (eo::gt lhs rhs)
+           )
+
+          (
+           ($verify_contradiction (>= lhs rhs))
+
+           (eo::or 
+            (eo::gt lhs rhs)
+            (eo::eq lhs rhs))
+           )
+
+          (
+           ($verify_contradiction (< lhs rhs))
+
+           ($verify_contradiction (> rhs lhs))
+           )
+
+          (
+           ($verify_contradiction (<= lhs rhs))
+
+           ($verify_contradiction (>= rhs lhs))
+           )
+
+          (
+           ($verify_contradiction (= lhs rhs))
+
+           (eo::eq rhs lhs)
+           )
+          )
+         )
+
+(program $check_la_generic ((coeffs @VarList) (CL Bool))
+  (@VarList Bool) Bool
   (
-   (($check_la_generic coeffs CL) true)
-  )
+   (
+    ($check_la_generic coeffs inequalities) 
+
+    ($verify_contradiction
+     ($add_processed_inequalities ($process_inequalities coeffs inequalities)))
+    )
+   )
 )
 
 ; NOTE: The coefficients are one single argument.  This means they must be
 ;       be wrapped in a single function call using an n-ary function.  See
 ;       the example `small.smt3`.
 ;TRUST
-(declare-rule la_generic ((coeffs Real) (conclusion Bool))
+(declare-rule la_generic ((coeffs @VarList) (conclusion Bool))
   :args (coeffs)
   :requires ((($check_la_generic coeffs conclusion) true))
   :conclusion-explicit conclusion
