@@ -572,12 +572,13 @@
 
 ; program: $check_inverse_relations
 ; args:
-; - rel (-> A A A): A relation over numbers.
-; - inv_rel (-> A A A): A relation over numbers.
+; - rel (-> A A Bool): A relation over numbers.
+; - inv_rel (-> A A Bool): A relation over numbers.
 ; return: >
-;   A boolean indicating if "inv_rel" is the inverse, as a relation, of "rel"
-(program $check_inverse_relations ((A Type) (rel (-> A A A)) (inv_rel (-> A A A)))
-         :signature ((-> A A A) (-> A A A)) Bool
+;   A boolean indicating if `inv_rel` is the inverse, as a relation, of `rel`.
+(program $check_inverse_relations ((A Type) (rel (-> A A Bool)) 
+                                   (inv_rel (-> A A Bool)))
+         :signature ((-> A A Bool) (-> A A Bool)) Bool
          (
           (
            ($check_inverse_relations < >)
@@ -621,7 +622,7 @@
 ; args:
 ; - conclusion Bool: Conclusion given to rule "la_mult_neg".
 ; return: >
-;   A boolean indicating if "conclusion" is an implication of the form, either:
+;   A boolean indicating if `conclusion` is an implication of the form, either:
 ;   - (𝑡1 < 0 ∧𝑡2 ⋈ 𝑡3) → 𝑡1∗𝑡2 ⋈_𝑖𝑛𝑣 𝑡1∗𝑡3
 ;   where ⋈ and ⋈_𝑖𝑛𝑣 are relations over numbers, one being the inverse
 ;   of the other, as captured by the predicate $check_inverse_relations.
