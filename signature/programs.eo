@@ -456,7 +456,9 @@
 ; args:
 ; - cl_1 Bool: A clause built with @cl.
 ; - cl_2 Bool: A clause built with @cl.
-; return: A clause representing the disjunction of "cl_1" and "cl_2".
+; return: >
+;   The clause formed by concatenating the literals of `cl_1` and `cl_2`, taking
+;   into account the semantics of `@empty_cl`.
 (program $cl_disjunct ((clause Bool) (left_disjunct Bool) (right_disjunct Bool)
                        (left_tail Bool :list) (right_tail Bool :list))
                        
