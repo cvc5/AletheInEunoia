@@ -44,17 +44,22 @@
 ; Rule 6: th_resolution
 ;-------------
 
-(program $normalize_formula ((formula Bool))
+; program: $remove_double_negation
+; args:
+; - formula Bool: An arbitrary formula.
+; return: >
+;   A formula equivalent to "formula", with leading double negations cancelled.
+(program $remove_double_negation ((formula Bool))
          :signature (Bool) Bool
          (
           (
-           ($normalize_formula (not (not formula)))
+           ($remove_double_negation (not (not formula)))
 
            formula
            )
 
           (; { "formula" does not begin with a double negation }
-           ($normalize_formula formula)
+           ($remove_double_negation formula)
 
            formula
            )
@@ -73,21 +78,15 @@
           (
            ($normalize_single_clause (@cl formula))
 
-           (@cl ($normalize_formula formula))
+           (@cl ($remove_double_negation formula))
            )
 
           (; { literals != false }
            ($normalize_single_clause (@cl formula formulas))
 
-           ($f_list_cons @cl ($normalize_formula formula) 
+           ($f_list_cons @cl ($remove_double_negation formula) 
                          ($normalize_single_clause formulas))
            )
-
-          ;; (
-          ;;  ($normalize_single_clause false)
-
-          ;;  @empty_cl
-          ;;  )
 
           (
            ($normalize_single_clause @empty_cl)
@@ -174,19 +173,11 @@
                                                (pivot Bool))
          :signature (Bool Bool) Bool
          (
-          ;; (; By pre, "clause" should contain "pivot".
-          ;;  ($find_and_remove_pivot_from_clauses pivot (and clause))
-           
-          ;;  ($f_list_remove_elem @cl clause @empty_cl pivot)
-          ;;  ;; ($remove_pivot_from_clause pivot clause)
-          ;;  )
-
           (; {clauses != true}
            ($find_and_remove_pivot_from_clauses pivot (and clause clauses))
 
            (eo::ite ($f_list_contains_elem @cl pivot clause)
 
-                    ;; ($f_list_remove_elem @cl clause pivot @empty_cl)
                     ($remove_pivot_from_clause pivot clause)
                     
                     ($find_and_remove_pivot_from_clauses pivot clauses)
@@ -261,34 +252,48 @@
   (
    (; Carcara's elaboration indicates the pivots followed by their "polarity": in 
     ; this case, true means that "pivot" appears exactly as it is, in some clause.
-    ($check_resolution_with_normalized_clauses clauses (@varlist pivot true pivots)
+    ($check_resolution_with_normalized_clauses clauses (@varlist pivot polarity 
+                                                                 pivots)
                                                conclusion)
 
     (eo::define
      (
-      (normalized_pivot ($normalize_formula pivot))
+      (normalized_pivot ($remove_double_negation pivot))
 
-      (normalized_negated_pivot ($normalize_formula (not pivot)))
+      (normalized_negated_pivot ($remove_double_negation (not pivot)))
       )
 
     (eo::define
      
      (
       (single_clause_without_pivot
-       ($find_and_remove_pivot_from_clauses normalized_pivot clauses)
+       ($find_and_remove_pivot_from_clauses 
+        (eo::ite polarity 
+                 normalized_pivot
+                 normalized_negated_pivot) clauses)
        )
 
-      (clauses_without_pivot ($return_untouched_clauses normalized_pivot clauses))
+      (clauses_without_pivot ($return_untouched_clauses 
+                              (eo::ite polarity 
+                                       normalized_pivot
+                                       normalized_negated_pivot) clauses))
       )
 
      (eo::define
       (
        (single_clause_without_not_pivot
-        ($find_and_remove_pivot_from_clauses normalized_negated_pivot clauses_without_pivot)
+        ($find_and_remove_pivot_from_clauses 
+         (eo::ite polarity 
+                  normalized_negated_pivot
+                  normalized_pivot)
+         clauses_without_pivot)
         )
 
-       (clauses_without_not_pivot ($return_untouched_clauses normalized_negated_pivot
-                                                             clauses_without_pivot))
+       (clauses_without_not_pivot ($return_untouched_clauses 
+                                   (eo::ite polarity 
+                                            normalized_negated_pivot
+                                            normalized_pivot)
+                                   clauses_without_pivot))
       )
 
       (eo::define
@@ -310,58 +315,6 @@
               )
               )
      )))
-    )
-
-   (; Carcara's elaboration indicates the pivots followed by their "polarity": in 
-    ; this case, false means that "pivot" appears as "not pivot", in some clause.
-    ($check_resolution_with_normalized_clauses clauses (@varlist pivot false pivots)
-                                               conclusion)
-
-    (eo::define
-     (
-      (normalized_pivot ($normalize_formula pivot))
-
-      (normalized_negated_pivot ($normalize_formula (not pivot)))
-      )
-
-    (eo::define
-     
-     (
-      (single_clause_without_pivot
-       ($find_and_remove_pivot_from_clauses normalized_negated_pivot clauses)
-       )
-
-      (clauses_without_pivot ($return_untouched_clauses normalized_negated_pivot clauses))
-      )
-
-     (eo::define
-      (
-       (single_clause_without_not_pivot
-        ($find_and_remove_pivot_from_clauses normalized_pivot clauses_without_pivot)
-        )
-
-       (clauses_without_not_pivot ($return_untouched_clauses normalized_pivot
-                                                             clauses_without_pivot))
-      )
-
-      (eo::define
-       (
-        (new_clause ($cl_disjunct single_clause_without_pivot
-                                  single_clause_without_not_pivot))
-        )
-
-     ; eo::define's body:
-     (eo::ite ($cl_equal conclusion new_clause)
-
-              true
-
-              ;; { not ($cl_equal conclusion new_clause) }
-              ($check_resolution_with_normalized_clauses
-               ($f_list_cons and new_clause
-                             clauses_without_not_pivot)
-               pivots conclusion)
-              )
-     ))))
     )
 
    (
