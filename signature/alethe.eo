@@ -48,7 +48,7 @@
 ; args:
 ; - formula Bool: An arbitrary formula.
 ; return: >
-;   A formula equivalent to "formula", with leading double negations cancelled.
+;   A formula equivalent to `formula`, with leading double negations cancelled.
 (program $remove_double_negation ((formula Bool))
          :signature (Bool) Bool
          (
@@ -58,7 +58,7 @@
            formula
            )
 
-          (; { "formula" does not begin with a double negation }
+          (; { `formula` does not begin with a double negation }
            ($remove_double_negation formula)
 
            formula
@@ -70,7 +70,7 @@
 ; args:
 ; - clause Bool: A clause built with @cl.
 ; return: >
-;    A clause logically equivalent to "clause", where leading double negations
+;    A clause logically equivalent to `clause`, where leading double negations
 ;    in disjuncts are removed.
 (program $normalize_single_clause ((formula Bool) (formulas Bool :list))
          :signature (Bool) Bool
@@ -100,8 +100,8 @@
 ; args:
 ; - clauses Bool: And-list of clauses.
 ; return: >
-;    An and-list of clauses logically equivalent to "clauses", where each single
-;    "clause" is normalized, according to $normalize_single_clause.
+;    An and-list of clauses where each single clause is normalized according 
+;    to $normalize_single_clause.
 (program $normalize_clauses ((clause Bool) (clauses Bool :list))
          :signature (Bool) Bool
          (
@@ -122,14 +122,15 @@
 
 ; program: $remove_pivot_from_clause
 ; args:
-; - pivot Bool: Pivot literal contained in "clause".
+; - pivot Bool: Pivot literal contained in `clause`.
 ; - clause Bool: Clause containing the pivot.
-; return: The clause obtained from removing "pivot" from "clause".
-; note: PRE : { "pivot" is contained in "clause" 
-;                && 
-;               "pivot" is normalized
-;                && 
-;               "clause" is normalized }
+; return: The clause obtained from removing `pivot` from `clause`.
+; note: >
+;  PRE : { `pivot` is contained in `clause` 
+;          &&
+;          `pivot` is normalized
+;          &&
+;          `clause` is normalized }
 (program $remove_pivot_from_clause ((hd Bool) (tail Bool :list) 
                                       (pivot Bool))
          :signature (Bool Bool) Bool
@@ -163,12 +164,13 @@
 ; - pivot Bool: >
 ;   Pivot to be found and removed from the corresponding clause, if it exists.
 ; - clauses Bool: And-list of clauses.
-; return: The clause containing "pivot", without "pivot" itself.
-; note: PRE : { "pivot" is contained in some clause from "clauses"
+; return: The clause containing `pivot`, without `pivot` itself.
+; note: >
+;  PRE : { `pivot` is contained in some clause from `clauses`
 ;                && 
-;               "pivot" is normalized
+;               `pivot` is normalized
 ;                && 
-;               "clause" is normalized }
+;               `clause` is normalized }
 (program $find_and_remove_pivot_from_clauses ((clause Bool) (clauses Bool :list) 
                                                (pivot Bool))
          :signature (Bool Bool) Bool
@@ -184,7 +186,7 @@
                     )
            )
 
-          (; By pre, "clause" should contain "pivot".
+          (; By pre, `clause` should contain `pivot`.
            ; { clause is just a single @cl clause }
            ($find_and_remove_pivot_from_clauses pivot clause)
 
@@ -199,13 +201,13 @@
 ; - pivot Bool: >
 ;   Pivot that is being considered in the current binary resolution step.
 ; - clauses Bool: And-list of clauses.
-; return: The And-list of clauses without the clause containing "pivot".
+; return: The And-list of clauses without the clause containing `pivot`.
 ; note: >
-;   PRE : { "pivot" is contained in some clause from "clauses"
+;   PRE : { `pivot` is contained in some clause from `clauses`
 ;           && 
-;           "pivot" is normalized
+;           `pivot` is normalized
 ;           && 
-;          "clause" is normalized }
+;          `clause` is normalized }
 ;   While this function repeats part of the work done by 
 ;   $find_and_remove_pivot_from_clauses, it is added to simplify the task
 ;   of identifying which are the remaining clauses upon which we must continue
@@ -225,7 +227,7 @@
                     )
            )
 
-          (; By pre, "clause" should contain "pivot".
+          (; By pre, `clause` should contain `pivot`.
            ; { clause is just a single @cl clause }
            ($return_untouched_clauses pivot clause)
 
@@ -240,10 +242,10 @@
 ; - pivots @VarList: A list of pivots used during resolution.
 ; - conclusion Bool: Conclusion provided to the rule.
 ; return: >
-;   A boolean indicating if "conclusion" is a resolvent that can be
-;   obtained from applying resolution over "clauses", using the pivots
-;   contained in "pivots", in the same order of their appearance in the list.
-; note: PRE : { "clauses" are normalized: double negation is simplified }
+;   A boolean indicating if `conclusion` is a resolvent that can be
+;   obtained from applying resolution over `clauses`, using the pivots
+;   contained in `pivots`, in the same order of their appearance in the list.
+; note: PRE : { `clauses` are normalized: double negation is simplified }
 (program $check_resolution_with_normalized_clauses  ((clauses Bool)
                                                      (polarity Bool)
                                                      (pivot Bool) (pivots @VarList :list)
@@ -251,7 +253,7 @@
   (Bool @VarList Bool) Bool
   (
    (; Carcara's elaboration indicates the pivots followed by their "polarity": in 
-    ; this case, true means that "pivot" appears exactly as it is, in some clause.
+    ; this case, true means that `pivot` appears exactly as it is, in some clause.
     ($check_resolution_with_normalized_clauses clauses (@varlist pivot polarity 
                                                                  pivots)
                                                conclusion)
@@ -331,9 +333,9 @@
 ; - pivots @VarList: A list of pivots used during resolution.
 ; - conclusion Bool: Conclusion provided to the rule.
 ; return: >
-;   A boolean indicating if "conclusion" is a resolvent that can be
-;   obtained from applying chain resolution over "clauses", using the pivots
-;   contained in "pivots", in the same order of their appearance in the list.
+;   A boolean indicating if `conclusion` is a resolvent that can be
+;   obtained from applying chain resolution over `clauses`, using the pivots
+;   contained in `pivots`, in the same order of their appearance in the list.
 (program $check_resolution ((clauses Bool) (pivots @VarList)
                             (conclusion Bool))
   (Bool @VarList Bool) Bool
@@ -348,14 +350,20 @@
 )
 
 ; rule: th_resolution
-; implements: TODO?
 ; premises:
-; - premises Bool:
-; - conclusion Bool:
-; - pivots @VarList:
+; - premises Bool: And-list of premises over which "resolution" is applied.
 ; args:
-; requires:
-; conclusion:
+; - pivots @VarList: >
+;   @VarList of pivots used in each binary resolution step, each pivot followed
+;   by its polarity.
+; requires: >
+;   For the conclusion of the rule to be result of the application of the chain
+;   resolution rule, over the given premises, using the provided pivots.
+; conclusion-explicit: >
+;   A clause containing a subset of the disjuncts the belong to the premises,
+;   obtained through chain resolution over the premises.
+; note: This rule is not emitted by the sat-solver. See rule `resolution`
+;   for the rule emitted by the sat-solver.
 (declare-rule th_resolution ((premises Bool) (conclusion Bool) (pivots @VarList))
   :premise-list premises and
   :args (pivots)
@@ -368,14 +376,19 @@
 ;-------------
 
 ; rule: resolution
-; implements: TODO?
 ; premises:
-; - premises Bool:
-; - conclusion Bool:
-; - pivots @VarList:
+; - premises Bool: And-list of premises over which "resolution" is applied.
 ; args:
-; requires:
-; conclusion:
+; - pivots @VarList: >
+;   @VarList of pivots used in each binary resolution step, each pivot followed
+;   by its polarity.
+; requires: >
+;   For the conclusion of the rule to be result of the application of the chain
+;   resolution rule, over the given premises, using the provided pivots.
+; conclusion-explicit: >
+;   A clause containing a subset of the disjuncts the belong to the premises,
+;   obtained through chain resolution over the premises.
+; note: This rule is emitted only by the sat-solver.
 (declare-rule resolution ((premises Bool) (conclusion Bool) (pivots @VarList))
   :premise-list premises and
   :args (pivots)
@@ -445,7 +458,7 @@
 ; - premise Bool: Last step before the application of "subproof".
 ; - conclusion Bool: Conclusion of the "subproof" step.
 ; return: >
-;   A boolean indicating if "conclusion" is of the form 
+;   A boolean indicating if `conclusion` is of the form 
 ;   (@cl (not assumption), premise)
 (program $check_subproof ((assumption Bool) (premise Bool) 
                           (conclusion Bool))
@@ -630,7 +643,7 @@
 ;    and bounded variables lhs_vars and rhs_vars.
 ; return: >
 ;    A boolean resulting from the conjunction of the following conditions:
-;    - Every variable in rhs_vars appear fixed in "new_context".
+;    - Every variable in rhs_vars appear fixed in `new_context`.
 ;    - Vars in lhs_vars are substituted by rhs_vars
 ;    - rhs_vars should not appear free in (Q lhs_vars lhs_body)
 ;    - rhs_vars should not appear in the first part of the new_context (old_context)
@@ -650,7 +663,7 @@
                          (forall rhs_vars rhs_body))))
 
     (eo::and
-     ; Every variable in rhs_vars appear fixed in "new_context".
+     ; Every variable in rhs_vars appear fixed in `new_context`.
      ($context_vars_are_fixed new_context rhs_vars)
 
      ; Vars in lhs_vars are substituted by rhs_vars.
@@ -689,7 +702,7 @@
 
     (eo::and
 
-     ; Every variable in rhs_vars appear fixed in "context".
+     ; Every variable in rhs_vars appear fixed in `context`.
      ($context_vars_are_fixed new_context rhs_vars)
 
      ; Vars in lhs_vars are substituted by rhs_vars
@@ -799,8 +812,8 @@
 ; - new_context Bool: Context of sko_ex premise.
 ; - ex_vars @VarList: List of existentially quantified variables.
 ; return: >
-;    Checks that "new_context" contains the expected mapping between each variable in
-;    "ex_vars" and its corresponding skolem term.
+;    Checks that `new_context` contains the expected mapping between each variable in
+;    `ex_vars` and its corresponding skolem term.
 (program $check_sko_ex_new_context ((ex_body Bool) (new_context Bool) (ex_vars @VarList))
          (Bool Bool @VarList) Bool
          (
@@ -839,7 +852,7 @@
      ($context_is_extended new_context old_context)
 
      ; new_context should contain the expected mapping between each variable in
-     ; "ex_vars" and its corresponding skolem term.
+     ; `ex_vars` and its corresponding skolem term.
      ($check_sko_ex_new_context lhs new_context ex_vars)
 
      ; ex_vars should not appear in the first part of the new_context (old_context)
@@ -1108,7 +1121,7 @@
 ; - premises Bool: Equivalence premises given to rule trans, chained through "and".
 ; - conclusion Bool: Conclusion given to rule trans. Must be built with @cl.
 ; return: >
-;   A boolean indicating if "conclusion" is the equivalence resulting from
+;   A boolean indicating if `conclusion` is the equivalence resulting from
 ;   the transitivity of equivalence, identifying the lhs of the first 
 ;   premise equivalence with the rhs of the last premise equivalence.
 (program $check_trans ((A Type) (lhs A) (lhs_1 A) (lhs_2 A)
@@ -1308,7 +1321,7 @@
 ;   Premises given to rule cong. Must be an and-list of each premise (equality).
 ; - conclusion Bool: Conclusion clause given to rule cong.
 ; return: >
-;   A boolean indicating if "conclusion" follows from the and-list of premises
+;   A boolean indicating if `conclusion` follows from the and-list of premises
 ;   given.
 (program $check_cong ((T Type) (U Type) (f_lhs (-> T U)) (lhs U) (f_rhs (-> T U)) (rhs U) 
                       (premises Bool))
@@ -1458,8 +1471,8 @@
 ; - conclusion Bool    : >
 ;   Conclusion provided to the rule. 
 ; return: >
-;   A boolean indicating if "conclusion" is a conjunct from 
-;   "premise", with index "index".
+;   A boolean indicating if `conclusion` is a conjunct from 
+;   `premise`, with index `index`.
 (program $check_and ((premise Bool) (premise_non_cl Bool) (index Int) (conclusion Bool))
   (Bool Int Bool) Bool
   (
@@ -1505,8 +1518,8 @@
 ; - conclusion Bool    : >
 ;   Conclusion provided to the rule. 
 ; return: >
-;   A boolean indicating if "conclusion" is a conjunct from "premise" (after
-;   applying DeMorgan's law), in position "index".
+;   A boolean indicating if `conclusion` is a conjunct from `premise` (after
+;   applying DeMorgan's law), in position `index`.
 (program $check_not_or ((disjuncts Bool) (premise_non_cl Bool) (index Int) (conclusion Bool))
   (Bool Int Bool) Bool
   (; To facilitate the use of the program, we allow 
@@ -1552,7 +1565,7 @@
 ; - conclusion Bool: >
 ;   Conclusion provided to the rule. 
 ; return: >
-;   A boolean indicating if "conclusion" is equivalent to "premise", but built 
+;   A boolean indicating if `conclusion` is equivalent to `premise`, but built 
 ;   with @cl.
 (program $check_or ((premise Bool) (conclusion Bool))
   (Bool Bool) Bool
@@ -1572,7 +1585,7 @@
 ;   The clause, built with the "or" operator, over which the rule is applied. 
 ;   It could be embedded within a single-term clause built with @cl.
 ; requires: >
-;   The conclusion should be a clause equivalent to "premise", 
+;   The conclusion should be a clause equivalent to `premise`, 
 ;   but built with @cl.
 ; conclusion-explicit: >
 ;   A conclusion satisfying the previous side-condition.
@@ -1592,9 +1605,9 @@
 ; - conclusion Bool: >
 ;   The conclusion provided to the not_and rule.
 ; return: >
-;   A boolean indicating if "conclusion" is a clause built with
+;   A boolean indicating if `conclusion` is a clause built with
 ;   @cl, where each disjunct is negated and corresponds to some conjunct from
-;   "premise".
+;   `premise`.
 (program $check_not_and ((conjunction Bool) (conclusion Bool))
   (Bool Bool) Bool
   (
@@ -1778,7 +1791,7 @@
 ;   The conclusion clause provided to the rule. It must be always built with
 ;   @cl.
 ; return: >
-;   A boolean indicating if "conclusion" satisfies the property of being
+;   A boolean indicating if `conclusion` satisfies the property of being
 ;   an instance of the weakening rule for implication, where the antecedent is 
 ;   a conjunction.
 (program $check_and_pos ((pos Int) (antecedent Bool) (consequent Bool))
@@ -1826,7 +1839,7 @@
 ;   This should be the conclusion to the application of and_neg. It must be
 ;   a clause built with @cl.
 ; return: >
-;   A boolean indicating if "conclusion" is an instance of excluded middle,
+;   A boolean indicating if `conclusion` is an instance of excluded middle,
 ;   for a proposition of the form phi_1 /\ ... /\ phi_n.
 (program $check_and_neg ((left_disjunct Bool) (right_disjunct Bool :list))
   (Bool) Bool
@@ -1896,7 +1909,7 @@
 ;   The conclusion clause provided to the rule. It must be always built with
 ;   @cl.
 ; return: >
-;   A boolean indicating if "conclusion" satisfies the property of being
+;   A boolean indicating if `conclusion` satisfies the property of being
 ;   an instance of the weakening rule for implication, with the form 
 ;   not phi_k, phi_0 \/ ... \/ phi_n, with 0 <= k <= n.
 (program $check_or_neg ((index Int) (left_disjunct Bool) (right_disjunct Bool))
@@ -2671,7 +2684,7 @@
 ;   type A.
 ; - conjunctions Bool: A conjunctions of inequalities of the form (not (= lhs' rhs'))
 ; return: >
-;   A boolean indicating if ineq appears in "conjunctions", modulo symmetry of the
+;   A boolean indicating if ineq appears in `conjunctions`, modulo symmetry of the
 ;   equality within ineq.
 (program $conjunction_contains_ineq ((A Type) (lhs A) (rhs A) (hd Bool) (tl Bool :list))
   (Bool Bool) Bool
@@ -2776,7 +2789,7 @@
 ; args:
 ; - conclusion Bool: The conclusion give to the distinct_elim rule.
 ; return:
-; A Boolean indicating if the given "conclusion" has the shape
+; A Boolean indicating if the given `conclusion` has the shape
 ; (distinct 𝑡1 … 𝑡𝑛) ≈ ⋀ 𝑡𝑖 ≈/≈ 𝑡𝑗.
 (program $check_distinct_elim ((A Type) (hd A) (inequalities Bool) (conjunctions Bool))
   (Bool) Bool
