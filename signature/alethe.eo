@@ -626,14 +626,14 @@
 ;   where ⋈ and ⋈_𝑖𝑛𝑣 are relations over numbers, one being the inverse
 ;   of the other, as captured by the predicate $check_inverse_relations.
 ;   - (𝑡1 < 0 ∧ ¬(𝑡2 ≈ 𝑡3)) → ¬(𝑡1∗𝑡2 ≈ 𝑡1∗𝑡3)
-(program $check_la_mult_neg ((A Type) (rel (-> A A A)) (inv_rel (-> A A A))
+(program $check_la_mult_neg ((A Type) (rel (-> A A Bool)) (inv_rel (-> A A Bool))
                              (t1 A) (t2 A) (t3 A)
                              (conclusion Bool))
   (Bool) Bool
   (
    (
-    ($check_la_mult_neg (-> (and (< t1 0) (rel t2 t3)) 
-                           (inv_rel (* t1 t2) (* t1 t3))))
+    ($check_la_mult_neg (@cl (=> (and (< t1 0.0) (rel t2 t3))
+                                (inv_rel (* t1 t2) (* t1 t3)))))
 
     (eo::ite ($check_inverse_relations rel inv_rel)
 
@@ -643,8 +643,8 @@
     )
 
    (
-    ($check_la_mult_neg (-> (and (< t1 0) (not (= t2 t3))) 
-                           (not (= (* t1 t2) (* t1 t3)))))
+    ($check_la_mult_neg (@cl (=> (and (< t1 0.0) (not (= t2 t3)))
+                                (not (= (* t1 t2) (* t1 t3))))))
 
     true
     )
@@ -660,8 +660,11 @@
 
 ; rule: la_mult_neg
 ; requires: >
-;   For conclusion to satisfy the criteria defined by the checker 
-;   $check_la_mult_neg.
+;   For conclusion to be an implication of the form, either:
+;   - (𝑡1 < 0 ∧𝑡2 ⋈ 𝑡3) → 𝑡1∗𝑡2 ⋈_𝑖𝑛𝑣 𝑡1∗𝑡3
+;   where ⋈ and ⋈_𝑖𝑛𝑣 are relations over numbers, one being the inverse
+;   of the other, as captured by the predicate $check_inverse_relations.
+;   - (𝑡1 < 0 ∧ ¬(𝑡2 ≈ 𝑡3)) → ¬(𝑡1∗𝑡2 ≈ 𝑡1∗𝑡3)
 ; conclusion-explicit: A conclusion satisfying the previous side-condition.
 (declare-rule la_mult_neg ((conclusion Bool))
   :requires ((($check_la_mult_neg conclusion) true))
