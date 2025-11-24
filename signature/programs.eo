@@ -452,6 +452,49 @@
   )
 )
 
+; program: $cl_disjunct
+; args:
+; - cl_1 Bool: A clause built with @cl.
+; - cl_2 Bool: A clause built with @cl.
+; return: >
+;   The clause formed by concatenating the literals of `cl_1` and `cl_2`, taking
+;   into account the semantics of `@empty_cl`.
+(program $cl_disjunct ((clause Bool) (left_disjunct Bool) (right_disjunct Bool)
+                       (left_tail Bool :list) (right_tail Bool :list))
+                       
+         :signature (Bool Bool) Bool
+         (
+          (
+           ($cl_disjunct @empty_cl clause)
+
+           clause
+           )
+
+          (; {clause != @empty_cl }
+           ($cl_disjunct clause @empty_cl)
+
+           clause
+           )
+
+          (
+           ($cl_disjunct (@cl left_disjunct) 
+                         (@cl right_disjunct right_tail))
+
+           (@cl left_disjunct right_disjunct right_tail)
+           )
+
+          (; { left_tail != false}
+           ($cl_disjunct (@cl left_disjunct left_tail) 
+                         (@cl right_disjunct right_tail))
+
+           ($f_list_cons @cl 
+                         left_disjunct 
+                         ($cl_disjunct left_tail
+                                       (@cl right_disjunct right_tail)))
+           )
+          )
+)
+
 ; program: convert_or_to_cl
 ; args:
 ; - or_clause Bool : >
