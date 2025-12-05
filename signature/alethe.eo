@@ -517,7 +517,7 @@
 ; args:
 ; - order (-> A A A): An order over numeric types.
 ; return: >
-;   The order that can be obtained by inverting the pairs of relation "order".
+;   The order that can be obtained by inverting the pairs of relation `order`.
 (program $invert_order ((A Type) (rel (-> A A Bool)))
          :signature ((-> A A Bool)) (-> A A Bool)
          (
@@ -556,8 +556,9 @@
 ; program: $negate_inequality
 ; args:
 ; - inequality Bool: A linear inequaity that we want to negate.
-; return: The negated form of "inequality", according to $invert_order.
-(program $negate_inequality ()
+; return: The negated form of `inequality`, according to `$invert_order`.
+(program $negate_inequality ((A Type) (order (-> A A Bool)) (lhs A) (rhs A)
+                             (inequality Bool))
          :signature (Bool) Bool
          (
           (
@@ -566,11 +567,11 @@
            inequality
            )
 
-          (
-           ($negate_inequality (order lhs rhs))
+          ;; (
+          ;;  ($negate_inequality (order lhs rhs))
 
-           (($invert_order order) lhs rhs)
-           )
+          ;;  (($invert_order order) lhs rhs)
+          ;;  )
           )
 )
 
@@ -587,7 +588,8 @@
 ; note: >
 ;   PRE : { "inequality" is already in its negated form, according to 
 ;           $negate_inequality }
-(program $manipulate_inequality ()
+(program $manipulate_inequality ((A Type) (d1 A) (d2 A) (summatory1 A)
+                                 (summatory2 A) (order (-> A A Bool)))
          :signature (Bool) Bool
          (
           (
@@ -620,7 +622,7 @@
 ; args:
 ; - constant A: A numeric constant.
 ; return: The absolute value of "constant".
-(program $abs ((A type))
+(program $abs ((A Type) (constant A))
          :signature (A) A
 
          (
@@ -641,7 +643,8 @@
 ; return: >
 ;   An inequality that is equivalent to "inequality", but where "coeff"
 ;   has been multiplied in both sides of "inequality".
-(program $apply_coefficients ((A type))
+(program $apply_coefficients ((A Type) (lhs A) (rhs A) (coeff A) 
+                              (order (-> A A Bool)))
          :signature (Bool A) Bool
          (
           (
@@ -665,7 +668,7 @@
 ; return: 
 ; note: PRE : { lhs_order and rhs_order are not the inverse order from each 
 ;               other }
-(program $decide_order ((A Type) (lhs_order (-> A A Bool)) (rhs_order (-> A A Bool)))
+(program $decide_order ((A Type) (order1 (-> A A Bool)) (order2 (-> A A Bool)))
          :signature ((-> A A Bool) (-> A A Bool)) (-> A A Bool)
          (
           (
@@ -712,7 +715,7 @@
           )
 )
 
-(program $add_terms ((A Type))
+(program $add_terms ((A Type) (lhs A) (rhs A))
          :signature (A A) A
          (
           (
@@ -761,7 +764,9 @@
           )
          )
 
-(program $add_inequalities ()
+(program $add_inequalities ((A Type) (lhs_lhs A) (lhs_rhs A)
+                            (rhs_lhs A) (rhs_rhs A) (lhs_order (-> A A Bool))
+                            (rhs_order (-> A A Bool)))
          :signature (Bool Bool) Bool
          (
           (
@@ -775,7 +780,8 @@
           )
 )
 
-(program $process_inequalities ()
+(program $process_inequalities ((A Type) (coeff A) (coeffs @VarList :list)
+                                (ineq Bool) (ineqs Bool :list))
          :signature (@Varlist Bool) Bool
          (
           (
@@ -801,7 +807,7 @@
           )
 )
 
-(program $add_processed_inequalities ()
+(program $add_processed_inequalities ((ineq Bool) (ineqs Bool))
          :signature (Bool) Bool
          (
           (
@@ -820,7 +826,7 @@
           )
 )
 
-(program $verify_contradiction ()
+(program $verify_contradiction ((A Type) (lhs A) (rhs A))
          :signature (Bool) Bool
 
          (
@@ -858,14 +864,14 @@
           )
          )
 
-(program $check_la_generic ((coeffs @VarList) (CL Bool))
+(program $check_la_generic ((coeffs @VarList) (conclusion Bool))
   (@VarList Bool) Bool
   (
    (
-    ($check_la_generic coeffs inequalities) 
+    ($check_la_generic coeffs conclusion) 
 
     ($verify_contradiction
-     ($add_processed_inequalities ($process_inequalities coeffs inequalities)))
+     ($add_processed_inequalities ($process_inequalities coeffs conclusion)))
     )
    )
 )
