@@ -250,7 +250,7 @@
                                                      (polarity Bool)
                                                      (pivot Bool) (pivots @VarList :list)
                             (conclusion Bool))
-  (Bool @VarList Bool) Bool
+  :signature (Bool @VarList Bool) Bool
   (
    (; Carcara's elaboration indicates the pivots followed by their "polarity": in 
     ; this case, true means that `pivot` appears exactly as it is, in some clause.
@@ -338,7 +338,7 @@
 ;   contained in `pivots`, in the same order of their appearance in the list.
 (program $check_resolution ((clauses Bool) (pivots @VarList)
                             (conclusion Bool))
-  (Bool @VarList Bool) Bool
+  :signature (Bool @VarList Bool) Bool
   (
    (
     ($check_resolution clauses pivots conclusion)
@@ -398,7 +398,7 @@
 
 ;TODO
 (program $check_tautology ((CL1 Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_tautology CL1) true)
   )
@@ -424,7 +424,7 @@
 ;   A boolean indicating if conclusion is equivalent to premise, without 
 ;   duplicated disjuncts.
 (program $check_contraction ((premise Bool) (conclusion Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (
     ; Check that both clauses contain the same elements, regardless of order
@@ -462,7 +462,7 @@
 ;   (@cl (not assumption), premise)
 (program $check_subproof ((assumption Bool) (premise Bool) 
                           (conclusion Bool))
-  (Bool Bool Bool) Bool
+  :signature (Bool Bool Bool) Bool
   (
    (
     ($check_subproof (@cl assumption) @empty_cl conclusion)
@@ -516,39 +516,38 @@
 ; program: $invert_order
 ; args:
 ; - order (-> A A A): An order over numeric types.
-; return: >
-;   The order that can be obtained by inverting the pairs of relation `order`.
+; return:
 (program $invert_order ((A Type) (rel (-> A A Bool)))
          :signature ((-> A A Bool)) (-> A A Bool)
          (
           (
            ($invert_order <)
 
-           >
+           >=
            )
 
           (
            ($invert_order <=)
 
-           >=
+           >
            )
 
-          (
-           ($invert_order =)
+          ;; (; TODO: shouldn't be allowed 
+          ;;  ($invert_order =)
 
-           =
-           )
+          ;;  =
+          ;;  )
 
           (
            ($invert_order >)
 
-           <
+           <=
            )
 
           (
            ($invert_order >=)
 
-           <=
+           <
            )
           )
 )
@@ -567,60 +566,288 @@
            inequality
            )
 
-          ;; (
-          ;;  ($negate_inequality (order lhs rhs))
+          (
+           ($negate_inequality (order lhs rhs))
 
-          ;;  (($invert_order order) lhs rhs)
-          ;;  )
+           (eo::define
+            (
+             (inverted_order ($invert_order order))
+             )
+            
+            (inverted_order lhs rhs))
+           )
           )
-)
+         )
 
 ; program: $manipulate_inequality
 ; args:
-; - inequality Bool: The inequality to be manipulated.
+; - inequality Bool: >
+;   The inequality to be manipulated. Should have the form 
+;   (ineq (+ d1 summatory1) (+ d2 summatory2)), for some order `ineq`.
 ; return: >
-;   An inequality that is equivalent to "inequality", resulting from
-;   manipulations that preserve the solutions of "inequality":
+;   The inequality resulting from manipulations that preserve the solutions of 
+;   `inequality`:
+;   - rewrites the inequality just in terms of >, >= or =, accordingly
 ;   - it subtracts the right-hand side summatory, from both sides
 ;   - it subtracts the right-hand side additive constant, from both sides
 ;   - for the resultant right-hand side constant "d", it corrects it to 
-;     floor(d) + 1, and converts >, < to >= or <=, respectively.
+;     floor(d) + 1, and converts > to >=
 ; note: >
-;   PRE : { "inequality" is already in its negated form, according to 
-;           $negate_inequality }
+;   PRE : { `inequality` is already in its negated form, according to 
+;           `$negate_inequality` }
 (program $manipulate_inequality ((A Type) (d1 A) (d2 A) (summatory1 A)
-                                 (summatory2 A) (order (-> A A Bool)))
+                                 (summatory2 A) (order (-> A A Bool))
+                                 (lhs_c A) (lhs_term A) (rhs_c A) (rhs_term A))
          :signature (Bool) Bool
          (
           (
            ($manipulate_inequality (> (+ d1 summatory1) (+ d2 summatory2)))
 
-           (>= (- summatory1 summatory2)
-                  ;; Floor function, as a result of converting to Z.
-                  (+ (eo::to_z (- d2 d1)) 1))
+           (>= ($evaluate_arith_term (- summatory1 summatory2))
+              ;; Floor function, as a result of converting to Z.
+              ($evaluate_arith_term
+               (+ 
+                (eo::ite (eo::and ($is_numeric_literal d1)
+                                  ($is_numeric_literal d2))
+                         
+                         (eo::to_z ($evaluate_arith_term (- d2 d1)))
+
+                         (- d2 d1))
+                1)))
            )
 
           (
+           ($manipulate_inequality (>= (+ d1 summatory1) (+ d2 summatory2)))
+
+           (>= ($evaluate_arith_term (- summatory1 summatory2))
+              ;; Floor function, as a result of converting to Z.
+              ($evaluate_arith_term
+               (+ 
+                (eo::ite (eo::and ($is_numeric_literal d1)
+                                  ($is_numeric_literal d2))
+                         
+                         (eo::to_z ($evaluate_arith_term (- d2 d1)))
+
+                         (- d2 d1))
+                1)))
+           )
+
+          (; Rewrite in terms of >=
            ($manipulate_inequality (< (+ d1 summatory1) (+ d2 summatory2)))
 
-           (<= (- summatory1 summatory2)
-                  ;; Floor function, as a result of converting to Z.
-                  (+ (eo::to_z (- d2 d1)) 1))
+           (>= 
+            ($evaluate_arith_term (- summatory2 summatory1))
+
+            ($evaluate_arith_term
+             ;; Floor function, as a result of converting to Z.
+             (+ 
+              (eo::ite (eo::and ($is_numeric_literal d1)
+                                ($is_numeric_literal d2))
+                       
+                       (eo::to_z ($evaluate_arith_term (- d1 d2)))
+
+                       (- d1 d2))
+              1)))
+           )
+
+          (; Rewrite in terms of >=
+           ($manipulate_inequality (<= (+ d1 summatory1) (+ d2 summatory2)))
+
+           (>= 
+            ($evaluate_arith_term (- summatory2 summatory1))
+
+            ($evaluate_arith_term
+             ;; Floor function, as a result of converting to Z.
+             (+ 
+              (eo::ite (eo::and ($is_numeric_literal d1)
+                                ($is_numeric_literal d2))
+                       
+                       (eo::to_z ($evaluate_arith_term (- d1 d2)))
+
+                       (- d1 d2))
+              1)))
            )
 
           (
-           ($manipulate_inequality (order (+ d1 summatory1) (+ d2 summatory2)))
+           ($manipulate_inequality (= (+ d1 summatory1) (+ d2 summatory2)))
 
-           (order (- summatory1 summatory2)
-                  ;; Floor function, as a result of converting to Z.
-                  (+ (eo::to_z (- d2 d1)) 1))
+           (= ($evaluate_arith_term (- summatory1 summatory2))
+
+              ($evaluate_arith_term
+               ;; Floor function, as a result of converting to Z.
+               (+ 
+                (eo::ite (eo::and ($is_numeric_literal d1)
+                                  ($is_numeric_literal d2))
+                         
+                         (eo::to_z ($evaluate_arith_term (- d2 d1)))
+
+                         (- d2 d1))
+                1)))
+              )
+
+          (; Special case, not to be confused with just having additive
+           ; constants.
+           ($manipulate_inequality (> (* lhs_c lhs_term) 
+                                      (* rhs_c rhs_term)))
+
+           (> ($evaluate_arith_term 
+               (- (* lhs_c lhs_term) (* rhs_c rhs_term)))
+              0)
+           )
+
+          (; Special case, not to be confused with just having additive
+           ; constants.
+           ($manipulate_inequality (>= (* lhs_c lhs_term) 
+                                      (* rhs_c rhs_term)))
+
+           (>= ($evaluate_arith_term 
+               (- (* lhs_c lhs_term) (* rhs_c rhs_term)))
+              0)
+           )
+
+          (; { d1 and d2 are constants }
+           ($manipulate_inequality (> d1 d2))
+
+           (>= 0
+              ($evaluate_arith_term
+                ;; Floor function, as a result of converting to Z.
+                (+ 
+                 (eo::ite (eo::and ($is_numeric_literal d1)
+                                   ($is_numeric_literal d2))
+                          
+                          (eo::to_z ($evaluate_arith_term (- d2 d1)))
+
+                          (- d2 d1))
+                 1)))
+           )
+
+          (; { d1 and d2 are constants }
+           ($manipulate_inequality (>= d1 d2))
+
+           (>= 0
+              ($evaluate_arith_term
+                ;; Floor function, as a result of converting to Z.
+                (+ 
+                 (eo::ite (eo::and ($is_numeric_literal d1)
+                                   ($is_numeric_literal d2))
+                          
+                          (eo::to_z ($evaluate_arith_term (- d2 d1)))
+
+                          (- d2 d1))
+                 1)))
+           )
+
+          (; Special case, not to be confused with just having additive
+           ; constants.
+           ($manipulate_inequality (< (* lhs_c lhs_term) 
+                                      (* rhs_c rhs_term)))
+           (> ($evaluate_arith_term 
+               (- (* rhs_c rhs_term) (* lhs_c lhs_term)))
+              0)
+           )
+
+          (; Special case, not to be confused with just having additive
+           ; constants.
+           ($manipulate_inequality (<= (* lhs_c lhs_term) 
+                                      (* rhs_c rhs_term)))
+           (>= ($evaluate_arith_term 
+               (- (* rhs_c rhs_term) (* lhs_c lhs_term)))
+              0)
+           )
+
+          (
+           ($manipulate_inequality (< d1 d2))
+
+           (>= 0
+               ($evaluate_arith_term
+                ;; Floor function, as a result of converting to Z.
+                (+ 
+                 (eo::ite (eo::and ($is_numeric_literal d1)
+                                   ($is_numeric_literal d2))
+                          
+                          (eo::to_z ($evaluate_arith_term (- d1 d2)))
+
+                          (- d1 d2))
+                 1)))
+           )
+
+          (
+           ($manipulate_inequality (<= d1 d2))
+
+           (>= 0
+               ($evaluate_arith_term
+                ;; Floor function, as a result of converting to Z.
+                (+ 
+                 (eo::ite (eo::and ($is_numeric_literal d1)
+                                   ($is_numeric_literal d2))
+                          
+                          (eo::to_z ($evaluate_arith_term (- d1 d2)))
+
+                          (- d1 d2))
+                 1)))
+           )
+
+          (; Special case, not to be confused with just having additive
+           ; constants.
+           ($manipulate_inequality (= (* lhs_c lhs_term) 
+                                      (* rhs_c rhs_term)))
+           (= ($evaluate_arith_term 
+               (- (* lhs_c lhs_term) (* rhs_c rhs_term)))
+              0)
+           )
+
+          (
+           ($manipulate_inequality (= d1 d2))
+
+           (= 0
+              ($evaluate_arith_term
+               ;; Floor function, as a result of converting to Z.
+               (+ 
+                (eo::ite (eo::and ($is_numeric_literal d1)
+                                  ($is_numeric_literal d2))
+                         
+                         (eo::to_z ($evaluate_arith_term (- d2 d1)))
+
+                         (- d2 d1))
+                1)))
            )
           )
-)
+         )
+
+; program: $evaluate_inequality_sides
+; args:
+; - inequality Bool: An arbitrary linear inequality.
+; return: >
+;   An inequality built from `inequality`, where its both sides have been
+;   evaluated with `$evaluate_arith_term`.
+; note: >
+;   It is done so to take advantage of early opportunities of simplification of
+;   inequalities.
+(program $evaluate_inequality_sides ((A Type) (d1 A) (d2 A) (summatory1 A :list)
+                                     (summatory2 A :list) (order (-> A A Bool)))
+         :signature (Bool) Bool
+         (
+          (
+           ($evaluate_inequality_sides (order (+ d1 summatory1) (+ d2 summatory2)))
+
+           (order
+            ($evaluate_arith_term (+ d1 summatory1))
+            ($evaluate_arith_term (+ d2 summatory2)))
+           )
+
+          (
+           ($evaluate_inequality_sides (order d1 d2))
+
+           (order 
+            ($evaluate_arith_term d1)
+            ($evaluate_arith_term d2))
+           )
+          )
+         )
 
 ; program: $abs
 ; args:
-; - constant A: A numeric constant.
+; - constant A: A numeric literal.
 ; return: The absolute value of "constant".
 (program $abs ((A Type) (constant A))
          :signature (A) A
@@ -630,7 +857,9 @@
            ($abs constant)
 
            (eo::ite (eo::is_neg constant)
+
                     (eo::neg constant)
+
                     constant)
           )
           )
@@ -641,8 +870,8 @@
 ; - inequality Bool: A linear inequality.
 ; - coeff A: A numeric coefficient.
 ; return: >
-;   An inequality that is equivalent to "inequality", but where "coeff"
-;   has been multiplied in both sides of "inequality".
+;   An inequality obtained from `inequality` by multiplying `coeff`
+;   in both sides.
 (program $apply_coefficients ((A Type) (lhs A) (rhs A) (coeff A) 
                               (order (-> A A Bool)))
          :signature (Bool A) Bool
@@ -650,55 +879,62 @@
           (
            ($apply_coefficients (= lhs rhs) coeff)
 
-           (= (* coeff lhs) (* coeff rhs))
+           (= ($evaluate_arith_term (* coeff lhs))
+               
+              ($evaluate_arith_term (* coeff rhs)))
            )
 
-          (
+          (; { order != "=" }
            ($apply_coefficients (order lhs rhs) coeff)
 
-           (order (* ($abs coeff) lhs) (* ($abs coeff) rhs))
+           (eo::define
+            (; `coeff` could be an alethe arith expression like (- 1.0), we need
+             ; to convert it into a numeric literal, so $abs can be applied.
+             (evaluated_coeff ($evaluate_arith_term coeff))
+             )
+            
+            (order 
+             ($evaluate_arith_term (* ($abs evaluated_coeff) lhs))
+
+             ($evaluate_arith_term (* ($abs evaluated_coeff) rhs))))
            )
           )
 )
 
 ; program: $decide_order
 ; args:
-; - lhs_order (-> A A A):
-; - rhs_order (-> A A A):
-; return: 
-; note: PRE : { lhs_order and rhs_order are not the inverse order from each 
-;               other }
-(program $decide_order ((A Type) (order1 (-> A A Bool)) (order2 (-> A A Bool)))
+; - lhs_order (-> A A Bool): An arbitrary order.
+; - ineq_order (-> A A Bool): An arbitrary order.
+; return: >
+;   For 2 inequalities expressed in terms of orders `lhs_order` and `rhs_order`,
+;   returns the order that relates the 2 terms, that result from adding the
+;   left-hand sides and right-hand sides of the previous inequalities.
+(program $decide_order ((A Type) (order1 (-> A A Bool)) (order2 (-> A A Bool))
+                        (ineq_order (-> A A Bool)))
          :signature ((-> A A Bool) (-> A A Bool)) (-> A A Bool)
          (
           (
-           ($decide_order = =)
+           ($decide_order = ineq_order)
 
-           =
+           ineq_order
            )
 
           (
-           ($decide_order = >)
+           ($decide_order ineq_order =)
 
-           >
+           ineq_order
            )
 
           (
-           ($decide_order = >=)
-
-           >=
-           )
-
-          (
-           ($decide_order = <)
-
-           <
-           )
-
-          (
-           ($decide_order = <=)
+           ($decide_order < <=)
 
            <=
+           )
+
+          (
+           ($decide_order > >=)
+
+           >=
            )
 
           (
@@ -707,63 +943,19 @@
            order1
            )
 
-          (; TODO: ugly patch to avoid repeating previous equations
-           ($decide_order order1 order2)
+          ;; (; To avoid repeating previous equations...
+          ;;  ($decide_order order1 order2)
 
-           ($decide_order order2 order1)
-           )
+          ;;  ($decide_order order2 order1)
+          ;;  )
           )
 )
 
-(program $add_terms ((A Type) (lhs A) (rhs A))
-         :signature (A A) A
-         (
-          (
-           ($add_terms (+ 0 rhs))
-           
-           rhs
-           )
-
-          (
-           ($add_terms (+ lhs 0))
-           
-           lhs
-           )
-          
-          (
-           ($add_terms (+ lhs (- lhs)))
-           
-           0
-           )
-
-          (
-           ($add_terms (+ lhs rhs))
-           (eo::ite (eo::and ($is_numeric_constant lhs)
-                             ($is_numeric_constant rhs))
-
-                    (eo::add lhs rhs)
-
-                    ;; { not ($is_numeric_constant lhs) or 
-                    ;;   not ($is_numeric_constant rhs) }
-                    (eo::define 
-                     (
-                      (add_lhs ($add_terms lhs))
-
-                      (add_rhs ($add_terms rhs))
-                      )
-
-                     (eo::ite (eo::and ($is_numeric_constant add_lhs)
-                                       ($is_numeric_constant add_rhs))
-
-                              (eo::add add_lhs add_rhs)
-
-                              (+ lhs rhs))
-                     )
-                    )
-           )
-          )
-         )
-
+; program: $add_inequalities
+; args:
+; - inequality1 Bool: An inequality.
+; - inequality2 Bool: An inequality.
+; return: The inequality that results from adding `inequality1` with `inequality2`.
 (program $add_inequalities ((A Type) (lhs_lhs A) (lhs_rhs A)
                             (rhs_lhs A) (rhs_rhs A) (lhs_order (-> A A Bool))
                             (rhs_order (-> A A Bool)))
@@ -773,16 +965,33 @@
            ($add_inequalities (lhs_order lhs_lhs lhs_rhs)
                               (rhs_order rhs_lhs rhs_rhs))
 
-           (($decide_order lhs_order rhs_order) 
-            ($add_terms (+ lhs_lhs rhs_lhs))
-            ($add_terms (+ lhs_rhs rhs_rhs)))
+           (eo::define
+            (
+             (resulting_order ($decide_order lhs_order rhs_order))
+             )
+
+            (resulting_order
+
+             ($evaluate_arith_term (+ lhs_lhs rhs_lhs))
+
+             ($evaluate_arith_term (+ lhs_rhs rhs_rhs))))
+            )
            )
-          )
 )
 
+; program: $process_inequalities
+; args:
+; - coefficients @VarList: >
+;   A @VarList of coefficients for each given inequality.
+; - inequalities Bool: A clause whose disjuncts are linear inequalities.
+; return: >
+;   The negation of the given clause, in the form of the conjunction of its 
+;   negated disjuntcs (inequalities). Each inequality i is also manipulated
+;   according to `$manipulate_inequality`, and multiplied with coefficient i
+;   from the given `coefficients` `@VarList`.
 (program $process_inequalities ((A Type) (coeff A) (coeffs @VarList :list)
                                 (ineq Bool) (ineqs Bool :list))
-         :signature (@Varlist Bool) Bool
+         :signature (@VarList Bool) Bool
          (
           (
            ($process_inequalities (@varlist coeff coeffs)
@@ -792,8 +1001,10 @@
 
             and
 
-            ($apply_coefficients 
-             ($manipulate_inequality ($negate_inequality ineq))
+            ($apply_coefficients
+             ($manipulate_inequality
+              ($evaluate_inequality_sides
+               ($negate_inequality ineq)))
              coeff)
 
             ($process_inequalities coeffs ineqs))
@@ -803,26 +1014,32 @@
            ($process_inequalities @varlist.nil false)
 
            true
-          )
+           )
           )
 )
 
-(program $add_processed_inequalities ((ineq Bool) (ineqs Bool))
+; program: $add_processed_inequalities
+; args:
+; - ineqs Bool: >
+;   And-list of already processed inequalities, according to 
+;   $process_inequalities.
+; return: The inequality resulting from adding together inequalities from `ineqs`.
+(program $add_processed_inequalities ((ineq Bool) (ineqs Bool :list))
          :signature (Bool) Bool
          (
           (
            ($add_processed_inequalities (and ineq ineqs))
 
            ($add_inequalities
-            ineq
+            ($evaluate_inequality_sides ineq)
             ($add_processed_inequalities ineqs))
-            )
+           )
 
           (
            ($add_processed_inequalities true)
            ;; TODO: would this suffice?
            (= 0 0)
-            )
+           )
           )
 )
 
@@ -864,22 +1081,34 @@
           )
          )
 
+; program: $check_la_generic
+; args:
+; - coeffs @VarList:
+; - conclusion Bool:
+; return:
 (program $check_la_generic ((coeffs @VarList) (conclusion Bool))
-  (@VarList Bool) Bool
+  :signature (@VarList Bool) Bool
   (
    (
     ($check_la_generic coeffs conclusion) 
 
-    ($verify_contradiction
-     ($add_processed_inequalities ($process_inequalities coeffs conclusion)))
+    ;; ($verify_contradiction
+     ($add_processed_inequalities
+      ($process_inequalities coeffs conclusion)
+      )
+     ;; )
     )
    )
 )
 
-; NOTE: The coefficients are one single argument.  This means they must be
-;       be wrapped in a single function call using an n-ary function.  See
-;       the example `small.smt3`.
-;TRUST
+; rule: la_generic
+; implements: TODO?
+; premises:
+; - coeffs @VarList:
+; - conclusion Bool:
+; args:
+; requires:
+; conclusion:
 (declare-rule la_generic ((coeffs @VarList) (conclusion Bool))
   :args (coeffs)
   :requires ((($check_la_generic coeffs conclusion) true))
@@ -888,7 +1117,7 @@
 
 ;TODO
 (program $check_lia_generic ((CL Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_lia_generic CL) true)
   )
@@ -913,7 +1142,7 @@
 
 ;TODO
 (program $check_la_tautology ((CL Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_la_tautology CL) true)
   )
@@ -990,7 +1219,7 @@
 (program $check_la_mult_neg ((A Type) (rel (-> A A Bool)) (inv_rel (-> A A Bool))
                              (t1 A) (t2 A) (t3 A)
                              (conclusion Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (
     ($check_la_mult_neg (@cl (=> (and (< t1 0.0) (rel t2 t3))
@@ -1106,7 +1335,7 @@
                       (premise Bool) 
                       (lhs_vars @VarList) (lhs_body Bool) 
                       (rhs_vars @VarList) (rhs_body Bool))
-  (Bool Bool Bool Bool) Bool
+  :signature (Bool Bool Bool Bool) Bool
   (
    (
     ($check_bind old_context new_context
@@ -1226,7 +1455,7 @@
 ;    A @VarList containing pairs (also as @VarList) of the form (𝑥𝑖, 𝜀𝑥𝑖.(∃𝑥𝑖+1, … , 𝑥𝑛.𝜑).)
 (program $check_sko_ex_build_skolem_vars ((choice_body Bool) (A Type) (x A) 
                                        (tail @VarList :list))
-         (Bool @VarList) @VarList
+         :signature (Bool @VarList) @VarList
          (
           (
            ($check_sko_ex_build_skolem_vars choice_body (@varlist x))
@@ -1267,7 +1496,7 @@
 ;    Checks that `new_context` contains the expected mapping between each variable in
 ;    `ex_vars` and its corresponding skolem term.
 (program $check_sko_ex_new_context ((ex_body Bool) (new_context Bool) (ex_vars @VarList))
-         (Bool Bool @VarList) Bool
+         :signature (Bool Bool @VarList) Bool
          (
           (
            ($check_sko_ex_new_context ex_body new_context ex_vars)
@@ -1293,7 +1522,7 @@
 ;    outside of the subproof being closed by sko_ex.
 (program $check_sko_ex ((old_context Bool) (new_context Bool) (lhs Bool) (rhs Bool) 
                                                  (conclusion Bool) (ex_vars @VarList))
-  (Bool Bool Bool Bool) Bool
+  :signature (Bool Bool Bool Bool) Bool
   (
    (
     ($check_sko_ex old_context new_context 
@@ -1339,7 +1568,7 @@
 
 ;TODO
 (program $check_sko_forall ((ctx Bool) (T Type) (l T) (r T) (l1 T) (r1 T))
-  (Bool T T T T) Bool
+  :signature (Bool T T T T) Bool
   (
    (($check_sko_forall ctx l r l1 r1) true)
   )
@@ -1369,7 +1598,7 @@
                                                        (body Bool)
                                                        (instantiated_body Bool) 
                                                        (variables_substitutions @VarList))
-  (Bool @VarList) Bool
+  :signature (Bool @VarList) Bool
   (
    (;  TODO: 𝑥𝑖 and 𝑡𝑖 have the same sort
     ($check_forall_inst (@cl (or (not (forall forall_vars body)) instantiated_body))
@@ -1416,7 +1645,7 @@
 ;    context) to the left-hand side of the conclusion, we obtain a term that is
 ;    equivalent (modulo alpha-conversion) to the right-hand side.
 (program $check_refl ((context Bool) (conclusion Bool) (A Type) (lhs A) (rhs A))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (
     ($check_refl context (@cl (= lhs rhs)))
@@ -1459,7 +1688,7 @@
 ;   The last element of type T related with lhs, through transitivity, 
 ;   following the equivalences in eqs.
 (program $last_eq_right ((T Type) (t1 T) (t2 T) (eqs Bool))
-  (Bool T) Bool
+  :signature (Bool T) Bool
   (
    (; case (@cl (= t1 t2) false)
     ($last_eq_right (@cl (= t1 t2)) t1)
@@ -1540,7 +1769,7 @@
 ;   type T related with lhs, through transitivity, following the equivalences 
 ;   in eqs.
 (program $make_trans ((T Type) (t1 T) (t2 T) (eqs Bool :list))
-  (Bool T) Bool
+  :signature (Bool T) Bool
   (
    (; case (and (= t1 t2) true)
     ($make_trans (and (@cl (= t1 t2))) t1)
@@ -1579,7 +1808,7 @@
 (program $check_trans ((A Type) (lhs A) (lhs_1 A) (lhs_2 A)
                        (rhs A) (rhs_1 A) (rhs_2 A)
                        (eqs Bool :list))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    ; We perform the first step of $make_trans here, to be able to select
    ; which side of the equation to follow.
@@ -1777,7 +2006,7 @@
 ;   given.
 (program $check_cong ((T Type) (U Type) (f_lhs (-> T U)) (lhs U) (f_rhs (-> T U)) (rhs U) 
                       (premises Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (
     ($check_cong premises (@cl (= (f_lhs lhs) (f_rhs rhs))))
@@ -1835,7 +2064,7 @@
 
 ;TODO
 (program $check_eq_transitive ((conclusion Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_eq_transitive conclusion) true)
   )
@@ -1849,7 +2078,7 @@
 
 ;TODO
 (program $check_eq_congruent ((conclusion Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_eq_congruent conclusion) true)
   )
@@ -1863,7 +2092,7 @@
 
 ;TODO
 (program $check_eq_congruent_pred ((conclusion Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_eq_congruent_pred conclusion) true)
   )
@@ -1893,7 +2122,7 @@
 
 ;TODO
 (program $check_qnt_cnf ((conclusion Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_qnt_cnf conclusion) true)
   )
@@ -1926,7 +2155,7 @@
 ;   A boolean indicating if `conclusion` is a conjunct from 
 ;   `premise`, with index `index`.
 (program $check_and ((premise Bool) (premise_non_cl Bool) (index Int) (conclusion Bool))
-  (Bool Int Bool) Bool
+  :signature (Bool Int Bool) Bool
   (
    (
     ($check_and premise index conclusion)
@@ -1973,7 +2202,7 @@
 ;   A boolean indicating if `conclusion` is a conjunct from `premise` (after
 ;   applying DeMorgan's law), in position `index`.
 (program $check_not_or ((disjuncts Bool) (premise_non_cl Bool) (index Int) (conclusion Bool))
-  (Bool Int Bool) Bool
+  :signature (Bool Int Bool) Bool
   (; To facilitate the use of the program, we allow 
    ; the presence of a @cl constructor
    (($check_not_or (@cl premise_non_cl) index conclusion)
@@ -2020,7 +2249,7 @@
 ;   A boolean indicating if `conclusion` is equivalent to `premise`, but built 
 ;   with @cl.
 (program $check_or ((premise Bool) (conclusion Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (
     ($check_or (@cl premise) conclusion)
@@ -2061,7 +2290,7 @@
 ;   @cl, where each disjunct is negated and corresponds to some conjunct from
 ;   `premise`.
 (program $check_not_and ((conjunction Bool) (conclusion Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (
     ($check_not_and (@cl (not conjunction)) conclusion)
@@ -2247,7 +2476,7 @@
 ;   an instance of the weakening rule for implication, where the antecedent is 
 ;   a conjunction.
 (program $check_and_pos ((pos Int) (antecedent Bool) (consequent Bool))
-  (Int Bool) Bool
+  :signature (Int Bool) Bool
   (
    (
     ($check_and_pos pos (@cl (not antecedent) consequent))
@@ -2294,7 +2523,7 @@
 ;   A boolean indicating if `conclusion` is an instance of excluded middle,
 ;   for a proposition of the form phi_1 /\ ... /\ phi_n.
 (program $check_and_neg ((left_disjunct Bool) (right_disjunct Bool :list))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (
     ($check_and_neg (@cl left_disjunct right_disjunct))
@@ -2327,7 +2556,7 @@
 ;   A boolean indicating if conclusion is of the form
 ;   ¬(𝜑1 ∨⋯∨𝜑𝑛), 𝜑1, … , 𝜑𝑛, for some given propositions 𝜑1, ..., 𝜑𝑛.
 (program $check_or_pos ((left_disjunct Bool) (right_disjunct Bool :list))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (
     ($check_or_pos (@cl (not left_disjunct) right_disjunct))
@@ -2365,7 +2594,7 @@
 ;   an instance of the weakening rule for implication, with the form 
 ;   not phi_k, phi_0 \/ ... \/ phi_n, with 0 <= k <= n.
 (program $check_or_neg ((index Int) (left_disjunct Bool) (right_disjunct Bool))
-  (Int Bool) Bool
+  :signature (Int Bool) Bool
   (
    (
     ($check_or_neg index (@cl left_disjunct (not right_disjunct)))
@@ -2397,7 +2626,7 @@
 
 ;TODO
 (program $check_xor_pos1 ((CL Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_xor_pos1 CL) true)
   )
@@ -2412,7 +2641,7 @@
 
 ;TODO
 (program $check_xor_pos2 ((CL Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_xor_pos2 CL) true)
   )
@@ -2427,7 +2656,7 @@
 
 ;TODO
 (program $check_xor_neg1 ((CL Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_xor_neg1 CL) true)
   )
@@ -2442,7 +2671,7 @@
 
 ;TODO
 (program $check_xor_neg2 ((CL Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_xor_neg2 CL) true)
   )
@@ -2513,7 +2742,7 @@
 
 ;TODO
 (program $check_equiv_neg1 ((CL Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_equiv_neg1 CL) true)
   )
@@ -2528,7 +2757,7 @@
 
 ;TODO
 (program $check_equiv_neg2 ((CL Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_equiv_neg2 CL) true)
   )
@@ -2568,7 +2797,7 @@
 
 ;TODO
 (program $check_ite_pos1 ((CL Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_ite_pos1 CL) true)
   )
@@ -2583,7 +2812,7 @@
 
 ;TODO
 (program $check_ite_pos2 ((CL Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_ite_pos2 CL) true)
   )
@@ -2598,7 +2827,7 @@
 
 ;TODO
 (program $check_ite_neg1 ((CL Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_ite_neg1 CL) true)
   )
@@ -2613,7 +2842,7 @@
 
 ;TODO
 (program $check_ite_neg2 ((CL Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_ite_neg2 CL) true)
   )
@@ -2657,7 +2886,7 @@
 
 ;TODO
 (program $check_connective_def ((conclusion Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_connective_def conclusion) true)
   )
@@ -2671,7 +2900,7 @@
 
 ;TODO
 (program $check_and_simplify ((l Bool) (r Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (($check_and_simplify l r) true)
   )
@@ -2686,7 +2915,7 @@
 
 ;TODO
 (program $check_or_simplify ((conclusion Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_or_simplify conclusion) true)
   )
@@ -2700,7 +2929,7 @@
 
 ;TODO
 (program $check_not_simplify ((conclusion Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_not_simplify conclusion) true)
   )
@@ -2724,7 +2953,7 @@
 ;   results from the application of equivalence preserving transformations, 
 ;   as specified in "rewrite_implication".
 (program $check_implies_simplify ((phi_1 Bool) (phi_2 Bool) (psy Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (
     ($check_implies_simplify (@cl (= (=> phi_1 phi_2) psy)))
@@ -2759,7 +2988,7 @@
 ;   results from the application of equivalence preserving transformations, 
 ;   as specified in "rewrite_equivalence".
 (program $check_equiv_simplify ((phi_1 Bool) (phi_2 Bool) (psy Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (
     ($check_equiv_simplify (@cl (= (= phi_1 phi_2) psy)))
@@ -2784,7 +3013,7 @@
 
 ;TODO
 (program $check_bool_simplify ((conclusion Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_bool_simplify conclusion) true)
   )
@@ -2798,7 +3027,7 @@
 
 ;TODO
 (program $check_ac_simp ((l Bool) (r Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (($check_ac_simp l r) true)
   )
@@ -2813,7 +3042,7 @@
 
 ;TODO
 (program $check_ite_simplify ((l Bool) (r Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (($check_ite_simplify l r) true)
   )
@@ -2828,7 +3057,7 @@
 
 ;TODO
 (program $check_qnt_simplify ((l Bool) (r Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (($check_qnt_simplify l r) true)
   )
@@ -2843,7 +3072,7 @@
 
 ;TODO
 (program $check_onepoint ((conclusion Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_onepoint conclusion) true)
   )
@@ -2868,7 +3097,7 @@
 
 ;TODO
 (program $check_qnt_join ((conclusion Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_qnt_join conclusion) true)
   )
@@ -2882,7 +3111,7 @@
 
 ;TODO
 (program $check_qnt_rm_unused ((conclusion Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_qnt_rm_unused conclusion) true)
   )
@@ -2896,7 +3125,7 @@
 
 ;TODO
 (program $check_eq_simplify ((conclusion Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_eq_simplify conclusion) true)
   )
@@ -2910,7 +3139,7 @@
 
 ;TODO
 (program $check_div_simplify ((l Bool) (r Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (($check_div_simplify l r) true)
   )
@@ -2925,7 +3154,7 @@
 
 ;TODO
 (program $check_prod_simplify ((conclusion Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_prod_simplify conclusion) true)
   )
@@ -2939,7 +3168,7 @@
 
 ;TODO
 (program $check_unary_minus_simplify ((l Bool) (r Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (($check_unary_minus_simplify l r) true)
   )
@@ -2954,7 +3183,7 @@
 
 ;TODO
 (program $check_minus_simplify ((l Bool) (r Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (($check_minus_simplify l r) true)
   )
@@ -2969,7 +3198,7 @@
 
 ;TODO
 (program $check_sum_simplify ((l Bool) (r Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (($check_sum_simplify l r) true)
   )
@@ -2984,7 +3213,7 @@
 
 ;TODO
 (program $check_comp_simplify ((l Bool) (r Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (($check_comp_simplify l r) true)
   )
@@ -3005,7 +3234,7 @@
                               (A Type) (var A)
                               (B Type) (value B)
                               (tl @VarList :list))
-  (Bool Bool @VarList) Bool
+  :signature (Bool Bool @VarList) Bool
   (
    (
     ($verify_let_premises context premises 
@@ -3050,7 +3279,7 @@
                          (A Type) (lhs A) (rhs A)
                          (B Type)
                          (var_values B))
-  (Bool Bool Bool) Bool
+  :signature (Bool Bool Bool) Bool
   (
    (
     ($check_let_elim context premises
@@ -3095,7 +3324,7 @@
 ; Returns the reinterpretation of the given and-list of distinct-list elements,
 ; as a conjunction of inequalities.
 (program $build_distinct_list ((A Type) (lhs A) (rhs A) (tl Bool :list))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (
     ($build_distinct_list (and (distinct lhs rhs) tl))
@@ -3139,7 +3368,7 @@
 ;   A boolean indicating if ineq appears in `conjunctions`, modulo symmetry of the
 ;   equality within ineq.
 (program $conjunction_contains_ineq ((A Type) (lhs A) (rhs A) (hd Bool) (tl Bool :list))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (
     ($conjunction_contains_ineq (not (= lhs rhs)) (and (not (= lhs rhs)) tl))
@@ -3190,7 +3419,7 @@
 ;    according to comparison predicate $conjunction_contains_ineq.
 (program $conjunction_contains_conjunction ((hd Bool) (tl Bool :list)
                                            (f_list_2 Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (
     ($conjunction_contains_conjunction (and hd tl) f_list_2)
@@ -3226,7 +3455,7 @@
 ; A boolean indicating if the conjuncts from list_1 and list_2 are the 
 ; same, regardless of the order.
 (program $conjunctions_equal ((list_1 Bool) (list_2 Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (
     ($conjunctions_equal list_1 list_2)
@@ -3244,7 +3473,7 @@
 ; A Boolean indicating if the given `conclusion` has the shape
 ; (distinct 𝑡1 … 𝑡𝑛) ≈ ⋀ 𝑡𝑖 ≈/≈ 𝑡𝑗.
 (program $check_distinct_elim ((A Type) (hd A) (inequalities Bool) (conjunctions Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (; TODO: assuming that inequalities come first
    (
     ($check_distinct_elim (@cl (= inequalities conjunctions)))
@@ -3300,7 +3529,7 @@
 ;     ○ 𝑡𝑖 ≈ (𝑡1 ∘𝑡2) ∧(𝑡2 ∘𝑡3) ∧⋯∧ (𝑡𝑛−1 ∘𝑡𝑛) (for a chainable operator ∘)
 ;   - ∘ cannot be ∧ or ∨.
 (program $check_nary_elim ((A Type) (hd A) (tl A :list))
-  (Bool) Bool
+  :signature (Bool) Bool
   (; TODO: check that op is not /\ nor \/
    (
     ($check_nary_elim (@cl (= (=> hd tl) (=> hd tl))))
@@ -3329,7 +3558,7 @@
 
 ;TODO
 (program $check_bfun_elim ((psi Bool) (phi Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (($check_bfun_elim (@cl psi) phi) true)
   )
@@ -3345,7 +3574,7 @@
 
 ;TODO
 (program $check_ite_intro ((conclusion Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (($check_ite_intro conclusion) true)
   )
@@ -3389,7 +3618,7 @@
 ;   A boolean indicating if conclusion is a permutation of the premise.
 (program $check_reordering ((hd_premise Bool) (tl_premise Bool :list)
                            (hd_conclusion Bool) (tl_conclusion Bool :list))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (
     ($check_reordering (@cl hd_premise tl_premise) (@cl hd_conclusion tl_conclusion))
@@ -3433,7 +3662,7 @@
 
 ;TODO
 (program $check_rare_rewrite ((Flag Bool) (CL Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (($check_rare_rewrite Flag CL) true)
   )

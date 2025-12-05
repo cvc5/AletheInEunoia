@@ -15,7 +15,7 @@
 ; - t2 Terms: Term to be compared.
 ; return: Simulates the behavior of eo::is_eq.
 (program $eo_is_eq ((Terms Type) (t1 Terms) (t2 Terms))
-         (Terms Terms) Bool
+         :signature (Terms Terms) Bool
          (
           (
            ($eo_is_eq t1 t1)
@@ -145,6 +145,27 @@
           )
 )
 
+; program: $is_numeric_literal
+; args:
+; - c A: An arbitrary literal.
+; return: A boolean indicating if `c` is a rational or integer literal.
+;note: PRE : { decimal literals are syntax sugar for rational literals }
+(program $is_numeric_literal ((A Type) (c A))
+         :signature (A) Bool
+
+         (
+          (
+           ($is_numeric_literal c)
+
+           (eo::or (eo::is_z c)
+                   (eo::is_q c)
+                   ; To deal with numbers with decimal part.
+                   (eo::is_ok (eo::to_q c))
+                   )
+           )
+          )
+         )
+
 ;-------------
 ; @VarList
 ;-------------
@@ -156,7 +177,7 @@
 ; return:
 (program $varlist_concat ((A Type) (hd A) (tl @VarList :list)
                          (varlist_2 @VarList))
-  (@VarList @VarList) @VarList
+  :signature (@VarList @VarList) @VarList
 
   (
    (
@@ -182,7 +203,7 @@
 ; - tl @VarList:
 ; return:
 (program $varlist_reverse ((A Type) (hd A) (tl @VarList :list))
-  (@VarList) @VarList
+  :signature (@VarList) @VarList
   (
    (
     ($varlist_reverse (@varlist hd tl))
@@ -205,7 +226,7 @@
 ; return:
 ;  The zip of the received @VarLists, as another @VarList.
 (program $varlist_zip ((A Type) (hd_1 A) (tl_1 A :list) (hd_2 A) (tl_2 A :list))
-         (@VarList @VarList) @VarList
+         :signature (@VarList @VarList) @VarList
 
          (
           (
@@ -239,7 +260,7 @@
                         (hd_1 A) (tl_1 A :list)
                         (varlist_2 @VarList))
 
-         (@VarList @VarList) @VarList
+         :signature (@VarList @VarList) @VarList
 
          (
           (
@@ -267,7 +288,7 @@
 ;    PRE : { len(varlist) > 0 }
 (program $varlist_hd ((A Type) (hd A) (tail @VarList))
 
-         (@VarList) A
+         :signature (@VarList) A
 
          (
           (
@@ -285,7 +306,7 @@
 ;    The tail of the given @VarList; "varlist" could be nil.
 (program $varlist_tl ((A Type) (hd A) (tail @VarList))
 
-         (@VarList) @VarList
+         :signature (@VarList) @VarList
 
          (
           (
@@ -308,7 +329,7 @@
 ; - elem A: An element for which we want to test membership
 ; return: A boolean indicating if "elem" appears in "varlist".
 (program $varlist_contains_elem ((A Type) (elem A) (head A) (tail @VarList :list))
-         (@VarList A) Bool
+         :signature (@VarList A) Bool
          (
           (
            ($varlist_contains_elem @varlist.nil elem)
@@ -338,7 +359,7 @@
 ;    A new @VarList that is equal to "varlist" except that it does not
 ;    contain the first occurrence of "elem".
 (program $varlist_remove_elem ((A Type) (elem A) (head A) (tail @VarList :list))
-         (@VarList A) @VarList
+         :signature (@VarList A) @VarList
          (
           (
            ($varlist_remove_elem @varlist.nil elem)
@@ -373,7 +394,7 @@
 ;   For a unit clause, built with @cl, removes the top @cl if 
 ;   any, returning the only disjunct. Otherwise, returns T.
 (program $from_cl ((T Bool))
-    (Bool) Bool
+    :signature (Bool) Bool
     (
      (
 
@@ -396,7 +417,7 @@
 ;   Embeds T within a unit clause built with @cl, only
 ;   if T is not a unit clause built with @cl itself. 
 (program $to_cl ((T Bool))
-    (Bool) Bool
+    :signature (Bool) Bool
     (
      (
       ($to_cl (@cl T))
@@ -419,7 +440,7 @@
 ; - phi_2 Bool: A proposition.
 ; return: A boolean indicating if phi_1 and phi_2 are syntactically equal.
 (program $prop_syntax_eq ((phi Bool) (psi Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (
     ($prop_syntax_eq phi phi) 
@@ -442,7 +463,7 @@
 ; return: >
 ;   A boolean indicating if cl_1 and cl_2 are equal modulo permutations.
 (program $cl_equal ((cl_1 Bool) (cl_2 Bool))
-  (Bool Bool) Bool
+  :signature (Bool Bool) Bool
   (
    (
     ($cl_equal cl_1 cl_2)
@@ -503,7 +524,7 @@
 ; return: >
 ;   A clause equivalent to "or_clause", built exclusively with @cl.
 (program $convert_or_to_cl ((or_clause Bool) (disjunct_1 Bool) (disjunct_2 Bool :list))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (
     ($convert_or_to_cl (or disjunct_1 disjunct_2))
@@ -526,7 +547,7 @@
 ;   Applies De Morgan's law over the conjuncts of "ls", returning a new clause
 ;   built with @cl.
 (program $de_morgan_not_and ((l Bool) (ls Bool))
-  (Bool) Bool
+  :signature (Bool) Bool
   (
    (
     ($de_morgan_not_and (and l ls))
@@ -553,7 +574,7 @@
                            (f (-> A A B))
                            (nil_elem A)
                            (hd A) (tl A :list))
-         ((-> A A B) A A) @VarList
+         :signature ((-> A A B) A A) @VarList
 
          (
           (
@@ -588,7 +609,7 @@
 ; - clause Bool: A clause from which we want to delete duplicates.
 ; return: A clause that contains every element from "clause", without duplicates.
 (program $cl_remove_duplicates ((clause Bool))
-         (Bool) Bool
+         :signature (Bool) Bool
          (
           (
            ($cl_remove_duplicates clause)
@@ -611,7 +632,7 @@
 ;   A proposition that is equivalent to "implication", but that is
 ;   not built with =>.
 (program $rewrite_implication ((phi_1 Bool) (phi_2 Bool))
-         (Bool) Bool
+         :signature (Bool) Bool
          (; We apply semantics preserving rewrites.
           (
            ($rewrite_implication (=> (not phi_1) (not phi_2)))
@@ -671,7 +692,7 @@
 ;   A proposition that is equivalent to "equivalence", but that is
 ;   not built with =.
 (program $rewrite_equivalence ((phi_1 Bool) (phi_2 Bool))
-         (Bool) Bool
+         :signature (Bool) Bool
          (; We apply semantics preserving rewrites.
           (
            ($rewrite_equivalence (= (not phi_1) (not phi_2)))
@@ -737,7 +758,7 @@
                     (value B) (hd Bool) (tl Bool :list)
                     (varlist @VarList)
                     (subst Bool))
-         (Bool A) B
+         :signature (Bool A) B
          (
           (; Just to discard possible leading @ctx constructor
            ($context_get_substitute (@ctx varlist subst) id)
@@ -787,7 +808,7 @@
                                       (value B) (varlist @VarList) 
                                       (context Bool) (and_list Bool)
                                       (ids @VarList :list))
-         (Bool @VarList) @VarList
+         :signature (Bool @VarList) @VarList
          (
           (
            ($context_get_var_subst_pairs context (@varlist id ids))
@@ -814,7 +835,7 @@
 ;   A @VarList with the variables bound by "context".
 (program $context_get_variables ((varlist @VarList) (subst Bool) (any Bool) 
                                  (eqs Bool :list))
-         (Bool) @VarList
+         :signature (Bool) @VarList
          (
           (
            ($context_get_variables (@ctx varlist subst))
@@ -856,7 +877,7 @@
                                       (value B) (varlist @VarList) 
                                       (context Bool) (and_list Bool)
                                       (ids @VarList :list))
-         (Bool @VarList) @VarList
+         :signature (Bool @VarList) @VarList
          (
           (
            ($context_get_vars_substs context (@varlist id ids))
@@ -888,7 +909,7 @@
                                 (B Type) (any B)
                                 (eqs Bool :list)
                                 (varlist @VarList) (and_list Bool))
-         (Bool A) Bool
+         :signature (Bool A) Bool
          
          (
           (; Case: most nested @ctx.
@@ -960,7 +981,7 @@
 ;   A boolean indicating if every variable in "vars" appear fixed in "context".
 (program $context_vars_are_fixed ((A Type) (var A) (tl @VarList :list)
                                   (context Bool))
-         (Bool @VarList) Bool
+         :signature (Bool @VarList) Bool
          
          (
           (
@@ -987,7 +1008,7 @@
 ;    A boolean indicating if "var" is defined in "context".
 (program $context_var_is_defined ((A Type) (var A) (eq Bool)
                                   (varlist @VarList :list) (and_list Bool :list))
-         (Bool A) Bool
+         :signature (Bool A) Bool
          
          (
           (
@@ -1029,7 +1050,7 @@
 ;    A boolean indicating if at least some variable in "vars" is defined in "context".
 (program $context_vars_are_defined ((A Type) (var A)
                                   (vars @VarList :list) (context Bool))
-         (Bool @VarList) Bool
+         :signature (Bool @VarList) Bool
          
          (
           (
@@ -1059,7 +1080,7 @@
 ;    old_ctx.
 (program $context_is_extended ((old_ctx Bool) (new_ctx Bool)
                                (varlist @VarList) (eq Bool) (and_list Bool :list))
-    (Bool Bool) Bool
+    :signature (Bool Bool) Bool
     (
         (; We admit for the contexts to be equal
          ($context_is_extended new_ctx new_ctx) 
@@ -1114,7 +1135,7 @@
                        (A Type) (var_values A)
                        (B Type) (nested_func_app B))
 
-         (let_type) @VarList
+         :signature (let_type) @VarList
          (
           (
            ($let_get_vars (_ (@let var_defs body) var_values))
@@ -1139,7 +1160,7 @@
                          (B Type) (nested_func_app B)
                          (A Type) (value A))
 
-         (let_type) @VarList
+         :signature (let_type) @VarList
          (
           (
            ($let_get_values (_ (@let varlist body) value))
@@ -1168,7 +1189,7 @@
                          (B Type) (nested_func_app B)
                          (A Type) (value A))
 
-         (let_type) body_type
+         :signature (let_type) body_type
          (
           (
            ($let_get_body (_ (@let varlist body) value))
@@ -1195,7 +1216,7 @@
                                    (U Type) (value_x U) 
                                    (parameters @VarList :list))
 
-         (@VarList @VarList) @VarList
+         :signature (@VarList @VarList) @VarList
          (
           (
            ($let_get_vars_substitutes (@varlist x vardefs)
@@ -1227,7 +1248,7 @@
               (bool_body Bool)
               (E Type) (x E)
               (F Type) (G Type) (function (-> F G)) (actual_argument F))
-         (A) @VarList
+         :signature (A) @VarList
 
          (
           (
@@ -1321,7 +1342,7 @@
 (program $substitution_contains_substitute ((Vars Type) (Values Type)
                                             (var Vars) (var2 Vars) (value Values) 
                                             (substitutions @Substitution :list))
-         (@Substitution Vars) Bool
+         :signature (@Substitution Vars) Bool
          (
           (
            ($substitution_contains_substitute 
@@ -1383,7 +1404,7 @@
 ; return: The corresponding @Substitution.
 (program $substitution_build ( (Vars Type) (Values Type) (var Vars) (value Values)
                                (vars_tail @VarList :list) (values_tail @VarList :list))
-         (@VarList @VarList) @Substitution
+         :signature (@VarList @VarList) @Substitution
          (
           (
            ($substitution_build @varlist.nil @varlist.nil)
@@ -1407,7 +1428,7 @@
 ; return: The corresponding @Substitution.
 (program $substitution_build_from_pairs ((Vars Type) (Values Type) (var Vars) 
                                          (value Values) (pairs_tail @VarList :list))
-         (@VarList) @Substitution
+         :signature (@VarList) @Substitution
          (
           (
            ($substitution_build_from_pairs @varlist.nil)
@@ -1428,7 +1449,7 @@
 ; - context Bool: A context from which we want to build a substitution function.
 ; return: The corresponding @Substitution.
 (program $substitution_build_from_context ((context Bool))
-         (Bool) @Substitution
+         :signature (Bool) @Substitution
          (
           (
            ($substitution_build_from_context context)
@@ -1444,9 +1465,11 @@
 ; args:
 ; - $substitution_remove_substitutes nil:
 ; return:
-(program $substitution_remove_substitutes ((Vars Type) (Values Type) (var Vars) (value Values)
-                                                                                    (vars @VarList) (substitutions @Substitution :list))
-         (@Substitution @VarList) @Substitution
+(program $substitution_remove_substitutes ((Vars Type) (Values Type) (var Vars) 
+                                           (value Values)
+                                           (vars @VarList) 
+                                           (substitutions @Substitution :list))
+         :signature (@Substitution @VarList) @Substitution
 
          (
           (
@@ -1481,7 +1504,7 @@
 (program $substitution_get_value ((Vars Type) (Values Type) (var Vars) (var2 Vars)
                                   (value Values)
                                   (substitutions @Substitution :list))
-         (@Substitution Vars) Values
+         :signature (@Substitution Vars) Values
          (
           (
            ($substitution_get_value 
@@ -1513,7 +1536,7 @@
                       (substitution @Substitution)
                       (A Type) (B Type) (function (-> A B))
                       (actual_argument A))
-         (Terms @Substitution) Terms
+         :signature (Terms @Substitution) Terms
 
          (
           (
@@ -1582,3 +1605,810 @@
            )
           )
 )
+
+
+;-----------
+; Arithmetic
+;-----------
+
+
+; The following programs help to inspect terms without resorting to program 
+; patterns (to avoid problems that can arise with right/left-assoc-nil constants
+; and patterns).
+
+; program: $is_addition
+; args:
+; - term A: An arbitrary arith term.
+; return: A boolean indicating if `term` is built with `+`.
+(program $is_addition ((A Type) (lhs A) (rhs A :list) (term A))
+         :signature (A) Bool
+         (
+          (
+           ($is_addition (+ lhs rhs))
+
+           true
+           )
+
+          (
+           ($is_addition term)
+
+           false
+           )
+          )
+         )
+
+; program: $addition_get_lhs
+; args:
+; - term A: An arithmetic term of the form (+ lhs rhs).
+; return: The first summand of `term`.
+(program $addition_get_lhs ((A Type) (lhs A) (rhs A :list) (term A))
+         :signature (A) A
+         (
+          (
+           ($addition_get_lhs (+ lhs rhs))
+
+           lhs
+           )
+          )
+         )
+
+; program: $addition_get_rhs
+; args:
+; - term A: An arithmetic term of the form (+ lhs rhs).
+; return: The second summand of `term`.
+(program $addition_get_rhs ((A Type) (lhs A) (rhs A :list) (term A))
+         :signature (A) A
+         (
+          (
+           ($addition_get_rhs (+ lhs rhs))
+
+           rhs
+           )
+          )
+         )
+
+; program: $is_uninterpreted_constant
+; args:
+; - term A: An arbitrary arith term.
+; return: >
+;   A boolean indicating if `term` is a uninterpreted constant, or an 
+;   uninterpreted function applied over some arbitrary term.
+(program $is_uninterpreted_constant ((A Type) (lhs A) (rhs A :list) (term A))
+         :signature (A) Bool
+         (
+          (
+           ($is_uninterpreted_constant (+ lhs rhs))
+
+           false
+           )
+
+          (
+           ($is_uninterpreted_constant (* lhs rhs))
+
+           false
+           )
+          
+          (
+           ($is_uninterpreted_constant (/ lhs rhs))
+
+           false
+           )
+
+          (
+           ($is_uninterpreted_constant (- lhs rhs))
+
+           false
+           )
+
+          (
+           ($is_uninterpreted_constant (- term))
+
+           false
+           )
+
+          (
+           ($is_uninterpreted_constant term)
+
+           (eo::ite ($is_numeric_literal term)
+
+                    false
+                    
+                    ; { not ($is_numeric_literal term) }
+                    ; The only possibility that remains is for `term` to be
+                    ; an uninterpreted constant or function (applied).
+                    true)
+           )
+          )
+         )
+
+; program: $is_constant_times_variable
+; args:
+; - term A: An arithmetic term.
+; return: >
+;   Returns a boolean indicating if `term` = (* a variable), for some numerical
+;   literal "a", and "variable" being an arbitrary expression involving
+;   uninterpreted constants and/or functions.
+(program $is_constant_times_variable ((A Type) (constant A) (term A)
+                                      (variable A :list))
+         :signature (A) Bool
+         (
+          ( 
+           ($is_constant_times_variable (* constant variable))
+
+           (eo::ite (eo::and 
+                     ($is_uninterpreted_constant variable)
+                     ($is_numeric_literal constant))
+
+                    true
+
+                    ; { not (eo::and 
+                    ;   ($is_uninterpreted_constant variable)
+                    ;   ($is_numeric_literal constant)) }
+                    false)
+            )
+
+          ( ; { term != (* constant variable) }
+           ($is_constant_times_variable term)
+
+           false
+           )
+          )
+         )
+
+(program $constant_times_variable_get_variable ((A Type) (constant A)
+                                                (variable A :list))
+         :signature (A) A
+         (
+          (
+           ($constant_times_variable_get_variable (* constant variable))
+
+           variable
+           )
+          )
+         )
+
+(program $constant_times_variable_get_constant ((A Type) (constant A)
+                                                (variable A :list))
+         :signature (A) A
+         (
+          (
+           ($constant_times_variable_get_constant (* constant variable))
+
+           constant
+           )
+          )
+         )
+
+; program: $less_or_equal_literal
+; args:
+; - lhs A: A numeric literal.
+; - rhs A: A numeric literal.
+; return: The boolean value of the comparison lhs <= rhs.
+(program $less_or_equal_literal ((A Type) (lhs A) (rhs A))
+         :signature (A A) Bool
+         (
+          (
+           ($less_or_equal_literal lhs rhs)
+
+           (eo::or (eo::gt rhs lhs)
+                   (eo::is_eq lhs rhs))
+           )
+          )
+         )
+
+; program: $less_or_equal_arith_terms
+; args:
+; - lhs A: An arbitrary arithmetic term.
+; - rhs A: An arbitrary arithmetic term.
+; return: >
+;   Decides if `lhs` <= `rhs`. The criterion being:
+;   - numeric literals are <= than uninterpreted constants
+;   - for terms c1 * x and c2 * y, with x and y variables,
+;     we follow the order eo::cmp y x
+;   - between numeric literals we follo `$less_or_equal_literal`.
+; note : >
+;   PRE : { lhs and rhs are, either:
+;           - numeric literals
+;           - a product between numeric literals, or a numeric literal
+;             and a variable (uninterpreted constants or uninterpreted 
+;             functions applied to some value) }
+(program $less_or_equal_arith_terms ((A Type) (lhs A) (lhs_a A) (lhs_term A :list)
+                                     (rhs A) (rhs_a A) (rhs_term A :list)
+                                     (term A :list))
+         :signature (A A) Bool
+         (
+          (
+           ($less_or_equal_arith_terms (* lhs_a term) (* rhs_a term))
+           
+           ($less_or_equal_literal lhs_a rhs_a)
+           )
+
+          (; { lhs_term != rhs_term }
+           ($less_or_equal_arith_terms (* lhs_a lhs_term) (* rhs_a rhs_term))
+
+           (eo::ite (eo::and ($is_numeric_literal lhs_term)
+                             ($is_numeric_literal rhs_term))
+
+                    (eo::and ($less_or_equal_literal lhs_a rhs_a)
+                             ($less_or_equal_literal lhs_term rhs_term))
+
+                    ; { not ($is_numeric_literal lhs_term)
+                    ;   or 
+                    ;   not ($is_numeric_literal rhs_term) }
+                    (eo::ite ($is_numeric_literal lhs_term)
+
+                             true
+
+                             ; { not ($is_numeric_literal lhs_term) }
+                             (eo::ite ($is_numeric_literal rhs_term)
+
+                                      false
+
+                                      ; { not ($is_numeric_literal rhs_term) }
+                                      (eo::cmp rhs_term lhs_term))))
+           )
+
+          (; { lhs_term is not a product }
+           ($less_or_equal_arith_terms lhs_term (* rhs_a rhs_term))
+
+           true
+           )
+
+          (; { rhs_term is not a product }
+           ($less_or_equal_arith_terms (* lhs_a lhs_term) rhs_term)
+
+           false
+           )
+
+          (; { lhs and rhs are numeric literals }
+           ($less_or_equal_arith_terms lhs rhs)
+
+           ($less_or_equal_literal lhs rhs)
+           )
+          )
+         )
+
+; program: $get_lesser_arith_term
+; args:
+; - term A: An arithmetic term.
+; return: The lesser summand in `term`, according to `$less_or_equal_literal`.
+; note : >
+;   PRE : { `term` is of the form x_1 + ... + x_n, where each x_i is, either,
+;           l, l_1 * l_2, l * x, where l, l_1 and l_2 are numeric literals,
+;           and x is a variable (a term involving uninterpreted constants). }
+(program $get_lesser_arith_term ((A Type) (lhs A) (rhs A :list))
+         :signature (A) A
+         (
+          (
+           ($get_lesser_arith_term (+ lhs rhs))
+
+           (eo::define 
+            (
+             (lesser ($get_lesser_arith_term rhs))
+             )
+
+            (eo::ite ($less_or_equal_literal lhs lesser)
+
+                     lhs
+
+                     lesser))
+           )
+
+          
+          (; { lhs is a single summand }
+           ($get_lesser_arith_term lhs)
+
+           lhs
+           )
+          )
+         )
+
+; program: $reorder_arith_term
+; args:
+; - term A: An arithmetic term.
+; return: >
+;   A term obtained from reordering `term`, according to `$less_or_equal_literal`.
+;   It implements a simple insertion-sort.
+; note : >
+;   PRE : { `term` is of the form x_1 + ... + x_n, where each x_i is, either,
+;           l, l_1 * l_2, l * x, where l, l_1 and l_2 are numeric literals,
+;           and x is a variable (a term involving uninterpreted constants). }
+(program $reorder_arith_term ((A Type) (lhs A) (rhs A :list))
+         :signature (A) A
+         (
+          (
+           ($reorder_arith_term (+ lhs rhs))
+
+           (eo::define 
+            (
+             (lesser ($get_lesser_arith_term rhs))
+             )
+
+            (eo::ite ($less_or_equal_literal lhs lesser)
+
+                     ($f_list_cons + lhs
+                                   ($reorder_arith_term
+                                    ($f_list_remove_elem + rhs lesser 0)))
+
+                     ; { not ($less_or_equal_literal lhs lesser) }
+                     ($f_list_cons + lesser
+                                   ($reorder_arith_term
+                                    ($f_list_cons +
+                                                  lhs
+                                                  ($f_list_remove_elem
+                                                   +
+                                                   rhs 
+                                                   lesser
+                                                   0))))))
+           )
+
+          (; { lhs is a single summand }
+           ($reorder_arith_term lhs)
+
+           lhs
+           )
+          )
+         )
+
+; program: $small_step_evaluate_arith_term
+; args:
+; - term A: An arbitrary term representing a possible undefined numeric value.
+; return: >
+;   Returns a numeric expression that results from "evaluating" `term`: that is,
+;   implements the denotational semantics of the expression `term`.
+; note: >
+;   PRE : { `term` is normalized according to `$normalize_arith_term` }
+(program $small_step_evaluate_arith_term ((A Type) (lhs A) (rhs A :list) (term A))
+         :signature (A) A
+         (; Addition.
+          (
+           ($small_step_evaluate_arith_term (+ 0.0 rhs))
+           
+           ($small_step_evaluate_arith_term rhs)
+           )
+
+          (
+           ($small_step_evaluate_arith_term (+ 0 rhs))
+           
+           ($small_step_evaluate_arith_term rhs)
+           )
+
+          (
+           ($small_step_evaluate_arith_term (+ 0/1 rhs))
+           
+           ($small_step_evaluate_arith_term rhs)
+           )
+
+          (
+           ($small_step_evaluate_arith_term (+ lhs rhs))
+           
+           (eo::ite (eo::and ($is_numeric_literal lhs)
+                             ($is_numeric_literal rhs))
+
+                     (eo::add (eo::to_q lhs) 
+                              (eo::to_q rhs))
+                     
+                     ; { not ($is_numeric_literal lhs_evaluated)
+                     ;   or
+                     ;   not ($is_numeric_literal rhs_evaluated)) }
+                     
+                     ; Cases where we need to reason over the right term
+                     (eo::ite (eo::is_eq 0 rhs)
+                              ; Case (+ lhs 0)
+                              lhs
+                              ; { not (eo::is_eq 0 rhs) }
+                              (eo::ite (eo::and ($is_constant_times_variable lhs)
+                                                ($is_constant_times_variable rhs))
+
+                                       (eo::define
+                                        (
+                                         (lhs_variable ($constant_times_variable_get_variable lhs))
+                                         (rhs_variable ($constant_times_variable_get_variable rhs))
+                                         )
+
+                                        (eo::ite (eo::is_eq lhs_variable 
+                                                            rhs_variable)
+
+                                                 ; { case lhs = * c1 variable and
+                                                 ;   rhs = * c2 variable }
+                                                 (eo::define
+                                                  (
+                                                   (lhs_constant 
+                                                    ($constant_times_variable_get_constant 
+                                                     lhs))
+
+                                                   (rhs_constant 
+                                                    ($constant_times_variable_get_constant 
+                                                     rhs))
+                                                   )
+                              
+                                                  ($f_list_cons 
+                                                   *
+
+                                                   ($f_list_cons 
+                                                    + 
+                                                    lhs_constant
+                                                    rhs_constant)
+
+                                                   lhs_variable))
+
+                                                 ; { not (eo::is_eq lhs_variable 
+                                                 ;        rhs_variable)}
+                                                 (+ lhs rhs)))
+
+                                       ; { not ($is_constant_times_variable lhs)
+                                       ;   or
+                                       ;   not ($is_constant_times_variable rhs)}
+                                       (+ lhs rhs))))
+           )
+
+          ; Multiplication.
+          (
+           ($small_step_evaluate_arith_term (* 0.0 rhs))
+           
+           0.0
+           )
+
+          (
+           ($small_step_evaluate_arith_term (* 0 rhs))
+           
+           0
+           )
+
+          (
+           ($small_step_evaluate_arith_term (* 0/1 rhs))
+           
+           0
+           )
+
+          (
+           ($small_step_evaluate_arith_term (* 1.0 rhs))
+
+           (eo::ite ($is_uninterpreted_constant rhs)
+                    ; We keep the shape of the term, for future opportunities
+                    ; of reduction.
+                    (* 1.0  rhs)
+
+                    ; { not ($is_uninterpreted_constant rhs) }
+                    ($small_step_evaluate_arith_term rhs))
+           )
+
+          (
+           ($small_step_evaluate_arith_term (* 1 rhs))
+           
+           (eo::ite ($is_uninterpreted_constant rhs)
+                    ; We keep the shape of the term, for future opportunities
+                    ; of reduction.
+                    (* 1  rhs)
+
+                    ; { not ($is_uninterpreted_constant rhs) }
+                    ($small_step_evaluate_arith_term rhs))
+           )
+
+          (
+           ($small_step_evaluate_arith_term (* (- 1.0) rhs))
+
+           (eo::ite ($is_uninterpreted_constant rhs)
+                    ; We keep the shape of the term, for future opportunities
+                    ; of reduction.
+                    (* (- 1.0)  rhs)
+
+                    ; { not ($is_uninterpreted_constant rhs) }
+                    ($small_step_evaluate_arith_term (- rhs)))
+           )
+
+          (
+           ($small_step_evaluate_arith_term (* (- 1) rhs))
+
+           (eo::ite ($is_uninterpreted_constant rhs)
+                    ; We keep the shape of the term, for future opportunities
+                    ; of reduction.
+                    (* (- 1)  rhs)
+
+                    ; { not ($is_uninterpreted_constant rhs) }
+                    ($small_step_evaluate_arith_term (- rhs)))
+           )
+
+          (
+           ($small_step_evaluate_arith_term (* lhs rhs))
+
+           (eo::ite (eo::and ($is_numeric_literal lhs)
+                             ($is_numeric_literal rhs))
+
+                     (eo::mul (eo::to_q lhs) 
+                              (eo::to_q rhs))
+
+                     ; { not ($is_numeric_literal lhs_evaluated)
+                     ;   or
+                     ;   not ($is_numeric_literal rhs_evaluated)) }
+                     (eo::ite (eo::is_eq rhs 0)
+                              ; Case (* lhs 0.0)
+                              0
+
+                              ; {not (eo::is_eq rhs_evaluated 0)}
+                              (eo::ite (eo::is_eq rhs 1)
+                                       ; Case (* lhs 1)
+                                       (eo::ite ($is_uninterpreted_constant lhs)
+
+                                                (* 1 lhs)
+
+                                                ; { not ($is_uninterpreted_constant rhs) }
+                                                lhs)
+
+                                       ; { not (eo::is_eq rhs_evaluated 1) }
+                                       (eo::ite (eo::is_eq rhs -1)
+                                                ; Case (* lhs (- 1.0))
+                                                (eo::ite ($is_uninterpreted_constant lhs)
+
+                                                         (* -1 lhs)
+
+                                                         ; { not ($is_uninterpreted_constant rhs) }
+                                                         (- lhs))
+
+                                                ; { (eo::is_eq rhs_evaluated -1) }
+                                                 ($f_list_cons * lhs rhs)))))
+           )
+
+          ; Negative numbers
+          (
+           ($small_step_evaluate_arith_term (- (- term)))
+
+           ($small_step_evaluate_arith_term term)
+           )
+
+          (
+           ($small_step_evaluate_arith_term (- term))
+
+           (eo::ite ($is_numeric_literal term)
+
+                     (eo::mul (eo::to_q -1)
+                              (eo::to_q term))
+
+                     (- term))
+           )
+
+          (
+           ($small_step_evaluate_arith_term term)
+
+           term
+           )
+          )
+         )
+
+; program: $evaluate_arith_term
+; args:
+; - $evaluate_arith_term nil:
+; return:
+(program $evaluate_arith_term ((A Type) (lhs A) (rhs A :list) (term A)
+                               (op (-> A A A)))
+         :signature (A) A
+         (
+          (
+           ($evaluate_arith_term (op lhs rhs))
+
+           (eo::define 
+            (
+             (lhs_evaluated ($evaluate_arith_term lhs))
+             
+             (rhs_evaluated ($evaluate_arith_term rhs))
+             )
+
+            (eo::define 
+             (
+              (term_evaluated ($small_step_evaluate_arith_term
+                                ($f_list_cons op 
+                                              lhs_evaluated
+                                              rhs_evaluated)))
+              )
+
+             (eo::ite (eo::is_eq term_evaluated
+                                 ($f_list_cons op 
+                                               lhs_evaluated
+                                               rhs_evaluated))
+
+                      ; No progress made, we give up.
+                      term_evaluated
+
+                      ; { not (eo::is_eq term_evaluated
+                      ;       ($f_list_cons op 
+                      ;                     lhs_evaluated
+                      ;                     rhs_evaluated)) }
+                      ; Some progress made, we try again.
+                      ($evaluate_arith_term term_evaluated))))
+          )
+         
+         (
+          ($evaluate_arith_term term)
+
+           (eo::define 
+            (
+             (term_evaluated ($small_step_evaluate_arith_term term))
+             )
+
+            (eo::ite (eo::is_eq term_evaluated term)
+
+                     ; No progress made, we give up.
+                     term_evaluated
+
+                     ; { not (eo::is_eq term_normalized term) }
+                     ; Some progress made, we try again.
+                     ($evaluate_arith_term term_evaluated)))
+           )
+         )
+         )
+
+; program: $small_step_normalize_arith_term
+; args:
+; - term A: An arbitrary arithmetic term.
+; return: >
+;   The "normalized" form of `term`:
+;   - the resulting term is an addition of terms of the following form:
+;     + numeric literals
+;     + a product between numeric literals, or a numeric literal
+;       and a variable (uninterpreted constants or uninterpreted 
+;       functions applied to some value)
+;   - sub-terms do not contain leading unary "-"
+; note: >
+;   It is inspired in the "normalization" algorithm introduced in the paper 
+;   "Checking Linear Integer Arithmetic Proofs in Lambdapi", by Alessio 
+;   Coltellacci & Stephan Merz.
+(program $small_step_normalize_arith_term ((A Type) (lhs A) (variable A :list)
+                                (c1 A) (c2 A)
+                                (rhs A :list) (rhs_lhs A) (rhs_rhs A :list)
+                                (term A))
+         :signature (A) A
+         (
+          (; Getting rid of leading unary "-".
+           ($small_step_normalize_arith_term (- (+ lhs rhs)))
+
+           ($f_list_cons + (- lhs) (- rhs))
+           )
+
+          (; { term is not an addition or multiplication }
+           ($small_step_normalize_arith_term (- (* lhs rhs)))
+
+           ($f_list_cons * (- lhs) rhs)
+           )
+
+          (; { term is not an addition or multiplication }
+           ($small_step_normalize_arith_term (- (- term)))
+
+           term
+           )
+
+          (; { term is not an addition or multiplication }
+           ($small_step_normalize_arith_term (- term))
+
+           ($f_list_cons * -1 term)
+           )
+
+          (; { rhs is not an addition }
+           ($small_step_normalize_arith_term (* lhs rhs))
+
+           ; Check for case 
+           ; (* lhs (+ rhs_lhs rhs_rhs)) = (+ (* lhs rhs_lhs) (* lhs rhs_rhs))
+           (eo::ite ($is_addition rhs)
+                    ; We will try to distribute lhs.
+                    (eo::define
+                     (
+                      (rhs_lhs ($addition_get_lhs rhs))
+                      (rhs_rhs ($addition_get_rhs rhs))
+                      )
+
+                     ($f_list_cons + 
+                                   ($f_list_cons * lhs rhs_lhs)
+                                   ($f_list_cons * lhs rhs_rhs)))
+
+                    ; { not ($is_addition rhs) }
+                    (eo::ite ($is_addition lhs)
+
+                             ; We commute, to try to apply our
+                             ; distributivity rule.
+                             ; Cases of the form:
+                             ; (* (+ rhs_lhs rhs_rhs) c) = (* c (+ rhs_lhs rhs_rhs))
+                             ($f_list_cons * rhs lhs)
+
+                             ; { not ($is_numeric_literal rhs)
+                             ;   or ($is_numeric_literal lhs) }
+                             ($f_list_cons * lhs rhs)))
+           )
+
+          (; { term is not an addition, multiplication or unary substraction }
+           ($small_step_normalize_arith_term term)
+
+           term
+           )
+          )
+         )
+
+
+; program: $normalize_arith_term
+; args:
+; - term A: An arithmetic term.
+; return: >
+;   The result of normalizing `term` applying `$small_step_normalize_arith_term`
+;   as much as possible. Implements a rewriting machine that controls how to
+;   apply `$small_step_normalize_arith_term`.
+;   Left-to-right eager normalization order:
+;   - For a term op lhs rhs, we normalize lhs, in small-step fashion, until
+;     it cannot be further normalized. We continue with rhs, and only then
+;     with the whole resulting term.
+;   - Context-sensitive rewriting rules: 
+(program $normalize_arith_term ((A Type) (lhs A) (rhs A)
+                                (op (-> A A A)) (term A))
+         :signature (A) A
+         (
+          (
+           ($normalize_arith_term (op lhs rhs))
+           
+           (eo::define 
+            (
+             (lhs_normalized ($small_step_normalize_arith_term lhs))
+             )
+
+            (eo::ite (eo::is_eq lhs_normalized lhs)
+
+                     ; lhs already normalize
+                     (eo::define 
+                      (
+                       (rhs_normalized ($small_step_normalize_arith_term rhs))
+                       )
+
+                      (eo::ite (eo::is_eq rhs_normalized rhs)
+
+                               ; rhs already normalized, we continue with the
+                               ; whole term.
+                               (eo::define 
+                                (
+                                 (term_normalized ($small_step_normalize_arith_term
+                                                   (op lhs rhs)))
+                                 )
+
+                                (eo::ite (eo::is_eq term_normalized 
+                                                    (op lhs rhs))
+
+                                         ; No more progress during normalization.
+                                         ; We give up.
+                                         term_normalized
+
+                                         ; { not (eo::is_eq term_normalized 
+                                         ;          (op lhs rhs)}
+                                         ; Some progress made, we try again.
+                                         ($normalize_arith_term
+                                          term_normalized)))
+
+                               ; { not (eo::is_eq rhs_normalized rhs) }
+                               ; Some progress made, we try again.
+                               ($normalize_arith_term
+                                (op lhs_normalized rhs_normalized))))
+
+                     ; { not (eo::is_eq lhs_normalized lhs) }
+                     ; Some progress made, we try again.
+                     ($normalize_arith_term
+                      (op lhs_normalized rhs))))
+           )
+          
+          ;; (; { term != op lhs rhs }
+          ;;  ($normalize_arith_term term)
+
+          ;;  (eo::define 
+          ;;   (
+          ;;    (term_normalized ($small_step_normalize_arith_term term))
+          ;;    )
+
+          ;;   (eo::ite (eo::is_eq term_normalized term)
+          ;;            ; No progress made.
+          ;;            (eo::ite ($is_uninterpreted_constant term)
+          ;;                     ; Context-dependent rule: we convert a variable
+          ;;                     ; x into (* 1 x) only when it
+          ;;                     ($f_list_cons * 1 term)
+
+          ;;                     ; { not ($is_uninterpreted_constant rhs) 
+          ;;                     term_normalized)
+
+          ;;            ; { not (eo::is_eq term_normalized term) }
+          ;;            ; Some progress made, we try again.
+          ;;            ($normalize_arith_term term_normalized)))
+          ;;  )
+          )
+         )
