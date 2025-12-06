@@ -1887,7 +1887,7 @@
              (lesser ($get_lesser_arith_term rhs))
              )
 
-            (eo::ite ($less_or_equal_literal lhs lesser)
+            (eo::ite ($less_or_equal_arith_terms lhs lesser)
 
                      lhs
 
@@ -1919,27 +1919,39 @@
           (
            ($reorder_arith_term (+ lhs rhs))
 
-           (eo::define 
-            (
-             (lesser ($get_lesser_arith_term rhs))
-             )
+           (eo::ite (eo::gt ($f_list_len + rhs) 1)
 
-            (eo::ite ($less_or_equal_literal lhs lesser)
+                    (eo::define 
+                     (
+                      (lesser ($get_lesser_arith_term rhs))
+                      )
 
-                     ($f_list_cons + lhs
-                                   ($reorder_arith_term
-                                    ($f_list_remove_elem + rhs lesser 0)))
+                     (eo::ite ($less_or_equal_arith_terms lhs lesser)
 
-                     ; { not ($less_or_equal_literal lhs lesser) }
-                     ($f_list_cons + lesser
-                                   ($reorder_arith_term
-                                    ($f_list_cons +
-                                                  lhs
-                                                  ($f_list_remove_elem
-                                                   +
-                                                   rhs 
-                                                   lesser
-                                                   0))))))
+                              ($f_list_cons + lhs
+                                            ($reorder_arith_term
+                                             ($f_list_remove_elem + rhs lesser 0)))
+
+                              ; { not ($less_or_equal_literal lhs lesser) }
+                              ($f_list_cons + lesser
+                                            ($reorder_arith_term
+                                             ($f_list_cons 
+                                              +
+                                              lhs 
+                                              ($f_list_remove_elem
+                                               +
+                                               rhs 
+                                               lesser
+                                               0))))))
+
+                    ; {($f_list_len rhs) = 1}
+                    (eo::ite ($less_or_equal_arith_terms lhs rhs)
+
+                              (+ lhs rhs)
+
+                              ; { not ($less_or_equal_literal lhs lesser) }
+                              ($f_list_cons + rhs lhs)
+                              ))
            )
 
           (; { lhs is a single summand }
@@ -2388,27 +2400,27 @@
                       (op lhs_normalized rhs))))
            )
           
-          ;; (; { term != op lhs rhs }
-          ;;  ($normalize_arith_term term)
+          (; { term != op lhs rhs }
+           ($normalize_arith_term term)
 
-          ;;  (eo::define 
-          ;;   (
-          ;;    (term_normalized ($small_step_normalize_arith_term term))
-          ;;    )
+           (eo::define 
+            (
+             (term_normalized ($small_step_normalize_arith_term term))
+             )
 
-          ;;   (eo::ite (eo::is_eq term_normalized term)
-          ;;            ; No progress made.
-          ;;            (eo::ite ($is_uninterpreted_constant term)
-          ;;                     ; Context-dependent rule: we convert a variable
-          ;;                     ; x into (* 1 x) only when it
-          ;;                     ($f_list_cons * 1 term)
+            (eo::ite (eo::is_eq term_normalized term)
+                     ; No progress made.
+                     (eo::ite ($is_uninterpreted_constant term)
+                              ; Context-dependent rule: we convert a variable
+                              ; x into (* 1 x) only when it
+                              ($f_list_cons * 1 term)
 
-          ;;                     ; { not ($is_uninterpreted_constant rhs) 
-          ;;                     term_normalized)
+                              ; { not ($is_uninterpreted_constant rhs) 
+                              term_normalized)
 
-          ;;            ; { not (eo::is_eq term_normalized term) }
-          ;;            ; Some progress made, we try again.
-          ;;            ($normalize_arith_term term_normalized)))
-          ;;  )
+                     ; { not (eo::is_eq term_normalized term) }
+                     ; Some progress made, we try again.
+                     ($normalize_arith_term term_normalized)))
+           )
           )
          )
