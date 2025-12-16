@@ -1,0 +1,3029 @@
+(include "../../signature/programs/arith.eo")
+
+
+; Unit tests for arith.eo programs
+
+;---------------------------------
+; $is_numeric_literal
+;---------------------------------
+
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+(declare-const b Real)
+
+(declare-rule $test_$is_numeric_literal ()
+   :requires (
+              (($is_numeric_literal 1) true)
+
+              (($is_numeric_literal 1.0) true)
+
+              (($is_numeric_literal 1/1) true)
+
+              (($is_numeric_literal -1) true)
+
+              (($is_numeric_literal -1.0) true)
+
+              (($is_numeric_literal -1/1) true)
+
+              (($is_numeric_literal (+ 1 2)) false)
+
+              (($is_numeric_literal (* 1 2)) false)
+
+              (($is_numeric_literal false) false)
+
+              (($is_numeric_literal @varlist.nil) false)
+
+              (($is_numeric_literal a) false)
+
+              (($is_numeric_literal b) false)
+              )
+
+   :conclusion-explicit true
+   )
+
+;---------------------------------
+; $is_theory_binary_arith_op
+;---------------------------------
+
+; TODO: repeating constants just for cohesion of the code...
+; Some constants to build arith terms for testing purposes
+(declare-const f (-> Int Int))
+
+(declare-rule $test_$is_theory_binary_arith_op ()
+   :requires (
+              (($is_theory_binary_arith_op +) true)
+
+              (($is_theory_binary_arith_op *) true)
+
+              (($is_theory_binary_arith_op -) true)
+
+              (($is_theory_binary_arith_op /) true)
+
+              (($is_theory_binary_arith_op f) false)
+              )
+   :conclusion-explicit true
+   )
+
+;---------------------------------
+; $is_addition
+;---------------------------------
+
+(declare-rule $test_$is_addition ()
+   :requires (
+              (($is_addition (+ 1 1)) true)
+
+              (($is_addition (+ 1 (+ 1 1))) true)
+
+              (($is_addition (+ (+ 1 1) 1)) true)
+
+              (($is_addition (+ 1.0 1.0)) true)
+
+              (($is_addition (* 1 2)) false)
+
+              (($is_addition (* (+ 1.0 1.0) 2)) false)
+
+              (($is_addition (- 1 2)) false)
+
+              (($is_addition (- 1 (+ 1.0 1.0))) false)
+
+              (($is_addition (/ 1 2)) false)
+
+              (($is_addition (- 1)) false)
+
+              (($is_addition true) false)
+              )
+
+   :conclusion-explicit true
+   )
+
+;---------------------------------
+; $addition_get_lhs
+;---------------------------------
+
+(declare-rule $test_$addition_get_lhs ()
+   :requires (
+              (($addition_get_lhs (+ 1 2)) 1)
+
+              (($addition_get_lhs (+ 1.0 2.0)) 1.0)
+
+              (($addition_get_lhs (+ 1/1 13.0)) 1/1)
+
+              (($addition_get_lhs (+ (+ 1/1 1.0) 11)) (+ 1/1 1.0))
+
+              (($addition_get_lhs (+ (+ 1/1 19) (+ 1/1 1.0))) (+ 1/1 19))
+              ; Things that do not satisfy the pre.
+              (($addition_get_lhs (* 1.0 2.0)) ($addition_get_lhs (* 1.0 2.0)))
+
+              (($addition_get_lhs +) ($addition_get_lhs +))
+              )
+   :conclusion-explicit true
+   )
+
+;---------------------------------
+; $addition_get_rhs
+;---------------------------------
+
+(declare-rule $test_$addition_get_rhs ()
+   :requires (
+              (($addition_get_rhs ($f_list_cons + 1 2)) 2)
+
+              (($addition_get_rhs ($f_list_cons + 1.0 2.0)) 2.0)
+
+              (($addition_get_rhs ($f_list_cons + 1/1 13.0)) 13.0)
+
+              (($addition_get_rhs ($f_list_cons + 3 ($f_list_cons + 1/1 1.0))) 
+               ($f_list_cons + 1/1 1.0))
+
+              (($addition_get_rhs ($f_list_cons + 
+                                                (+ 1/1 19) 
+                                                ($f_list_cons + 1/1 1.0)))
+               ($f_list_cons + 1/1 1.0))
+
+                                        ; Things that do not satisfy the pre.
+              (($addition_get_rhs (* 1.0 2.0)) ($addition_get_rhs (* 1.0 2.0)))
+
+              (($addition_get_rhs +) ($addition_get_rhs +))
+              )
+   :conclusion-explicit true
+   )
+
+;---------------------------------
+; $is_uninterpreted_term
+;---------------------------------
+
+; TODO: repeating constants just for cohesion of the code...
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+(declare-const b Real)
+(declare-const f (-> Real Real))
+
+(declare-rule $test_$is_uninterpreted_term ()
+   :requires (
+              (($is_uninterpreted_term a) true)
+
+              (($is_uninterpreted_term b) true)
+
+              (($is_uninterpreted_term f) true)
+
+              (($is_uninterpreted_term (f 1)) true)
+              
+              (($is_uninterpreted_term (f b)) true)
+
+              (($is_uninterpreted_term (f (f b))) true)
+
+              (($is_uninterpreted_term 12) false)
+
+              (($is_uninterpreted_term (+ 1 a)) false)
+
+              (($is_uninterpreted_term (* 1 b)) false)
+
+              (($is_uninterpreted_term (* 1 (+ 1 a))) false)
+              )
+   :conclusion-explicit true
+   )
+
+;---------------------------------
+; $is_evaluatable
+;---------------------------------
+
+; TODO: repeating constants just for cohesion of the code...
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+(declare-const f (-> Real Real))
+
+(declare-rule $test_$is_evaluatable ()
+   :requires (
+              (($is_evaluatable 1) true)
+
+              (($is_evaluatable -1) true)
+
+              (($is_evaluatable 1.0) true)
+
+              (($is_evaluatable 1/1) true)
+
+              (($is_evaluatable (* 1 2)) true)
+
+              (($is_evaluatable (* 1 2.0)) true)
+
+              (($is_evaluatable (* 1.0 2)) true)
+
+              (($is_evaluatable (* 1.0 2.0)) true)
+
+              (($is_evaluatable (* 1/1 2/1)) true)
+
+              (($is_evaluatable (+ 1 2)) true)
+
+              (($is_evaluatable (+ 1 2.0)) true)
+
+              (($is_evaluatable (+ 1.0 2)) true)
+
+              (($is_evaluatable (+ 1.0 2.0)) true)
+
+              (($is_evaluatable (+ 1/1 2/1)) true)
+
+              (($is_evaluatable (/ 1 2)) true)
+
+              (($is_evaluatable (/ 1.0 2.0)) true)
+
+              (($is_evaluatable (- 1 2)) true)
+
+              (($is_evaluatable (- 1.0 2.0)) true)
+
+              (($is_evaluatable (- 1)) true)
+
+              (($is_evaluatable (- 1.0)) true)
+
+              (($is_evaluatable (- (* 1.0 2.0))) true)
+
+              (($is_evaluatable (- (* 1.0 (+ 1.0 2.0)))) true)
+
+              (($is_evaluatable (* (* 1.0 2.0) 2.0)) true)
+
+              (($is_evaluatable (* (* 1.0 2.0) (* 1.0 2.0))) true)
+
+              (($is_evaluatable a) false)
+
+              (($is_evaluatable (f a)) false)
+
+              (($is_evaluatable (f 1)) false)
+
+              (($is_evaluatable (f (f 1))) false)
+              )
+
+   :conclusion-explicit true
+   )
+
+
+;---------------------------------
+; $is_evaluatable_times_variable
+;---------------------------------
+
+; TODO: repeating constants just for cohesion of the code...
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+(declare-const b Real)
+(declare-const f (-> Real Real))
+
+(declare-rule $test_$is_evaluatable_times_variable ()
+   :requires (
+              (($is_evaluatable_times_variable ($f_list_cons * 1 a)) true)
+
+              (($is_evaluatable_times_variable ($f_list_cons * 1.0 a)) true)
+
+              (($is_evaluatable_times_variable ($f_list_cons * 1.0 (f 1.0))) true)
+
+              (($is_evaluatable_times_variable ($f_list_cons * 1.0 (f (f b)))) true)
+
+              (($is_evaluatable_times_variable ($f_list_cons * 
+                                                          ($f_list_cons * 1.0 2.0)
+                                                          (f (f b))))
+
+               true)
+
+              (($is_evaluatable_times_variable ($f_list_cons * 
+                                                          ($f_list_cons + 1 2)
+                                                          (f (f b))))
+
+               true)
+
+              (($is_evaluatable_times_variable ($f_list_cons + 1.0 a)) false)
+
+              (($is_evaluatable_times_variable ($f_list_cons - 1.0 a)) false)
+
+              (($is_evaluatable_times_variable ($f_list_cons * 1.0 (+ 1 a))) false)
+
+              (($is_evaluatable_times_variable ($f_list_cons * 1.0 (+ 1 (f b)))) false)
+              )
+   :conclusion-explicit true
+   )
+
+
+;---------------------------------
+; $evaluatable_times_variable_get_variable
+;---------------------------------
+
+; TODO: repeating constants just for cohesion of the code...
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+(declare-const b Real)
+(declare-const f (-> Real Real))
+
+(declare-rule $test_$evaluatable_times_variable_get_variable ()
+  :requires (
+             (($evaluatable_times_variable_get_variable ($f_list_cons * 1 a)) 
+
+              a)
+
+             (($evaluatable_times_variable_get_variable ($f_list_cons * 1.0 a)) 
+
+              a)
+
+             (($evaluatable_times_variable_get_variable ($f_list_cons * 1.0 (f 1.0))) 
+              
+              (f 1.0))
+
+             (($evaluatable_times_variable_get_variable ($f_list_cons * 1.0 (f (f b)))) 
+              
+              (f (f b)))
+
+             (($evaluatable_times_variable_get_variable ($f_list_cons + 1.0 a)) 
+
+              ($evaluatable_times_variable_get_variable ($f_list_cons + 1.0 a)))
+
+             (($evaluatable_times_variable_get_variable ($f_list_cons - 1.0 a)) 
+
+              ($evaluatable_times_variable_get_variable ($f_list_cons - 1.0 a)))
+             )
+  :conclusion-explicit true
+  )
+
+;---------------------------------
+; $evaluatable_times_variable_get_evaluatable
+;---------------------------------
+
+; TODO: repeating constants just for cohesion of the code...
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+(declare-const b Real)
+(declare-const f (-> Real Real))
+
+(declare-rule $test_$evaluatable_times_variable_get_evaluatable ()
+  :requires (
+             (($evaluatable_times_variable_get_evaluatable ($f_list_cons * 1 a)) 
+
+              1)
+
+             (($evaluatable_times_variable_get_evaluatable ($f_list_cons * 1.0 a)) 
+
+              1.0)
+
+             (($evaluatable_times_variable_get_evaluatable ($f_list_cons * 1.0 (f 1.0))) 
+              
+              1.0)
+
+             (($evaluatable_times_variable_get_evaluatable ($f_list_cons * 1.0 (f (f b)))) 
+              
+              1.0)
+
+             (($evaluatable_times_variable_get_evaluatable ($f_list_cons + 1.0 a)) 
+
+              ($evaluatable_times_variable_get_evaluatable ($f_list_cons + 1.0 a)))
+
+             (($evaluatable_times_variable_get_evaluatable ($f_list_cons - 1.0 a)) 
+
+              ($evaluatable_times_variable_get_evaluatable ($f_list_cons - 1.0 a)))
+             )
+  :conclusion-explicit true
+  )
+
+;---------------------------------
+; $less_or_equal_literal
+;---------------------------------
+
+(declare-rule $test_$less_or_equal_literal ()
+  :requires (
+             (($less_or_equal_literal 1 2) true)
+
+             (($less_or_equal_literal 1.0 2) true)
+
+             (($less_or_equal_literal 1.0 2/1) true)
+
+             (($less_or_equal_literal 1/1 2/1) true)
+
+             (($less_or_equal_literal 2/1 1/1) false)
+
+             (($less_or_equal_literal 2 1/1) false)
+
+             (($less_or_equal_literal 2.0 1/1) false)
+
+             (($less_or_equal_literal (+ 1 1) 1) 
+
+              ($less_or_equal_literal (+ 1 1) 1))
+             )
+  :conclusion-explicit true
+  )
+
+;---------------------------------
+; $less_or_equal_arith_terms
+;---------------------------------
+
+; TODO: repeating constants just for cohesion of the code...
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+(declare-const b Real)
+(declare-const f (-> Real Real))
+
+(declare-rule $test_$less_or_equal_arith_terms ()
+  :requires (
+             (($less_or_equal_arith_terms 1 2) true)
+
+             (($less_or_equal_arith_terms 2 1) false)
+
+             (($less_or_equal_arith_terms 1 2.0) true)
+
+             (($less_or_equal_arith_terms (* 1 2) 1) false)
+
+             (($less_or_equal_arith_terms (* 1 2) (* 2 3)) true)
+
+             (($less_or_equal_arith_terms (* 3 2) (* 2 3)) false)
+
+             (($less_or_equal_arith_terms (* 1 (* 1 1)) (* 2 3)) false)
+
+             (($less_or_equal_arith_terms (* 1 (* 1 1)) (* 1 (* 1 1))) true)
+
+             (($less_or_equal_arith_terms 1 (+ 2 3)) true)
+
+             (($less_or_equal_arith_terms 1 (* 2 3)) true)
+
+             (($less_or_equal_arith_terms 1 a) true)
+
+             (($less_or_equal_arith_terms 1 b) true)
+
+             (($less_or_equal_arith_terms a 1) false)
+
+             (($less_or_equal_arith_terms b 1) false)
+
+             (($less_or_equal_arith_terms 1 (f b)) true)
+
+             (($less_or_equal_arith_terms (f b) 1) false)
+
+             (($less_or_equal_arith_terms a a) true)
+
+             (($less_or_equal_arith_terms b b) true)
+             
+             ;; ; TODO: don't know if this will hold always
+             (($less_or_equal_arith_terms a b) true)
+
+             (($less_or_equal_arith_terms (f b) (f b)) true)
+
+             (($less_or_equal_arith_terms b a) false)
+
+             (($less_or_equal_arith_terms b (f b)) true)
+
+             (($less_or_equal_arith_terms (f b) b) false)
+
+             (($less_or_equal_arith_terms a (f b)) true)
+
+             (($less_or_equal_arith_terms (f b) a) false)
+
+             (($less_or_equal_arith_terms (* 1 a) (* -1 a)) false)
+
+             (($less_or_equal_arith_terms (* -1 a) (* 1 a)) true)
+
+             (($less_or_equal_arith_terms (* 1 a) (* 1 a)) true)
+
+             (($less_or_equal_arith_terms (* 1 a) (* 1 b)) true)
+
+             (($less_or_equal_arith_terms (* -1 a) (* 1 b)) true)
+
+             (($less_or_equal_arith_terms ($f_list_cons * -1 b) 
+                                          ($f_list_cons * 1 a)) false)
+
+             (($less_or_equal_arith_terms ($f_list_cons * 1 a) 
+                                          ($f_list_cons * -1 b)) true)
+
+             (($less_or_equal_arith_terms ($f_list_cons * 1 b) 
+                                          ($f_list_cons * 1 a)) false)
+
+             (($less_or_equal_arith_terms ($f_list_cons * -1 b) 
+                                          ($f_list_cons * 1 a)) false)
+             )
+
+  :conclusion-explicit true
+  )
+
+;---------------------------------
+; $get_lesser_arith_term
+;---------------------------------
+
+; TODO: repeating constants just for cohesion of the code...
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+(declare-const b Real)
+(declare-const f (-> Int Real Real))
+
+(declare-rule $test_$get_lesser_arith_term ()
+  :requires (
+             (($get_lesser_arith_term + ($f_list_cons + 1 2)) 1)
+
+             (($get_lesser_arith_term + ($f_list_cons + 1 0)) 0)
+
+             (($get_lesser_arith_term + ($f_list_cons + (* 1 1) 0)) 0)
+
+             (($get_lesser_arith_term + ($f_list_cons + (* 3 4) (* 2 2))) (* 2 2))
+
+             (($get_lesser_arith_term + ($f_list_cons + (* 2 (* 2 2)) (* 2 2))) 
+              
+              (* 2 2))
+
+             (($get_lesser_arith_term * ($f_list_cons * a 0)) 0)
+
+             (($get_lesser_arith_term * ($f_list_cons * 1 b)) 1)
+
+             (($get_lesser_arith_term * ($f_list_cons * 
+                                                      ($f_list_cons * 3 4) 
+                                                      ($f_list_cons * 2 2))) 
+
+              2)
+
+             (($get_lesser_arith_term * ($f_list_cons + (* 1 a) 1))
+
+              ($f_list_cons + (* 1 a) 1))
+
+             (($get_lesser_arith_term + ($f_list_cons + 
+                                                      (* 1 a) 
+                                                      (* 1 b)))
+
+              (* 1 b))
+
+             (($get_lesser_arith_term + ($f_list_cons + 
+                                                      (* 1 a) 
+                                                      ($f_list_cons + 
+                                                                    (* -1 b)
+                                                                    (* 1 b))))
+
+              (* -1 b))
+
+             (($get_lesser_arith_term + ($f_list_cons + 
+                                                      (* 1 b) 
+                                                      (* -1 b)))
+
+              (* -1 b))
+
+             (($get_lesser_arith_term + ($f_list_cons + 
+                                                      ($f_list_cons * 1 a) 
+                                                      ($f_list_cons +
+                                                                    ($f_list_cons * 1 b)
+                                                                    ($f_list_cons * -1 a))))
+
+              ($f_list_cons * 1 b))
+
+             (($get_lesser_arith_term + 
+                                      ($f_list_cons + 
+                                                    ($f_list_cons * 1 a) 
+                                                    ($f_list_cons +
+                                                                  ($f_list_cons * 1 b)
+                                                                  ($f_list_cons +
+                                                                                ($f_list_cons * -1 a)
+                                                                                ($f_list_cons * -1 b)))))
+
+              ($f_list_cons * -1 b))
+
+             (($get_lesser_arith_term + ($f_list_cons + 
+                                                      (* a 1) 
+                                                      ($f_list_cons + 
+                                                                    (* b 1)
+                                                                    (* (f a b) 1))))
+
+              (* b 1))
+
+             (($get_lesser_arith_term + ($f_list_cons * (* a a) 1))
+
+              ($f_list_cons * (* a a) 1))
+
+             (($get_lesser_arith_term + (+ (+ (+ -2 a) 1) (+ (+ b 3) (+ a b))))
+
+              -2)
+             )
+
+  :conclusion-explicit true
+  )
+
+;---------------------------------
+; $reorder_arith_term
+;---------------------------------
+
+; TODO: repeating constants just for cohesion of the code...
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+(declare-const b Real)
+(declare-const f (-> Int Real Int))
+
+(declare-rule $test_$reorder_arith_term ()
+  :requires (; Addition
+             (($reorder_arith_term ($f_list_cons + 2 1))
+
+              ($f_list_cons + 1 2))
+
+             (($reorder_arith_term ($f_list_cons + 3 ($f_list_cons + 2 1)))
+
+              ($f_list_cons + 1 ($f_list_cons + 2 3)))
+
+             (($reorder_arith_term ($f_list_cons + 4 ($f_list_cons + 1 4)))
+
+              ($f_list_cons + 1 ($f_list_cons + 4 4)))
+
+             (($reorder_arith_term ($f_list_cons + 4 ($f_list_cons + a 4)))
+
+              ($f_list_cons +
+                            4
+                            ($f_list_cons + 4 a)))
+             
+             ; Product
+             (($reorder_arith_term ($f_list_cons * 2 1))
+
+              ($f_list_cons * 1 2))
+
+             (($reorder_arith_term ($f_list_cons * 1 2))
+
+              ($f_list_cons * 1 2))
+
+             (($reorder_arith_term ($f_list_cons * 2 ($f_list_cons * a 3)))
+
+              ($f_list_cons * 
+                            2
+                            ($f_list_cons * 3 a)))
+
+             (($reorder_arith_term ($f_list_cons * a ($f_list_cons * a 3)))
+
+              ($f_list_cons * 3 ($f_list_cons * a a)))
+
+             (($reorder_arith_term ($f_list_cons * a ($f_list_cons * b 3)))
+
+              ($f_list_cons * 3 ($f_list_cons * a b)))
+
+             (($reorder_arith_term ($f_list_cons * b 
+                                                 ($f_list_cons * 
+                                                               a 
+                                                               ($f_list_cons * a 3))))
+
+              ($f_list_cons * 3 ($f_list_cons * 
+                                              a 
+                                              ($f_list_cons * a b))))
+
+             ; Addition and product
+             (($reorder_arith_term ($f_list_cons + 
+                                                 ($f_list_cons * 1 2) 
+                                                 ($f_list_cons + 3 4)))
+
+              ($f_list_cons + 3 ($f_list_cons + 4 ($f_list_cons * 1 2))))
+
+             (($reorder_arith_term ($f_list_cons + 
+                                                 ($f_list_cons * 2 1) 
+                                                 ($f_list_cons + 3 4)))
+
+              ($f_list_cons + 3 ($f_list_cons + 4 ($f_list_cons * 1 2))))
+
+             (($reorder_arith_term ($f_list_cons + ($f_list_cons * 1 a) 1))
+
+              ($f_list_cons + 1 ($f_list_cons * 1 a)))
+
+             (($reorder_arith_term ($f_list_cons + ($f_list_cons * a 1) 1))
+
+              ($f_list_cons + 1 ($f_list_cons * 1 a)))
+
+             (($reorder_arith_term ($f_list_cons + 
+                                                 ($f_list_cons * 1 a) 
+                                                 ($f_list_cons * 1 b)))
+
+              ($f_list_cons + 
+                            ($f_list_cons * 1 a) 
+                            ($f_list_cons * 1 b)))
+
+             (($reorder_arith_term ($f_list_cons + 
+                                                 ($f_list_cons * 1 b) 
+                                                 ($f_list_cons * 1 a)))
+
+              ($f_list_cons + 
+                            ($f_list_cons * 1 a) 
+                            ($f_list_cons * 1 b)))
+
+             (($reorder_arith_term 
+               ($f_list_cons + 
+                             ($f_list_cons * 1 a) 
+                             ($f_list_cons + 
+                                           3
+                                           ($f_list_cons + 
+                                                         4
+                                                         ($f_list_cons * 4 b)))))
+
+              ($f_list_cons + 
+                            3
+                            ($f_list_cons + 4
+                                          ($f_list_cons + 
+                                                        ($f_list_cons * 1 a)
+                                                        ($f_list_cons * 4 b)))))
+
+             ; Terms with the same variables should appear together.
+             (($reorder_arith_term ($f_list_cons + 
+                                                 ($f_list_cons * 1 b)
+                                                 ($f_list_cons + 
+                                                               ($f_list_cons * -200 a)
+                                                               ($f_list_cons * -1 b))))
+
+              ($f_list_cons + 
+                            ($f_list_cons * -200 a)
+                            ($f_list_cons + 
+                                          ($f_list_cons * -1 b)
+                                          ($f_list_cons * 1 b))))
+             (($reorder_arith_term 
+               ($f_list_cons +
+                             ($f_list_cons * -3 a)
+                             ($f_list_cons +
+                                           ($f_list_cons * 1 b)
+                                           ($f_list_cons + 
+                                                         ($f_list_cons * -49 a)
+                                                         ($f_list_cons * -1 b)))))
+
+              ($f_list_cons +
+                             ($f_list_cons * -49 a)
+                             ($f_list_cons +
+                                           ($f_list_cons * -3 a)
+                                           ($f_list_cons + 
+                                                         ($f_list_cons * -1 b)
+                                                         ($f_list_cons * 1 b)
+                                                         ))))
+             
+             (($reorder_arith_term 
+               ($f_list_cons 
+                + 
+                ($f_list_cons 
+                 + 
+                 ($f_list_cons + 2 a) 1) 
+                ($f_list_cons 
+                 + 
+                 ($f_list_cons + b 3) 
+                 ($f_list_cons + a b))))
+
+              ($f_list_cons 
+                + 
+                1
+                ($f_list_cons 
+                 +
+                 2
+                 ($f_list_cons 
+                  + 
+                  3
+                  ($f_list_cons 
+                   +
+                   a
+                   ($f_list_cons 
+                    + 
+                    a 
+                    ($f_list_cons + b b)))))))
+
+             ; Subtraction 
+             (($reorder_arith_term (- -2 1))
+
+              (- -2 1))
+
+             (($reorder_arith_term (- a 1))
+
+              (- a 1))
+
+             (($reorder_arith_term (- a (- -2 1)))
+
+              (- a (- -2 1)))
+
+             ; Reorder within terms of a subtraction.
+             (($reorder_arith_term (- 1 ($f_list_cons * a 2)))
+
+              (- 1 ($f_list_cons * 2 a)))
+
+             (($reorder_arith_term (- ($f_list_cons * a 2) 1))
+
+              (- ($f_list_cons * 2 a) 1))
+
+             (($reorder_arith_term (- ($f_list_cons * a 2) ($f_list_cons * 30 4)))
+
+              (- ($f_list_cons * 2 a) ($f_list_cons * 4 30)))
+
+             ; Negative terms
+             (($reorder_arith_term (- 1))
+
+              (- 1))
+
+             (($reorder_arith_term (- a))
+
+              (- a))
+
+             (($reorder_arith_term (- (f a b)))
+
+              (- (f a b)))
+
+             ; Reorder within subterms of a negative term.
+             (($reorder_arith_term (- ($f_list_cons + 2 1)))
+
+              (- ($f_list_cons + 1 2)))
+
+             (($reorder_arith_term (- ($f_list_cons * 2 1)))
+
+              (- ($f_list_cons * 1 2)))
+
+             (($reorder_arith_term (- ($f_list_cons + 2 ($f_list_cons + a 4))))
+
+              (- ($f_list_cons + 2 ($f_list_cons + 4 a))))
+
+             (($reorder_arith_term (- ($f_list_cons + 2 ($f_list_cons + (f a b) 4))))
+
+              (- ($f_list_cons + 2 ($f_list_cons + 4 (f a b)))))
+
+             ; Misc.
+             ; No confusion between arith ops and uninterpreted functions.
+             (($reorder_arith_term (f 2 1.0))
+
+              (f 2 1.0))
+
+             (($reorder_arith_term (f (f 2 1.0) 3.0))
+
+              (f (f 2 1.0) 3.0))
+             
+             )
+
+  :conclusion-explicit true
+  )
+
+
+;------------------------------------
+; $small_step_assoc_evaluatable_terms
+;------------------------------------
+
+; TODO: repeating constants just for cohesion of the code...
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+
+(declare-rule $test_$small_step_assoc_evaluatable_terms ()
+  :requires (; Additions
+             (($small_step_assoc_evaluatable_terms ($f_list_cons + 1 2))
+
+              ($f_list_cons + 1 2))
+
+             (($small_step_assoc_evaluatable_terms ($f_list_cons + 1 
+                                                                 ($f_list_cons + 2 3)))
+
+              ($f_list_cons + ($f_list_cons + 1 2) 3))
+
+             (($small_step_assoc_evaluatable_terms 
+               ($f_list_cons + 1 
+                             ($f_list_cons + 
+                                           2 
+                                           ($f_list_cons + 3 4))))
+
+              ($f_list_cons + ($f_list_cons + 1 2) ($f_list_cons + 3 4)))
+
+             (($small_step_assoc_evaluatable_terms 
+               ($f_list_cons + 1 ($f_list_cons * 2 a)))
+
+              ($f_list_cons + 1 ($f_list_cons * 2 a)))
+
+             (($small_step_assoc_evaluatable_terms 
+               ($f_list_cons + 1 ($f_list_cons + 
+                                               ($f_list_cons * 2 a)
+                                               ($f_list_cons * 2 b))))
+
+              ($f_list_cons + 1 ($f_list_cons + 
+                                               ($f_list_cons * 2 a)
+                                               ($f_list_cons * 2 b))))
+
+             (($small_step_assoc_evaluatable_terms 
+               ($f_list_cons + 1 
+                             ($f_list_cons + 
+                                           2 
+                                           a)))
+
+              ($f_list_cons + ($f_list_cons + 1 2) a))
+
+             (($small_step_assoc_evaluatable_terms 
+               ($f_list_cons + 1 
+                             ($f_list_cons + 
+                                           2 
+                                           ($f_list_cons + 3 a))))
+
+              ($f_list_cons + ($f_list_cons + 1 2) ($f_list_cons + 3 a)))
+
+             ; Products
+             (($small_step_assoc_evaluatable_terms ($f_list_cons * 1 2))
+
+              ($f_list_cons * 1 2))
+
+             (($small_step_assoc_evaluatable_terms ($f_list_cons * 1 
+                                                                 ($f_list_cons * 2 3)))
+
+              ($f_list_cons * ($f_list_cons * 1 2) 3))
+
+             (($small_step_assoc_evaluatable_terms 
+               ($f_list_cons * 1 
+                             ($f_list_cons * 
+                                           2 
+                                           ($f_list_cons * 3 4))))
+
+              ($f_list_cons * ($f_list_cons * 1 2) ($f_list_cons * 3 4)))
+
+             (($small_step_assoc_evaluatable_terms 
+               ($f_list_cons * 1 ($f_list_cons * 2 a)))
+
+              ($f_list_cons * ($f_list_cons * 1 2) a))
+
+             (($small_step_assoc_evaluatable_terms 
+               ($f_list_cons * 1 ($f_list_cons * 2
+                                               ($f_list_cons * 3 a))))
+
+              ($f_list_cons * 
+                            ($f_list_cons * 1 2)
+                            ($f_list_cons * 3 a)))
+
+             (($small_step_assoc_evaluatable_terms 
+               ($f_list_cons * 1 
+                             ($f_list_cons * 
+                                           2 
+                                           a)))
+
+              ($f_list_cons * ($f_list_cons * 1 2) a))
+
+             (($small_step_assoc_evaluatable_terms 
+               ($f_list_cons * 1 
+                             ($f_list_cons * 
+                                           2 
+                                           ($f_list_cons * 3 a))))
+
+              ($f_list_cons * ($f_list_cons * 1 2) ($f_list_cons * 3 a)))
+
+             ; Additions and products.
+             (($small_step_assoc_evaluatable_terms 
+               ($f_list_cons + 1 
+                             ($f_list_cons * 
+                                           2 
+                                           ($f_list_cons * 3 a))))
+
+              ($f_list_cons + 1 
+                             ($f_list_cons * 
+                                           2 
+                                           ($f_list_cons * 3 a))))
+
+             (($small_step_assoc_evaluatable_terms 
+               ($f_list_cons + 
+                             ($f_list_cons * 1 a) 
+                             ($f_list_cons *
+                                           2 
+                                           ($f_list_cons * 3 a))))
+
+              ($f_list_cons + 
+                             ($f_list_cons * 1 a) 
+                             ($f_list_cons *
+                                           2 
+                                           ($f_list_cons * 3 a))))
+
+             (($small_step_assoc_evaluatable_terms 
+               ($f_list_cons + 1 
+                             ($f_list_cons + 
+                                           ($f_list_cons + 3 a)
+                                           a)))
+
+              ($f_list_cons + 
+                            ($f_list_cons + 1 3)
+                            ($f_list_cons + a a)))
+
+             (($small_step_assoc_evaluatable_terms 
+               ($f_list_cons + 1 
+                             ($f_list_cons + 2 
+                                           ($f_list_cons + 
+                                                         ($f_list_cons + 3 a)
+                                                         a))))
+
+              ($f_list_cons + 
+                            ($f_list_cons + 1 2)
+                            ($f_list_cons + 
+                                          ($f_list_cons + 3 a)
+                                          a)))
+
+             ; Association of uninterpreted terms.
+             (($small_step_assoc_evaluatable_terms 
+               ($f_list_cons + 
+                             ($f_list_cons * 1 a)
+                             ($f_list_cons + 
+                                           ($f_list_cons * 2 a) 
+                                           ($f_list_cons * 3 b))))
+
+              ($f_list_cons + 
+                            ($f_list_cons + 
+                                          ($f_list_cons * 1 a)
+                                          ($f_list_cons * 2 a))
+                            ($f_list_cons * 3 b)))
+
+             )
+
+  :conclusion-explicit true
+
+)
+
+;------------------------------------
+; $assoc_evaluatable_terms
+;------------------------------------
+
+; TODO: repeating constants just for cohesion of the code...
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+(declare-const b Real)
+(declare-const f (-> Int Real Real))
+
+(declare-rule $test_$assoc_evaluatable_terms ()
+  :requires (; Additions
+             (($assoc_evaluatable_terms ($f_list_cons + 1 2))
+
+              ($f_list_cons + 1 2))
+
+             (($assoc_evaluatable_terms ($f_list_cons + 1 
+                                                      ($f_list_cons + 2 3)))
+
+              ($f_list_cons + ($f_list_cons + 1 2) 3))
+
+             (($assoc_evaluatable_terms 
+               ($f_list_cons + 1 
+                             ($f_list_cons + 
+                                           2 
+                                           ($f_list_cons + 3 4))))
+
+              ($f_list_cons + 
+                            ($f_list_cons + 
+                                          ($f_list_cons + 1 2) 
+                                          3)
+                            4))
+
+             (($assoc_evaluatable_terms 
+               ($f_list_cons + 1 ($f_list_cons * 2 a)))
+
+              ($f_list_cons + 1 ($f_list_cons * 2 a)))
+
+             (($assoc_evaluatable_terms 
+               ($f_list_cons + 1 ($f_list_cons + 
+                                               ($f_list_cons * 2 a)
+                                               ($f_list_cons * 2 b))))
+
+              ($f_list_cons + 1 ($f_list_cons + 
+                                               ($f_list_cons * 2 a)
+                                               ($f_list_cons * 2 b))))
+
+             (($assoc_evaluatable_terms 
+               ($f_list_cons + 1 
+                             ($f_list_cons + 
+                                           2 
+                                           a)))
+
+              ($f_list_cons + ($f_list_cons + 1 2) a))
+
+             (($assoc_evaluatable_terms 
+               ($f_list_cons + 1 
+                             ($f_list_cons + 
+                                           2 
+                                           ($f_list_cons + 3 a))))
+
+              ($f_list_cons +
+                            ($f_list_cons + ($f_list_cons + 1 2) 3)
+                            a))
+
+             ; Products
+             (($assoc_evaluatable_terms ($f_list_cons * 1 2))
+
+              ($f_list_cons * 1 2))
+
+             (($assoc_evaluatable_terms ($f_list_cons * 1 
+                                                      ($f_list_cons * 2 3)))
+
+              ($f_list_cons * ($f_list_cons * 1 2) 3))
+
+             (($assoc_evaluatable_terms 
+               ($f_list_cons * 1 
+                             ($f_list_cons * 
+                                           2 
+                                           ($f_list_cons * 3 4))))
+
+              ($f_list_cons *
+                            ($f_list_cons * ($f_list_cons * 1 2) 3)
+                            4))
+
+             (($assoc_evaluatable_terms 
+               ($f_list_cons * 1 ($f_list_cons * 2 a)))
+
+              ($f_list_cons * ($f_list_cons * 1 2) a))
+
+             (($assoc_evaluatable_terms 
+               ($f_list_cons * 1 ($f_list_cons * 2
+                                               ($f_list_cons * 3 a))))
+
+              ($f_list_cons * 
+                            ($f_list_cons * 
+                                          ($f_list_cons * 1 2)
+                                          3)
+                            a))
+
+             (($assoc_evaluatable_terms 
+               ($f_list_cons * 1 
+                             ($f_list_cons * 
+                                           2 
+                                           a)))
+
+              ($f_list_cons * ($f_list_cons * 1 2) a))
+
+             (($assoc_evaluatable_terms 
+               ($f_list_cons * 1 
+                             ($f_list_cons * 
+                                           2 
+                                           ($f_list_cons * 3 a))))
+
+              ($f_list_cons * 
+                            ($f_list_cons * ($f_list_cons * 1 2) 3)
+                            a))
+
+             ; Addition and products.
+             (($assoc_evaluatable_terms 
+               ($f_list_cons + 1 
+                             ($f_list_cons * 
+                                           2 
+                                           ($f_list_cons * 3 a))))
+
+              ($f_list_cons + 1 
+                             ($f_list_cons *
+                                           ($f_list_cons * 2 3) 
+                                           a)))
+
+             (($assoc_evaluatable_terms 
+               ($f_list_cons + 
+                             ($f_list_cons * 1 a) 
+                             ($f_list_cons *
+                                           2 
+                                           ($f_list_cons * 3 a))))
+
+              ($f_list_cons + 
+                             ($f_list_cons * 1 a) 
+                             ($f_list_cons * ($f_list_cons * 2 3) a)))
+
+             (($assoc_evaluatable_terms 
+               ($f_list_cons + 
+                             1
+                             ($f_list_cons + 
+                                           2
+                                           ($f_list_cons + 
+                                                         3
+                                                         ($f_list_cons * 
+                                                                       3 
+                                                                       ($f_list_cons * 2 a))))))
+
+              ($f_list_cons + 
+                            ($f_list_cons + ($f_list_cons + 1 2) 3)
+                            ($f_list_cons * ($f_list_cons * 3 2) a)))
+             
+             ; Association of uninterpreted terms
+             (($assoc_evaluatable_terms 
+               ($f_list_cons + 1 
+                             ($f_list_cons + 
+                                           ($f_list_cons + 3 a)
+                                           a)))
+
+              ($f_list_cons + 
+                            ($f_list_cons + 1 3)
+                            ($f_list_cons + a a)))
+
+             (($assoc_evaluatable_terms 
+               ($f_list_cons + 1 
+                             ($f_list_cons + 2 
+                                           ($f_list_cons + 
+                                                         ($f_list_cons + 3 a)
+                                                         a))))
+
+              ($f_list_cons + 
+                            ($f_list_cons + 
+                                          ($f_list_cons + 1 2) 3)
+                            ($f_list_cons + a a)))
+
+             (($assoc_evaluatable_terms 
+               ($f_list_cons + 1 
+                             ($f_list_cons + 2 
+                                           ($f_list_cons + 
+                                                         ($f_list_cons + 3 a)
+                                                         a))))
+
+              ($f_list_cons + 
+                            ($f_list_cons + 
+                                          ($f_list_cons + 1 2) 3)
+                            ($f_list_cons + a a)))
+
+             (($assoc_evaluatable_terms 
+               ($f_list_cons + 1 
+                             ($f_list_cons + 2 
+                                           ($f_list_cons + 
+                                                         ($f_list_cons * 1 a)
+                                                         ($f_list_cons * 2 a)))))
+
+              ($f_list_cons + 
+                            ($f_list_cons + 1 2)
+                            ($f_list_cons + 
+                                          ($f_list_cons * 1 a)
+                                          ($f_list_cons * 2 a))))
+
+             (($assoc_evaluatable_terms 
+               ($f_list_cons 
+                + 
+                1 
+                ($f_list_cons 
+                 + 
+                 2 
+                 ($f_list_cons + 
+                               ($f_list_cons * 1 a)
+                               ($f_list_cons + 
+                                             ($f_list_cons * 2 a)
+                                             ($f_list_cons * 3 b))))))
+
+              ($f_list_cons + 
+                            ($f_list_cons + 1 2)
+                            ($f_list_cons + 
+                                          ($f_list_cons + 
+                                                        ($f_list_cons * 1 a)
+                                                        ($f_list_cons * 2 a))
+                                          ($f_list_cons * 3 b))))
+
+             (($assoc_evaluatable_terms 
+               ($f_list_cons 
+                + 
+                1 
+                ($f_list_cons 
+                 + 
+                 2 
+                 ($f_list_cons + 
+                               ($f_list_cons * 1 a)
+                               ($f_list_cons 
+                                + 
+                                ($f_list_cons * 2 a)
+                                ($f_list_cons 
+                                 + 
+                                 ($f_list_cons * 3 b)
+                                 ($f_list_cons 
+                                  +
+                                  ($f_list_cons * 4 b)
+                                  ($f_list_cons * 5 (f a b)))))))))
+
+              ($f_list_cons 
+               + 
+               ($f_list_cons + 1 2)
+               ($f_list_cons + 
+                             ($f_list_cons + 
+                                           ($f_list_cons * 1 a)
+                                           ($f_list_cons * 2 a))
+                             ($f_list_cons + 
+                                           ($f_list_cons + 
+                                                         ($f_list_cons * 3 b)
+                                                         ($f_list_cons * 4 b))
+                                           ($f_list_cons * 5 (f a b))))))
+             )
+
+  :conclusion-explicit true
+
+)
+
+
+;---------------------------------
+; $build_proper_monomials
+;---------------------------------
+
+; TODO: repeating constants just for cohesion of the code...
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+(declare-const f (-> Int Int))
+
+(declare-rule $test_$build_proper_monomials ()
+  :requires (; Single term
+             (($build_proper_monomials a)
+
+              ($f_list_cons * 1/1 a))
+
+             (($build_proper_monomials (f a))
+
+              ($f_list_cons * 1/1 (f a)))
+
+             ; Additions
+             (($build_proper_monomials ($f_list_cons + 1 a))
+
+              ($f_list_cons + 1 ($f_list_cons * 1/1 a)))
+
+             (($build_proper_monomials ($f_list_cons + a 1))
+
+              ($f_list_cons + ($f_list_cons * 1/1 a) 1))
+
+             (($build_proper_monomials ($f_list_cons + 1 ($f_list_cons + 2 a)))
+
+              ($f_list_cons + 1 ($f_list_cons + 2 ($f_list_cons * 1/1 a))))
+
+             (($build_proper_monomials ($f_list_cons + 1 ($f_list_cons + a 2)))
+
+              ($f_list_cons + 1 ($f_list_cons + ($f_list_cons * 1/1 a) 2)))
+
+             (($build_proper_monomials ($f_list_cons + a ($f_list_cons + 1 2)))
+
+              ($f_list_cons + ($f_list_cons * 1/1 a) ($f_list_cons + 1 2)))
+
+             (($build_proper_monomials ($f_list_cons + a ($f_list_cons * 1 2)))
+
+              ($f_list_cons + ($f_list_cons * 1/1 a) ($f_list_cons * 1 2)))
+
+             (($build_proper_monomials 
+               ($f_list_cons + 
+                             ($f_list_cons + 
+                                           ($f_list_cons + 2 3) 
+                                           a) 
+                             4))
+
+              ($f_list_cons + 
+                             ($f_list_cons + 
+                                           ($f_list_cons + 2 3)
+                                           ($f_list_cons * 1/1 a)) 
+                             4))
+
+             (($build_proper_monomials 
+               ($f_list_cons + 
+                             ($f_list_cons + 
+                                           ($f_list_cons + a 3) 
+                                           a) 
+                             4))
+
+              ($f_list_cons + 
+                            ($f_list_cons + 
+                                          ($f_list_cons + 
+                                                        ($f_list_cons * 1/1 a) 
+                                                        3)
+                                          ($f_list_cons * 1/1 a)) 
+                            4))
+
+             ; Subtraction
+             (($build_proper_monomials (- 1 a))
+
+              (- 1 ($f_list_cons * 1/1 a)))
+
+             (($build_proper_monomials (- 1 (- 2 a)))
+
+              (- 1 (- 2 ($f_list_cons * 1/1 a))))
+
+             (($build_proper_monomials (- 1 (- a 2)))
+
+              (- 1 (- ($f_list_cons * 1/1 a) 2)))
+
+             (($build_proper_monomials (- a (- 1 2)))
+
+              (- ($f_list_cons * 1/1 a) (- 1 2)))
+
+             (($build_proper_monomials (- (f a) (- 1 2)))
+
+              (- ($f_list_cons * 1/1 (f a)) (- 1 2)))
+
+             ; Negative
+             (($build_proper_monomials (- 1))
+
+              (- 1))
+
+             (($build_proper_monomials (- a))
+
+              (- ($f_list_cons * 1/1 a)))
+
+             (($build_proper_monomials (- ($f_list_cons + a 1)))
+
+              (- ($f_list_cons + ($f_list_cons * 1/1 a) 1)))
+
+             (($build_proper_monomials (- ($f_list_cons + 1 ($f_list_cons + a 2))))
+
+              (- ($f_list_cons + 1 ($f_list_cons + ($f_list_cons * 1/1 a) 2))))
+
+             ; Product (shouldn't change)
+             (($build_proper_monomials ($f_list_cons * 1 a))
+
+              ($f_list_cons * 1 a))
+
+             (($build_proper_monomials ($f_list_cons * 1 (f a)))
+
+              ($f_list_cons * 1 (f a)))
+
+             (($build_proper_monomials ($f_list_cons * 1 ($f_list_cons * 2 (f a))))
+
+              ($f_list_cons * 1 ($f_list_cons * 2 (f a))))
+
+             (($build_proper_monomials ($f_list_cons * a ($f_list_cons * 2 1)))
+
+              ($f_list_cons * a ($f_list_cons * 2 1)))
+             )
+              
+  :conclusion-explicit true
+  )
+
+;---------------------------------
+; $small_step_reduction_arith_term
+;---------------------------------
+
+; TODO: repeating constants just for cohesion of the code...
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+(declare-const b Real)
+(declare-const f (-> Real Real))
+
+(declare-rule $test_$small_step_reduction_arith_term ()
+  :requires (; Case (+ 0 rhs) = rhs
+             (($small_step_reduction_arith_term ($f_list_cons + 0.0 1))
+
+              1)
+
+             (($small_step_reduction_arith_term ($f_list_cons + 0.0 (+ 1 1)))
+
+              (+ 1 1))
+
+             (($small_step_reduction_arith_term ($f_list_cons + 0 1))
+
+              1)
+
+             (($small_step_reduction_arith_term ($f_list_cons + 0 (+ 1 1)))
+
+              (+ 1 1))
+
+             (($small_step_reduction_arith_term ($f_list_cons + 0/1 1))
+
+              1)
+
+             (($small_step_reduction_arith_term ($f_list_cons + 0/1 (+ 1 1)))
+
+              (+ 1 1))
+
+             (($small_step_reduction_arith_term ($f_list_cons + 0 ($f_list_cons * 1/1 a)))
+
+              ($f_list_cons * 1/1 a))
+
+             (($small_step_reduction_arith_term ($f_list_cons + 0.0 ($f_list_cons * 1/1 a)))
+
+              ($f_list_cons * 1/1 a))
+
+             (($small_step_reduction_arith_term ($f_list_cons + 0/1 ($f_list_cons * 1/1 a)))
+
+              ($f_list_cons * 1/1 a))
+
+             ; Uninterpreted terms have a context-dependent semantics, they
+             ; shouldn't be reduced by this relation.
+             (($small_step_reduction_arith_term a)
+
+              a)
+
+             (($small_step_reduction_arith_term (f b))
+
+              (f b))
+
+             ; Case (+ lhs 0) = lhs
+             ; NOTE: this case is given semantics directly through eo::add,
+             ; previous conversion to rational. of operands.
+             (($small_step_reduction_arith_term ($f_list_cons + 1 0.0))
+
+              1/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons + 1 0))
+
+              1/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons + 1 0/1))
+
+              1/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons + 
+                                                              (+ 2 3) 
+                                                              0.0))
+
+              (+ 2 3))
+
+             (($small_step_reduction_arith_term ($f_list_cons + 
+                                                              (+ 2 3) 0))
+
+              (+ 2 3))
+
+             (($small_step_reduction_arith_term ($f_list_cons + ($f_list_cons * 2/1 a) 0))
+
+              ($f_list_cons * 2/1 a))
+
+             (($small_step_reduction_arith_term ($f_list_cons + ($f_list_cons * 4/1 a) 0/1))
+
+              ($f_list_cons * 4/1 a))
+
+             ; Case + lhs rhs when they are numeric literals.
+             (($small_step_reduction_arith_term ($f_list_cons + 1 2))
+
+              3/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons + 1.0 2.0))
+
+              3/1)
+
+             ; Case (+ (* a x) (* b x)) = (* (+ a b) x)
+             (($small_step_reduction_arith_term ($f_list_cons +
+                                                              ($f_list_cons * 3 a)
+                                                              ($f_list_cons * 4 a)))
+
+              ($f_list_cons * ($f_list_cons + 3 4) a))
+
+             (($small_step_reduction_arith_term 
+               ($f_list_cons +
+                             ($f_list_cons * ($f_list_cons * 3 4) a)
+                             ($f_list_cons * 4 a)))
+
+              ($f_list_cons * ($f_list_cons + ($f_list_cons * 3 4) 4) a))
+
+             ; Case (* 0 rhs) = 0
+             (($small_step_reduction_arith_term ($f_list_cons * 0.0 1))
+
+              0/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 0.0 (+ 1 1)))
+
+              0/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 0 1))
+
+              0/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 0 (+ 1 1)))
+
+              0/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 0/1 1))
+
+              0/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 0/1 (+ 1 1)))
+
+              0/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 0 a))
+
+              0/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 0.0 a))
+
+              0/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 0/1 a))
+
+              0/1)
+
+             ; Case (* lhs 0) = lhs
+             ; NOTE: this case is given semantics directly through eo::add,
+             ; previous conversion to rational. of operands.
+             (($small_step_reduction_arith_term ($f_list_cons * 1 0/1))
+
+              0/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 1 0))
+
+              0)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 
+                                                              (+ 2 3) 
+                                                              0.0))
+
+              0/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 
+                                                              (+ 2 3) 0))
+
+              0/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * a 0))
+
+              0/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * a 0/1))
+
+              0/1)
+
+             ; Case (* 1 rhs) = rhs
+             (($small_step_reduction_arith_term ($f_list_cons * 1.0 5))
+
+              5)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 1.0 (+ 1 1)))
+
+              (+ 1 1))
+
+             (($small_step_reduction_arith_term ($f_list_cons * 1 3.0))
+
+              3.0)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 1 (+ 1 1)))
+
+              (+ 1 1))
+
+             (($small_step_reduction_arith_term ($f_list_cons * 1/1 5))
+
+              5)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 1/1 (+ 1 1)))
+
+              (+ 1 1))
+
+             (($small_step_reduction_arith_term ($f_list_cons * 1 a))
+
+              ($f_list_cons * 1/1 a))
+
+             (($small_step_reduction_arith_term ($f_list_cons * 1.0 a))
+
+              ($f_list_cons * 1/1 a))
+
+             (($small_step_reduction_arith_term ($f_list_cons * 1/1 a))
+
+              ($f_list_cons * 1/1 a))
+
+             ; Case (* lhs 1) = lhs
+             ; NOTE: this case is given semantics directly through eo::mul,
+             ; previous conversion of operands to rational.
+             (($small_step_reduction_arith_term ($f_list_cons * 2 1/1))
+
+              2/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 3 1))
+
+              3/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 
+                                                              (+ 2 3) 
+                                                              1.0))
+
+              (+ 2 3))
+
+             ; Case (* -1 rhs) = rhs
+             (($small_step_reduction_arith_term ($f_list_cons * -1.0 5))
+
+              -5/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * -1.0 (+ 1 1)))
+
+              ($f_list_cons * -1/1 (+ 1 1)))
+
+             (($small_step_reduction_arith_term ($f_list_cons * -1 3.0))
+
+              -3/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * -1 (+ 1 1)))
+
+              ($f_list_cons * -1/1 (+ 1 1)))
+
+             (($small_step_reduction_arith_term ($f_list_cons * -1/1 5))
+
+              -5/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * -1/1 (+ 1 1)))
+
+              ($f_list_cons * -1/1 (+ 1 1)))
+
+             (($small_step_reduction_arith_term ($f_list_cons * -1 a))
+
+              ($f_list_cons * -1/1 a))
+
+             (($small_step_reduction_arith_term ($f_list_cons * -1.0 a))
+
+              ($f_list_cons * -1/1 a))
+
+             (($small_step_reduction_arith_term ($f_list_cons * -1/1 a))
+
+              ($f_list_cons * -1/1 a))
+
+             ; Case (* lhs -1) = lhs
+             ; NOTE: this case is given semantics directly through eo::mul,
+             ; previous conversion of operands to rational.
+             (($small_step_reduction_arith_term ($f_list_cons * 2 -1/1))
+
+              -2/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 3 -1))
+
+              -3/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 
+                                                              (+ 2 3) 
+                                                              -1.0))
+
+              ($f_list_cons * -1/1 (+ 2 3)))
+
+             ; Case * lhs rhs when they are numeric literals.
+             (($small_step_reduction_arith_term ($f_list_cons * 3 2))
+
+              6/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 3.0 2.0))
+
+              6/1)
+
+             (($small_step_reduction_arith_term ($f_list_cons * 3/1 2/1))
+
+              6/1)
+
+             ;; ; Case - (- lhs) = lhs
+             ;; (($small_step_reduction_arith_term (- (- 1)))
+
+             ;;  1)
+
+             ;; (($small_step_reduction_arith_term (- (- 1.0)))
+
+             ;;  1.0)
+
+             ;; (($small_step_reduction_arith_term (- (- 1/1)))
+
+             ;;  1/1)
+
+             ;; (($small_step_reduction_arith_term (- (- a)))
+
+             ;;  a)
+
+             ;; (($small_step_reduction_arith_term (- (- (+ 1 a))))
+
+             ;;  (+ 1 a))
+
+             ;; (($small_step_reduction_arith_term (- (- (+ 1 3))))
+
+             ;;  (+ 1 3))
+
+             ;; ; Case (- lhs) = lhs
+             ;; (($small_step_reduction_arith_term (- 1))
+
+             ;;  -1/1)
+
+             ;; (($small_step_reduction_arith_term (- 1.0))
+
+             ;;  -1/1)
+
+             ;; (($small_step_reduction_arith_term (- a))
+
+             ;;  ($f_list_cons * -1/1 a))
+
+             ;; (($small_step_reduction_arith_term (- ($f_list_cons + 1 1)))
+
+             ;;  ($f_list_cons * -1/1 ($f_list_cons + 1 1)))
+
+             ;; (($small_step_reduction_arith_term (- (+ 1 1)))
+
+             ;;  ($f_list_cons * -1/1 (+ 1 1)))
+             )
+
+  :conclusion-explicit true
+  )
+
+;---------------------------------
+; $small_step_evaluator_arith_term
+;---------------------------------
+
+; TODO: repeating constants just for cohesion of the code...
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+
+(declare-rule $test_$small_step_evaluator_arith_term ()
+  :requires (; Case (+ 0 rhs) = rhs
+             (($small_step_evaluator_arith_term ($f_list_cons + 0.0 1))
+
+              1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons + 0.0 (+ 1 1)))
+
+              2/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons + 0 1))
+
+              1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons + 0 (+ 1 1)))
+
+              2/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons + 0/1 1))
+
+              1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons + 0/1 (+ 1 1)))
+
+              2/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons + 
+                                                              0 
+                                                              ($f_list_cons * 1/1 a)))
+
+              ($f_list_cons * 1/1 a))
+
+             (($small_step_evaluator_arith_term ($f_list_cons + 
+                                                              0.0 
+                                                              ($f_list_cons * 1/1 a)))
+
+              ($f_list_cons * 1/1 a))
+
+             (($small_step_evaluator_arith_term ($f_list_cons + 
+                                                              0/1 
+                                                              ($f_list_cons * 1/1 a)))
+
+              ($f_list_cons * 1/1 a))
+
+             ; Case (+ lhs 0) = lhs
+             ; NOTE: this case is given semantics directly through eo::add,
+             ; previous conversion to rational. of operands.
+             (($small_step_evaluator_arith_term ($f_list_cons + 1 0.0))
+
+              1/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons + 1 0))
+
+              1/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons + 1 0/1))
+
+              1/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons + 
+                                                              (+ 2 3) 
+                                                              0.0))
+
+              5/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons + 
+                                                              (+ 2 3) 0))
+
+              5/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons + 
+                                                              ($f_list_cons * 1/1 a) 
+                                                              0))
+
+              ($f_list_cons * 1/1 a))
+
+             (($small_step_evaluator_arith_term ($f_list_cons + 
+                                                              ($f_list_cons * 1/1 a) 
+                                                              0/1))
+
+              ($f_list_cons * 1/1 a))
+
+             ; Case + lhs rhs when they are numeric literals.
+             (($small_step_evaluator_arith_term ($f_list_cons + 1 2))
+
+              3/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons + 1.0 2.0))
+
+              3/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons + 
+                                                              3.0 
+                                                              ($f_list_cons * 4.0 3.0)))
+
+              15/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons + 
+                                                              ($f_list_cons * 4.0 3.0) 
+                                                              ($f_list_cons * 4.0 3.0)))
+
+              24/1)
+             
+             (($small_step_evaluator_arith_term 
+               ($f_list_cons + 
+                             ($f_list_cons * 4.0 3.0) 
+                             ($f_list_cons * 
+                                           ($f_list_cons * 4.0 3.0) 3.0)))
+
+              48/1)
+
+             ; Case (+ (* a x) (* b x)) = (* (+ a b) x)
+             (($small_step_evaluator_arith_term ($f_list_cons +
+                                                              ($f_list_cons * 3 a)
+                                                              ($f_list_cons * 4 a)))
+
+              ($f_list_cons * 7/1 a))
+
+             (($small_step_evaluator_arith_term 
+               ($f_list_cons +
+                             ($f_list_cons * ($f_list_cons * 3 4) a)
+                             ($f_list_cons * 4 a)))
+
+              ($f_list_cons * 16/1 a))
+
+             ; Case (* 0 rhs) = 0
+             (($small_step_evaluator_arith_term ($f_list_cons * 0.0 1))
+
+              0/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 0.0 (+ 1 1)))
+
+              0/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 0 1))
+
+              0/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 0 (+ 1 1)))
+
+              0/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 0/1 1))
+
+              0/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 0/1 (+ 1 1)))
+
+              0/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 0 a))
+
+              0/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 0.0 a))
+
+              0/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 0/1 a))
+
+              0/1)
+
+             ; Case (* lhs 0) = lhs
+             ; NOTE: this case is given semantics directly through eo::add,
+             ; previous conversion to rational. of operands.
+             (($small_step_evaluator_arith_term ($f_list_cons * 1 0/1))
+
+              0/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 1 0))
+
+              0)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 
+                                                              (+ 2 3) 
+                                                              0.0))
+
+              0/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 
+                                                              (+ 2 3) 0))
+
+              0/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * a 0))
+
+              0/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * a 0/1))
+
+              0/1)
+
+             ; Case (* 1 rhs) = rhs
+             (($small_step_evaluator_arith_term ($f_list_cons * 1.0 5))
+
+              5)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 1.0 (+ 1 1)))
+
+              2/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 1 3.0))
+
+              3.0)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 1 (+ 1 1)))
+
+              2/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 1/1 5))
+
+              5)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 1/1 (+ 1 1)))
+
+              2/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 1 a))
+
+              ($f_list_cons * 1/1 a))
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 1.0 a))
+
+              ($f_list_cons * 1/1 a))
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 1/1 a))
+
+              ($f_list_cons * 1/1 a))
+
+             ; Case (* lhs 1) = lhs
+             ; NOTE: this case is given semantics directly through eo::mul,
+             ; previous conversion of operands to rational.
+             (($small_step_evaluator_arith_term ($f_list_cons * 2 1/1))
+
+              2/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 3 1))
+
+              3/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 
+                                                              (+ 2 3) 
+                                                              1.0))
+
+              5/1)
+
+             ; Case (* -1 rhs) = rhs
+             (($small_step_evaluator_arith_term ($f_list_cons * -1.0 5))
+
+              -5/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * -1.0 (+ 1 1)))
+
+              -2/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * -1 3.0))
+
+              -3/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * -1 (+ 1 1)))
+
+              -2/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * -1/1 5))
+
+              -5/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * -1/1 (+ 1 1)))
+
+              -2/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * -1 a))
+
+              ($f_list_cons * -1/1 a))
+
+             (($small_step_evaluator_arith_term ($f_list_cons * -1.0 a))
+
+              ($f_list_cons * -1/1 a))
+
+             (($small_step_evaluator_arith_term ($f_list_cons * -1/1 a))
+
+              ($f_list_cons * -1/1 a))
+
+             ; Case (* lhs -1) = lhs
+             ; NOTE: this case is given semantics directly through eo::mul,
+             ; previous conversion of operands to rational.
+             (($small_step_evaluator_arith_term ($f_list_cons * 2 -1/1))
+
+              -2/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 3 -1))
+
+              -3/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 
+                                                              (+ 2 3) 
+                                                              -1.0))
+
+              -5/1)
+
+             ; Case * lhs rhs when they are numeric literals.
+             (($small_step_evaluator_arith_term ($f_list_cons * 3 2))
+
+              6/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 3.0 2.0))
+
+              6/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons * 3/1 2/1))
+
+              6/1)
+             (($small_step_evaluator_arith_term ($f_list_cons *
+                                                              3.0
+                                                              ($f_list_cons * 4.0 3.0)))
+
+              36/1)
+
+             (($small_step_evaluator_arith_term ($f_list_cons *
+                                                              ($f_list_cons * 4.0 3.0)
+                                                              3.0))
+
+              36/1)
+
+             ;; ; Case - (- lhs) = lhs
+             ;; (($small_step_evaluator_arith_term (- (- 1)))
+
+             ;;  1)
+
+             ;; (($small_step_evaluator_arith_term (- (- 1.0)))
+
+             ;;  1/1)
+
+             ;; (($small_step_evaluator_arith_term (- (- 1/1)))
+
+             ;;  1/1)
+
+             ;; (($small_step_evaluator_arith_term (- (- a)))
+
+             ;;  ($f_list_cons * -1/1 a))
+
+             ;; (($small_step_evaluator_arith_term (- (- ($f_list_cons + 1 a))))
+
+             ;;  ($f_list_cons + 1 a))
+
+             ;; (($small_step_evaluator_arith_term (- (- (+ 1 3))))
+
+             ;;  4/1)
+
+             ;; ; Case (- lhs) = lhs
+             
+             ;; (($small_step_evaluator_arith_term (- a))
+
+             ;;  ($f_list_cons * -1/1 a))
+
+             ;; (($small_step_evaluator_arith_term (- ($f_list_cons * -1/1 a)))
+
+             ;;  ($f_list_cons * -1/1 a))
+             ;; (($small_step_evaluator_arith_term (- 1))
+
+             ;;  -1/1)
+
+             ;; (($small_step_evaluator_arith_term (- 1.0))
+
+             ;;  -1/1)
+
+             ;; (($small_step_evaluator_arith_term (- a))
+
+             ;;  ($f_list_cons * -1/1 a))
+
+             ;; (($small_step_evaluator_arith_term (- (+ 1 1)))
+
+             ;;  (- (+ 1 1)))
+             )
+
+  :conclusion-explicit true
+  )
+
+;---------------------------------
+; $small_step_normalize_arith_term
+;---------------------------------
+
+; TODO: repeating constants just for cohesion of the code...
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+
+(declare-rule $test_$small_step_normalize_arith_term ()
+  :requires (; Getting rid of leading unary "-".
+             (($small_step_normalize_arith_term (- ($f_list_cons + 2 4)))
+
+              ($f_list_cons + 
+                            ($f_list_cons * -1/1 2)
+                            ($f_list_cons * -1/1 4)))
+
+             (($small_step_normalize_arith_term (- ($f_list_cons + 
+                                                                 2 
+                                                                 ($f_list_cons + 3 4))))
+
+              ($f_list_cons + 
+                            ($f_list_cons * -1/1 2)
+                            ($f_list_cons * -1/1 ($f_list_cons + 3 4))))
+
+             (($small_step_normalize_arith_term (- ($f_list_cons + 2 a)))
+
+              ($f_list_cons + 
+                            ($f_list_cons * -1/1 2)
+                            ($f_list_cons * -1/1 a)))
+
+             (($small_step_normalize_arith_term (- ($f_list_cons + 
+                                                                 ($f_list_cons + 2 a) 
+                                                                 4)))
+
+              ($f_list_cons + 
+                            ($f_list_cons * -1/1 ($f_list_cons + 2 a))
+                            ($f_list_cons * -1/1 4)))
+
+             (($small_step_normalize_arith_term (- ($f_list_cons * 2 4)))
+
+              ($f_list_cons *
+                            ($f_list_cons * -1/1 2)
+                            4))
+
+             (($small_step_normalize_arith_term (- ($f_list_cons *
+                                                                 2 
+                                                                 ($f_list_cons + 3 4))))
+
+              ($f_list_cons *
+                            ($f_list_cons * -1/1 2)
+                            ($f_list_cons + 3 4)))
+
+             (($small_step_normalize_arith_term (- ($f_list_cons * 2 a)))
+
+              ($f_list_cons *
+                            ($f_list_cons * -1/1 2)
+                            a))
+
+             (($small_step_normalize_arith_term (- ($f_list_cons *
+                                                                 ($f_list_cons + 2 a) 
+                                                                 4)))
+
+              ($f_list_cons *
+                            ($f_list_cons * -1/1 ($f_list_cons + 2 a))
+                            4))
+
+             ; Case - (- lhs) = lhs
+             (($small_step_normalize_arith_term (- (- 4)))
+
+              4)
+
+             (($small_step_normalize_arith_term (- (- (+ 1 2))))
+
+              (+ 1 2))
+
+             (($small_step_normalize_arith_term (- (- (+ 1 (+ 2 3)))))
+
+              (+ 1 (+ 2 3)))
+
+             (($small_step_normalize_arith_term (- (- (+ 1 a))))
+
+              (+ 1 a))
+
+             (($small_step_normalize_arith_term (- (- (* 1 2))))
+
+              (* 1 2))
+
+             (($small_step_normalize_arith_term (- (- (* 1 (* 2 3)))))
+
+              (* 1 (* 2 3)))
+
+             (($small_step_normalize_arith_term (- (- (* 1 a))))
+
+              (* 1 a))
+
+             ; Getting rid of subtractions.
+             (($small_step_normalize_arith_term (- 1 2))
+
+              ($f_list_cons + 
+                            1
+                            ($f_list_cons * -1/1 2)))
+
+             (($small_step_normalize_arith_term (- (+ 1 2) 3))
+
+              ($f_list_cons + 
+                            (+ 1 2)
+                            ($f_list_cons * -1/1 3)))
+
+             (($small_step_normalize_arith_term (- (+ 1 2) (+ 3 4)))
+
+              ($f_list_cons + 
+                            (+ 1 2)
+                            ($f_list_cons * -1/1 (+ 3 4))))
+
+             (($small_step_normalize_arith_term (- (+ 1 2) (- (+ 3 4) (+ 5 6))))
+
+              ($f_list_cons + 
+                            (+ 1 2)
+                            ($f_list_cons * -1/1 (- (+ 3 4) (+ 5 6)))))
+
+             ; Distributivity 
+             (($small_step_normalize_arith_term ($f_list_cons * 
+                                                              1 
+                                                              ($f_list_cons + 2 3)))
+
+              ($f_list_cons +
+                            ($f_list_cons * 1 2) 
+                            ($f_list_cons * 1 3)))
+
+             (($small_step_normalize_arith_term ($f_list_cons * 
+                                                              ($f_list_cons + 2 3) 
+                                                              ($f_list_cons + 4 5)))
+
+              ($f_list_cons +
+                            ($f_list_cons * ($f_list_cons + 2 3) 4) 
+                            ($f_list_cons * ($f_list_cons + 2 3) 5)))
+
+             (($small_step_normalize_arith_term 
+               ($f_list_cons * 
+                             a
+                             ($f_list_cons + 
+                                           ($f_list_cons + 4 5)
+                                           ($f_list_cons + 6 7))))
+
+              ($f_list_cons +
+                            ($f_list_cons * a ($f_list_cons + 4 5)) 
+                            ($f_list_cons * a ($f_list_cons + 6 7))))
+
+             (($small_step_normalize_arith_term 
+               ($f_list_cons * -1/1 ($f_list_cons + 2 a)))
+
+              ($f_list_cons +
+                            ($f_list_cons * -1/1 2 )
+                            ($f_list_cons * -1/1 a)))
+
+             (($small_step_normalize_arith_term 
+               ($f_list_cons *
+                             4
+                             ($f_list_cons +
+                                           ($f_list_cons * -1/1 2 )
+                                           ($f_list_cons * -1/1 a))))
+
+              ($f_list_cons +
+                            ($f_list_cons * 4 ($f_list_cons * -1/1 2))
+                            ($f_list_cons * 4 ($f_list_cons * -1/1 a))))
+
+             ; Commutativity to exploit distributivity on a later step.
+             (($small_step_normalize_arith_term ($f_list_cons * 
+                                                              ($f_list_cons + 2 3)
+                                                              1))
+
+              ($f_list_cons * 
+                            1
+                            ($f_list_cons + 2 3)))
+
+             (($small_step_normalize_arith_term ($f_list_cons * 
+                                                              ($f_list_cons + 2 3)
+                                                              ($f_list_cons * 2 3)))
+
+              ($f_list_cons * 
+                            ($f_list_cons * 2 3)
+                            ($f_list_cons + 2 3)))
+
+             (($small_step_normalize_arith_term ($f_list_cons * 
+                                                              ($f_list_cons + 2 3)
+                                                              a))
+
+              ($f_list_cons * 
+                            ($f_list_cons + 2 3)
+                            a))
+
+             (($small_step_normalize_arith_term 
+               ($f_list_cons * 
+                             ($f_list_cons + ($f_list_cons * 2 3) 4)
+                             a))
+
+              ($f_list_cons * 
+                             ($f_list_cons + ($f_list_cons * 2 3) 4)
+                             a))
+
+             (($small_step_normalize_arith_term 
+               ($f_list_cons *
+                             ($f_list_cons +
+                                           ($f_list_cons * -1/1 2 )
+                                           ($f_list_cons * -1/1 a))
+                             4))
+
+              ($f_list_cons *
+                            4
+                            ($f_list_cons +
+                                          ($f_list_cons * -1/1 2 )
+                                          ($f_list_cons * -1/1 a))))
+
+             ; Associativity 
+             (($small_step_normalize_arith_term ($f_list_cons *
+                                                              1
+                                                              ($f_list_cons * 2 a)))
+
+              ($f_list_cons *
+                            ($f_list_cons * 1 2)
+                            a))
+
+             (($small_step_normalize_arith_term 
+               ($f_list_cons *
+                             1
+                             ($f_list_cons * 2 ($f_list_cons * 3 a))))
+
+              ($f_list_cons *
+                            ($f_list_cons * 1 2)
+                            ($f_list_cons * 3 a)))
+
+             (($small_step_normalize_arith_term ($f_list_cons +
+                                                              1
+                                                              ($f_list_cons + 2 a)))
+
+              ($f_list_cons +
+                            ($f_list_cons + 1 2)
+                            a))
+
+             (($small_step_normalize_arith_term 
+               ($f_list_cons +
+                             1
+                             ($f_list_cons + 2 ($f_list_cons + 3 a))))
+
+              ($f_list_cons +
+                            ($f_list_cons + 1 2)
+                            ($f_list_cons + 3 a)))
+
+             (($small_step_normalize_arith_term 
+               ($f_list_cons +
+                             1
+                             ($f_list_cons + 2 ($f_list_cons * 1/1 a))))
+
+              ($f_list_cons +
+                            ($f_list_cons + 1 2)
+                            ($f_list_cons * 1/1 a)))
+
+             ; Misc.
+             (($small_step_normalize_arith_term ($f_list_cons * -1/1 a))
+
+              ($f_list_cons * -1/1 a))
+
+             (($small_step_normalize_arith_term ($f_list_cons + 
+                                                              ($f_list_cons * -1/1 2)
+                                                              ($f_list_cons * -1/1 a)))
+
+              ($f_list_cons + 
+                            ($f_list_cons * -1/1 2)
+                            ($f_list_cons * -1/1 a)))
+             )
+
+  :conclusion-explicit true
+  )
+
+;---------------------------------
+; $normalize_arith_term
+;---------------------------------
+
+; TODO: repeating constants just for cohesion of the code...
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+(declare-const b Real)
+
+(declare-rule $test_$normalize_arith_term ()
+  :requires (; Getting rid of leading unary "-".
+             (($normalize_arith_term (- ($f_list_cons + 2 4)))
+
+              ($f_list_cons + 
+                            ($f_list_cons * -1/1 2)
+                            ($f_list_cons * -1/1 4)))
+
+             
+             (($normalize_arith_term (- ($f_list_cons + 
+                                                      2 
+                                                      ($f_list_cons + 3 4))))
+
+              ($f_list_cons + 
+                            ($f_list_cons + 
+                                          ($f_list_cons * -1/1 2)
+                                          ($f_list_cons * -1/1 3))
+                            ($f_list_cons * -1/1 4)))
+
+             (($normalize_arith_term (- ($f_list_cons + 
+                                                      ($f_list_cons + 3 4) 
+                                                      ($f_list_cons + 5 6))))
+
+              ($f_list_cons + 
+                            ($f_list_cons + 
+                                          ($f_list_cons +
+                                                        ($f_list_cons * -1/1 3)
+                                                        ($f_list_cons * -1/1 4))
+                                          ($f_list_cons * -1/1 5))
+                            ($f_list_cons * -1/1 6)))
+
+             (($normalize_arith_term (- ($f_list_cons + 2 ($f_list_cons * 1 a))))
+
+              ($f_list_cons + 
+                            ($f_list_cons * -1/1 2)
+                            ($f_list_cons * 
+                                          ($f_list_cons * -1/1 1)
+                                          a)))
+             
+             (($normalize_arith_term (- ($f_list_cons + 
+                                                      ($f_list_cons + 2 ($f_list_cons * 1 a))
+                                                      4)))
+
+              ($f_list_cons +
+                            ($f_list_cons +
+                                          ($f_list_cons * -1/1 2)
+                                          ($f_list_cons * 
+                                                        ($f_list_cons * -1/1 1) 
+                                                        a))
+                            ($f_list_cons * -1/1 4)))
+
+             (($normalize_arith_term (- ($f_list_cons * 2 4)))
+
+              ($f_list_cons *
+                            ($f_list_cons * -1/1 2)
+                            4))
+
+             (($normalize_arith_term (- ($f_list_cons *
+                                                      2 
+                                                      ($f_list_cons + 3 4))))
+
+              ($f_list_cons +
+                            ($f_list_cons * 
+                                          ($f_list_cons * -1/1 2)
+                                          3)
+                            ($f_list_cons *
+                                          ($f_list_cons * -1/1 2)
+                                          4)))
+
+             (($normalize_arith_term (- ($f_list_cons * 2 ($f_list_cons * 1 a))))
+
+              ($f_list_cons *
+                            ($f_list_cons *
+                                          ($f_list_cons * -1/1 2)
+                                          1)
+                            a))
+
+             (($normalize_arith_term (- ($f_list_cons *
+                                                      ($f_list_cons + 2 ($f_list_cons * 1 a)) 
+                                                      4)))
+              ($f_list_cons +
+                            ($f_list_cons * 
+                                          ($f_list_cons * 4 -1/1) 
+                                          2)
+                            ($f_list_cons * 
+                                          ($f_list_cons * 
+                                                        ($f_list_cons * 4 -1/1) 
+                                                        1)
+                                          a)))
+
+             ; Case - (- lhs) = lhs
+             (($normalize_arith_term (- (- 4)))
+
+              4)
+
+             (($normalize_arith_term (- (- ($f_list_cons + 1 2))))
+
+              ($f_list_cons + 1 2))
+
+             (($normalize_arith_term (- (- ($f_list_cons + 1 ($f_list_cons + 2 3)))))
+
+              ($f_list_cons + 
+                            ($f_list_cons + 1 2)
+                            3))
+
+             (($normalize_arith_term (- (- ($f_list_cons + 1 ($f_list_cons * 1 a)))))
+
+              ($f_list_cons + 1 ($f_list_cons * 1 a)))
+
+             (($normalize_arith_term (- (- ($f_list_cons * 1 2))))
+
+              ($f_list_cons * 1 2))
+
+             (($normalize_arith_term (- (- ($f_list_cons * 1 ($f_list_cons * 2 3)))))
+
+              ($f_list_cons * 
+                            ($f_list_cons * 1 2)
+                            3))
+
+             (($normalize_arith_term (- (- ($f_list_cons * 1 ($f_list_cons * 1 a)))))
+
+              ($f_list_cons * ($f_list_cons * 1 1) a))
+             
+             ; Getting rid of subtractions.
+             (($normalize_arith_term (- 1 2))
+
+              ($f_list_cons + 
+                            1
+                            ($f_list_cons * -1/1 2)))
+
+             (($normalize_arith_term (- ($f_list_cons + 1 2) 3))
+
+              ($f_list_cons + 
+                            ($f_list_cons + 1 2)
+                            ($f_list_cons * -1/1 3)))
+
+             (($normalize_arith_term (- ($f_list_cons + 1 2) 
+                                        ($f_list_cons + 3 4)))
+
+              ($f_list_cons +
+                            ($f_list_cons + 
+                                          ($f_list_cons + 1 2)
+                                          ($f_list_cons * -1/1 3))
+                            ($f_list_cons * -1/1 4)))
+
+             ; Distributivity.
+             (($normalize_arith_term ($f_list_cons * 
+                                                   1 
+                                                   ($f_list_cons + 2 3)))
+
+              ($f_list_cons +
+                            ($f_list_cons * 1 2) 
+                            ($f_list_cons * 1 3)))
+
+             (($normalize_arith_term 
+               ($f_list_cons +
+                            ($f_list_cons *
+                                          4
+                                          ($f_list_cons + 2 3))
+                            ($f_list_cons *
+                                          5
+                                          ($f_list_cons + 2 3))))
+
+              ($f_list_cons +
+                            ($f_list_cons +
+                                          ($f_list_cons +
+                                                        ($f_list_cons * 4 2)
+                                                        ($f_list_cons * 4 3))
+                                          ($f_list_cons * 5 2))
+                            ($f_list_cons * 5 3)))
+
+             (($normalize_arith_term ($f_list_cons * 
+                                                   ($f_list_cons + 2 3) 
+                                                   ($f_list_cons + 4 5)))
+
+              ($f_list_cons +
+                            ($f_list_cons +
+                                          ($f_list_cons +
+                                                        ($f_list_cons * 4 2)
+                                                        ($f_list_cons * 4 3))
+                                          ($f_list_cons * 5 2))
+                            ($f_list_cons * 5 3)))
+
+             (($normalize_arith_term ($f_list_cons * 
+                                                   ($f_list_cons + 4 5)
+                                                   a))
+
+              ($f_list_cons * 
+                            ($f_list_cons + 4 5)
+                            a))
+
+             (($normalize_arith_term 
+               ($f_list_cons * 
+                             ($f_list_cons + 
+                                           ($f_list_cons + 4 5)
+                                           ($f_list_cons + 6 7))
+                             a))
+
+              ($f_list_cons * 
+                             ($f_list_cons + 
+                                           ($f_list_cons + 
+                                                         ($f_list_cons + 4 5)
+                                                         6)
+                                           7)
+                             a))
+
+             ; Commutativity to exploit distributivity on a later step.
+             (($normalize_arith_term ($f_list_cons * 
+                                                   ($f_list_cons + 2 3)
+                                                   1))
+
+              ($f_list_cons +
+                            ($f_list_cons * 1 2)
+                            ($f_list_cons * 1 3)))
+
+             (($normalize_arith_term ($f_list_cons * 
+                                                   ($f_list_cons + 2 3)
+                                                   ($f_list_cons * 4 5)))
+
+              ($f_list_cons + 
+                            ($f_list_cons * ($f_list_cons * 4 5) 2)
+                            ($f_list_cons * ($f_list_cons * 4 5) 3)))
+
+             (($normalize_arith_term ($f_list_cons * 
+                                                   ($f_list_cons + 2 3)
+                                                   a))
+
+              ($f_list_cons * 
+                            ($f_list_cons + 2 3)
+                            a))
+
+             (($normalize_arith_term 
+               ($f_list_cons * 
+                             ($f_list_cons + ($f_list_cons * 2 3) 4)
+                             a))
+
+              ($f_list_cons * 
+                             ($f_list_cons + ($f_list_cons * 2 3) 4)
+                             a))
+
+             ; Associativity 
+             (($normalize_arith_term ($f_list_cons *
+                                                   1
+                                                   ($f_list_cons * 2 a)))
+
+              ($f_list_cons *
+                            ($f_list_cons * 1 2)
+                            a))
+
+             (($normalize_arith_term 
+               ($f_list_cons *
+                             1
+                             ($f_list_cons * 2 ($f_list_cons * 3 a))))
+
+              ($f_list_cons *
+                            ($f_list_cons *
+                                          ($f_list_cons * 1 2)
+                                          3)
+                            a))
+
+             (($normalize_arith_term 
+               ($f_list_cons *
+                             1
+                             ($f_list_cons * 2 ($f_list_cons * 3 a))))
+
+              ($f_list_cons *
+                            ($f_list_cons *
+                                          ($f_list_cons * 1 2)
+                                          3)
+                            a))
+
+             (($normalize_arith_term ($f_list_cons +
+                                                   1
+                                                   ($f_list_cons + 2 a)))
+
+              ($f_list_cons +
+                            ($f_list_cons + 1 2)
+                            a))
+
+             (($normalize_arith_term 
+               ($f_list_cons +
+                             1
+                             ($f_list_cons + 2 ($f_list_cons + 3 a))))
+
+              ($f_list_cons +
+                            ($f_list_cons +
+                                          ($f_list_cons + 1 2)
+                                          3)
+                            a))
+             
+             (($normalize_arith_term 
+               ($f_list_cons +
+                             1
+                             ($f_list_cons + 2 ($f_list_cons * 1/1 a))))
+
+              ($f_list_cons +
+                            ($f_list_cons + 1 2)
+                            ($f_list_cons * 1/1 a)))
+             ; Misc.
+             (($normalize_arith_term -1/1)
+
+              -1/1)
+
+             (($normalize_arith_term ($f_list_cons * -1/1 a))
+
+              ($f_list_cons * -1/1 a))
+             )
+  
+  :conclusion-explicit true
+  )
+
+;---------------------------------
+; $evaluate_arith_term
+;---------------------------------
+
+; TODO: repeating constants just for cohesion of the code...
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+(declare-const b Real)
+(declare-const f (-> Int Real Int))
+
+(declare-rule $test_$evaluate_arith_term ()
+  :requires (; Fully evaluatable terms
+             ; Additions
+             (($evaluate_arith_term (+ 2 3))
+              
+              5/1)
+
+             (($evaluate_arith_term (+ 2 3 1))
+              
+              6/1)
+
+             (($evaluate_arith_term (+ 2 3 1 4))
+              
+              10/1)
+
+             (($evaluate_arith_term (+ 2 3 (+ 1 4)))
+              
+              10/1)
+
+             (($evaluate_arith_term (+ 2 (+ 3 (+ 1 4))))
+              
+              10/1)
+
+             (($evaluate_arith_term (+ (+ (+ 2 3) 1) 4))
+              
+              10/1)
+
+             (($evaluate_arith_term (+ (+ (+ 2 3) 1) (+ (+ 2 3) 1)))
+              
+              12/1)
+             
+             ; Products
+             (($evaluate_arith_term (* 2 3))
+              
+              6/1)
+
+             (($evaluate_arith_term (* 2 3 1))
+              
+              6/1)
+
+             (($evaluate_arith_term (* 2 3 1 4))
+              
+              24/1)
+
+             (($evaluate_arith_term (* 2 3 (* 1 4)))
+              
+              24/1)
+
+             (($evaluate_arith_term (* 2 (* 3 (* 1 4))))
+              
+              24/1)
+
+             (($evaluate_arith_term (* (* (* 2 3) 1) 4))
+              
+              24/1)
+
+             (($evaluate_arith_term (* (* (* 2 3) 1) (* (* 2 3) 1)))
+              
+              36/1)
+             
+             ; Subtraction
+             (($evaluate_arith_term (- 1 2))
+              
+              -1/1)
+
+             (($evaluate_arith_term (- 1 (- 1 2)))
+              
+              2)
+
+             (($evaluate_arith_term (- (- 1 2) (- 1 2)))
+              
+              0/1)
+
+             (($evaluate_arith_term (- (- 1 2) (- (- 1 2) 2)))
+              
+              2)
+
+             ; Negative terms.
+             (($evaluate_arith_term (- 1))
+              
+              -1/1)
+
+             (($evaluate_arith_term (- (- 1)))
+              
+              1)
+
+             (($evaluate_arith_term (- 2/1))
+              
+              -2/1)
+
+             (($evaluate_arith_term (- 2.0))
+              
+              -2/1)
+             
+             ; Mixed operators
+             (($evaluate_arith_term (+ 2 (* 3 4)))
+              
+              14/1)
+
+             (($evaluate_arith_term (+ (* 3 4) (* 3 4)))
+              
+              24/1)
+
+             (($evaluate_arith_term (+ (* 3 4) (* 3 (* 3 4))))
+              
+              48/1)
+
+             (($evaluate_arith_term (+ (- 3 4) (* 3 (* 3 4))))
+              
+              35/1)
+
+             (($evaluate_arith_term (+ (- 3 4) (* 3 (- 3 4))))
+              
+              -4/1)
+
+             (($evaluate_arith_term (+ (- 3 4) (* (- 3) (- 3 4))))
+              
+              2/1)
+
+             ; Terms with uninterpreted subterms
+             ; Additions
+             (($evaluate_arith_term ($f_list_cons + a 2))
+              
+              ($f_list_cons + 2 ($f_list_cons * 1/1 a)))
+
+             (($evaluate_arith_term ($f_list_cons + 
+                                                  2
+                                                  ($f_list_cons + a 1)))
+              
+              ($f_list_cons + 
+                            3/1
+                            ($f_list_cons * 1/1 a)))
+
+             (($evaluate_arith_term (+ 2 a 1 4))
+              
+              ($f_list_cons + 7/1 ($f_list_cons * 1/1 a)))
+
+             (($evaluate_arith_term (+ 2 3 (+ 1 4) (* 2 a)))
+              
+              ($f_list_cons + 10/1 ($f_list_cons * 2 a)))
+
+             (($evaluate_arith_term (+ 2 3 (* 2 a) (+ 1 4)))
+              
+              ($f_list_cons + 10/1 ($f_list_cons * 2 a)))
+
+             (($evaluate_arith_term (+ 2 (+ ($f_list_cons * 2 a) (+ 1 4))))
+              
+              ($f_list_cons + 7/1 ($f_list_cons * 2 a)))
+
+             (($evaluate_arith_term (+ (+ (+ 2 3) a) 4))
+              
+              ($f_list_cons + 9/1 ($f_list_cons * 1/1 a)))
+
+             (($evaluate_arith_term (+ (+ (+ 2 a) 1) (+ (+ a 3) 1)))
+              
+              ($f_list_cons + 7/1 ($f_list_cons * 2/1 a)))
+
+             (($evaluate_arith_term (+ (+ (+ 2 a) 1) (+ (+ b 3) 
+                                                        (+ a b))))
+              
+              ($f_list_cons + 
+                            6/1 
+                            ($f_list_cons + 
+                                          ($f_list_cons * 2/1 b)
+                                          ($f_list_cons * 2/1 a))))
+             
+             ;; ; Products
+             ;; (($evaluate_arith_term (* 2 3))
+              
+             ;;  6/1)
+
+             ;; (($evaluate_arith_term (* 2 3 1))
+              
+             ;;  6/1)
+
+             ;; (($evaluate_arith_term (* 2 3 1 4))
+              
+             ;;  24/1)
+
+             ;; (($evaluate_arith_term (* 2 3 (* 1 4)))
+              
+             ;;  24/1)
+
+             ;; (($evaluate_arith_term (* 2 (* 3 (* 1 4))))
+              
+             ;;  24/1)
+
+             ;; (($evaluate_arith_term (* (* (* 2 3) 1) 4))
+              
+             ;;  24/1)
+
+             ;; (($evaluate_arith_term (* (* (* 2 3) 1) (* (* 2 3) 1)))
+              
+             ;;  36/1)
+             
+             ;; ; Subtraction
+             ;; (($evaluate_arith_term (- 1 2))
+              
+             ;;  -1/1)
+
+             ;; (($evaluate_arith_term (- 1 (- 1 2)))
+              
+             ;;  2)
+
+             ;; (($evaluate_arith_term (- (- 1 2) (- 1 2)))
+              
+             ;;  0/1)
+
+             ;; (($evaluate_arith_term (- (- 1 2) (- (- 1 2) 2)))
+              
+             ;;  2)
+
+             ;; ; Negative terms.
+             ;; (($evaluate_arith_term (- 1))
+              
+             ;;  -1/1)
+
+             ;; (($evaluate_arith_term (- (- 1)))
+              
+             ;;  1)
+
+             ;; (($evaluate_arith_term (- 2/1))
+              
+             ;;  -2/1)
+
+             ;; (($evaluate_arith_term (- 2.0))
+              
+             ;;  -2/1)
+             
+             ;; ; Mixed operators
+             ;; (($evaluate_arith_term (+ 2 (* 3 4)))
+              
+             ;;  14/1)
+
+             ;; (($evaluate_arith_term (+ (* 3 4) (* 3 4)))
+              
+             ;;  24/1)
+
+             ;; (($evaluate_arith_term (+ (* 3 4) (* 3 (* 3 4))))
+              
+             ;;  48/1)
+
+             ;; (($evaluate_arith_term (+ (- 3 4) (* 3 (* 3 4))))
+              
+             ;;  35/1)
+
+             ;; (($evaluate_arith_term (+ (- 3 4) (* 3 (- 3 4))))
+              
+             ;;  -4/1)
+
+             ;; (($evaluate_arith_term (+ (- 3 4) (* (- 3) (- 3 4))))
+              
+             ;;  2/1)
+             )
+
+  :conclusion-explicit true
+)
+
+
+
+; Running every test.
+(step test1 true :rule $test_$is_addition)
+(step test2 true :rule $test_$is_theory_binary_arith_op)
+(step test3 true :rule $test_$is_numeric_literal)
+(step test4 true :rule $test_$addition_get_lhs)
+(step test5 true :rule $test_$addition_get_rhs)
+(step test6 true :rule $test_$is_uninterpreted_term)
+(step test7 true :rule $test_$is_evaluatable)
+(step test8 true :rule $test_$is_evaluatable_times_variable)
+(step test9 true :rule $test_$evaluatable_times_variable_get_variable)
+(step test10 true :rule $test_$evaluatable_times_variable_get_evaluatable)
+(step test11 true :rule $test_$less_or_equal_literal)
+(step test12 true :rule $test_$less_or_equal_arith_terms)
+(step test13 true :rule $test_$get_lesser_arith_term)
+(step test14 true :rule $test_$reorder_arith_term)
+(step test15 true :rule $test_$small_step_assoc_evaluatable_terms)
+(step test16 true :rule $test_$assoc_evaluatable_terms)
+(step test17 true :rule $test_$build_proper_monomials)
+(step test18 true :rule $test_$small_step_reduction_arith_term)
+(step test19 true :rule $test_$small_step_evaluator_arith_term)
+(step test20 true :rule $test_$small_step_normalize_arith_term)
+(step test21 true :rule $test_$normalize_arith_term)
+(step test22 true :rule $test_$evaluate_arith_term)

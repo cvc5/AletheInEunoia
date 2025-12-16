@@ -1,5 +1,5 @@
-(include "./theory.eo")
-(include "./programs.eo")
+(include "./theories/theory.eo")
+(include "./programs/programs.eo")
 
 ; Rule: assume is native
 ; Note: The hole here does not allow for args or premises.
@@ -532,12 +532,6 @@
            >
            )
 
-          ;; (; TODO: shouldn't be allowed 
-          ;;  ($invert_order =)
-
-          ;;  =
-          ;;  )
-
           (
            ($invert_order >)
 
@@ -603,96 +597,90 @@
           (
            ($manipulate_inequality (> (+ d1 summatory1) (+ d2 summatory2)))
 
-           (>= ($evaluate_arith_term (- summatory1 summatory2))
+           (>= (- summatory1 summatory2)
               ;; Floor function, as a result of converting to Z.
-              ($evaluate_arith_term
-               (+ 
+              (+ 
                 (eo::ite (eo::and ($is_numeric_literal d1)
                                   ($is_numeric_literal d2))
                          
                          (eo::to_z ($evaluate_arith_term (- d2 d1)))
 
                          (- d2 d1))
-                1)))
+                1.0))
            )
 
           (
            ($manipulate_inequality (>= (+ d1 summatory1) (+ d2 summatory2)))
 
-           (>= ($evaluate_arith_term (- summatory1 summatory2))
+           (>= (- summatory1 summatory2)
               ;; Floor function, as a result of converting to Z.
-              ($evaluate_arith_term
-               (+ 
+              (+ 
                 (eo::ite (eo::and ($is_numeric_literal d1)
                                   ($is_numeric_literal d2))
                          
                          (eo::to_z ($evaluate_arith_term (- d2 d1)))
 
                          (- d2 d1))
-                1)))
+                1.0))
            )
 
           (; Rewrite in terms of >=
            ($manipulate_inequality (< (+ d1 summatory1) (+ d2 summatory2)))
 
            (>= 
-            ($evaluate_arith_term (- summatory2 summatory1))
+            (- summatory2 summatory1)
 
-            ($evaluate_arith_term
-             ;; Floor function, as a result of converting to Z.
-             (+ 
+            ;; Floor function, as a result of converting to Z.
+            (+ 
               (eo::ite (eo::and ($is_numeric_literal d1)
                                 ($is_numeric_literal d2))
                        
                        (eo::to_z ($evaluate_arith_term (- d1 d2)))
 
                        (- d1 d2))
-              1)))
+              1.0))
            )
 
           (; Rewrite in terms of >=
            ($manipulate_inequality (<= (+ d1 summatory1) (+ d2 summatory2)))
 
            (>= 
-            ($evaluate_arith_term (- summatory2 summatory1))
+            (- summatory2 summatory1)
 
-            ($evaluate_arith_term
-             ;; Floor function, as a result of converting to Z.
-             (+ 
-              (eo::ite (eo::and ($is_numeric_literal d1)
-                                ($is_numeric_literal d2))
-                       
-                       (eo::to_z ($evaluate_arith_term (- d1 d2)))
+            ;; Floor function, as a result of converting to Z.
+            (+ 
+             (eo::ite (eo::and ($is_numeric_literal d1)
+                               ($is_numeric_literal d2))
+                      
+                      (eo::to_z ($evaluate_arith_term (- d1 d2)))
 
-                       (- d1 d2))
-              1)))
+                      (- d1 d2))
+             1.0))
            )
 
           (
            ($manipulate_inequality (= (+ d1 summatory1) (+ d2 summatory2)))
 
-           (= ($evaluate_arith_term (- summatory1 summatory2))
+           (= (- summatory1 summatory2)
 
-              ($evaluate_arith_term
-               ;; Floor function, as a result of converting to Z.
-               (+ 
-                (eo::ite (eo::and ($is_numeric_literal d1)
-                                  ($is_numeric_literal d2))
-                         
-                         (eo::to_z ($evaluate_arith_term (- d2 d1)))
+              ;; Floor function, as a result of converting to Z.
+              (+ 
+               (eo::ite (eo::and ($is_numeric_literal d1)
+                                 ($is_numeric_literal d2))
+                        
+                        (eo::to_z ($evaluate_arith_term (- d2 d1)))
 
-                         (- d2 d1))
-                1)))
-              )
+                        (- d2 d1))
+               1.0))
+           )
 
           (; Special case, not to be confused with just having additive
            ; constants.
            ($manipulate_inequality (> (* lhs_c lhs_term) 
                                       (* rhs_c rhs_term)))
 
-           (> ($evaluate_arith_term 
-               (- (* lhs_c lhs_term) (* rhs_c rhs_term)))
-              0)
+           (> (- (* lhs_c lhs_term) (* rhs_c rhs_term))
+              0.0)
            )
 
           (; Special case, not to be confused with just having additive
@@ -700,66 +688,62 @@
            ($manipulate_inequality (>= (* lhs_c lhs_term) 
                                       (* rhs_c rhs_term)))
 
-           (>= ($evaluate_arith_term 
-               (- (* lhs_c lhs_term) (* rhs_c rhs_term)))
-              0)
+           (>= (- (* lhs_c lhs_term) (* rhs_c rhs_term))
+              0.0)
            )
 
           (; { d1 and d2 are constants }
            ($manipulate_inequality (> d1 d2))
 
-           (>= 0
-              ($evaluate_arith_term
-                ;; Floor function, as a result of converting to Z.
-                (+ 
+           (>= 0.0
+               ;; Floor function, as a result of converting to Z.
+               (+ 
                  (eo::ite (eo::and ($is_numeric_literal d1)
                                    ($is_numeric_literal d2))
                           
                           (eo::to_z ($evaluate_arith_term (- d2 d1)))
 
                           (- d2 d1))
-                 1)))
+                 1.0))
            )
 
           (; { d1 and d2 are constants }
            ($manipulate_inequality (>= d1 d2))
 
-           (>= 0
-              ($evaluate_arith_term
-                ;; Floor function, as a result of converting to Z.
-                (+ 
+           (>= 0.0
+               ;; Floor function, as a result of converting to Z.
+               (+ 
                  (eo::ite (eo::and ($is_numeric_literal d1)
                                    ($is_numeric_literal d2))
                           
                           (eo::to_z ($evaluate_arith_term (- d2 d1)))
 
                           (- d2 d1))
-                 1)))
+                 1.0))
            )
 
           (; Special case, not to be confused with just having additive
            ; constants.
            ($manipulate_inequality (< (* lhs_c lhs_term) 
                                       (* rhs_c rhs_term)))
-           (> ($evaluate_arith_term 
-               (- (* rhs_c rhs_term) (* lhs_c lhs_term)))
-              0)
+
+           (> (- (* rhs_c rhs_term) (* lhs_c lhs_term))
+              0.0)
            )
 
           (; Special case, not to be confused with just having additive
            ; constants.
            ($manipulate_inequality (<= (* lhs_c lhs_term) 
                                       (* rhs_c rhs_term)))
-           (>= ($evaluate_arith_term 
-               (- (* rhs_c rhs_term) (* lhs_c lhs_term)))
-              0)
+
+           (>= (- (* rhs_c rhs_term) (* lhs_c lhs_term))
+              0.0)
            )
 
           (
            ($manipulate_inequality (< d1 d2))
 
-           (>= 0
-               ($evaluate_arith_term
+           (>= 0.0
                 ;; Floor function, as a result of converting to Z.
                 (+ 
                  (eo::ite (eo::and ($is_numeric_literal d1)
@@ -768,48 +752,48 @@
                           (eo::to_z ($evaluate_arith_term (- d1 d2)))
 
                           (- d1 d2))
-                 1)))
+                 1.0))
            )
 
           (
            ($manipulate_inequality (<= d1 d2))
 
-           (>= 0
-               ($evaluate_arith_term
-                ;; Floor function, as a result of converting to Z.
-                (+ 
-                 (eo::ite (eo::and ($is_numeric_literal d1)
-                                   ($is_numeric_literal d2))
-                          
-                          (eo::to_z ($evaluate_arith_term (- d1 d2)))
-
-                          (- d1 d2))
-                 1)))
-           )
-
-          (; Special case, not to be confused with just having additive
-           ; constants.
-           ($manipulate_inequality (= (* lhs_c lhs_term) 
-                                      (* rhs_c rhs_term)))
-           (= ($evaluate_arith_term 
-               (- (* lhs_c lhs_term) (* rhs_c rhs_term)))
-              0)
-           )
-
-          (
-           ($manipulate_inequality (= d1 d2))
-
-           (= 0
-              ($evaluate_arith_term
+           (>= 0.0
+               
                ;; Floor function, as a result of converting to Z.
                (+ 
                 (eo::ite (eo::and ($is_numeric_literal d1)
                                   ($is_numeric_literal d2))
                          
-                         (eo::to_z ($evaluate_arith_term (- d2 d1)))
+                         (eo::to_z ($evaluate_arith_term (- d1 d2)))
 
-                         (- d2 d1))
-                1)))
+                         (- d1 d2))
+                1.0))
+          )
+
+          (; Special case, not to be confused with just having additive
+           ; constants.
+           ($manipulate_inequality (= (* lhs_c lhs_term) 
+                                      (* rhs_c rhs_term)))
+           
+           (= (- (* lhs_c lhs_term) (* rhs_c rhs_term))
+              0.0)
+           )
+
+          (
+           ($manipulate_inequality (= d1 d2))
+
+           (= 0.0
+              
+              ;; Floor function, as a result of converting to Z.
+              (+ 
+               (eo::ite (eo::and ($is_numeric_literal d1)
+                                 ($is_numeric_literal d2))
+                        
+                        (eo::to_z ($evaluate_arith_term (- d2 d1)))
+
+                        (- d2 d1))
+               1.0))
            )
           )
          )
@@ -879,9 +863,9 @@
           (
            ($apply_coefficients (= lhs rhs) coeff)
 
-           (= ($evaluate_arith_term (* coeff lhs))
+           (= (* coeff lhs)
                
-              ($evaluate_arith_term (* coeff rhs)))
+              (* coeff rhs))
            )
 
           (; { order != "=" }
@@ -894,12 +878,12 @@
              )
             
             (order 
-             ($evaluate_arith_term (* ($abs evaluated_coeff) lhs))
+             (* ($abs evaluated_coeff) lhs)
 
-             ($evaluate_arith_term (* ($abs evaluated_coeff) rhs))))
+             (* ($abs evaluated_coeff) rhs)))
            )
           )
-)
+         )
 
 ; program: $decide_order
 ; args:
@@ -974,10 +958,11 @@
 
              ($evaluate_arith_term (+ lhs_lhs rhs_lhs))
 
-             ($evaluate_arith_term (+ lhs_rhs rhs_rhs))))
+             ($evaluate_arith_term (+ lhs_rhs rhs_rhs)))
             )
            )
-)
+         )
+         )
 
 ; program: $process_inequalities
 ; args:
@@ -1003,8 +988,7 @@
 
             ($apply_coefficients
              ($manipulate_inequality
-              ($evaluate_inequality_sides
-               ($negate_inequality ineq)))
+               ($negate_inequality ineq))
              coeff)
 
             ($process_inequalities coeffs ineqs))
@@ -1031,14 +1015,14 @@
            ($add_processed_inequalities (and ineq ineqs))
 
            ($add_inequalities
-            ($evaluate_inequality_sides ineq)
+            ineq
             ($add_processed_inequalities ineqs))
            )
 
           (
            ($add_processed_inequalities true)
            ;; TODO: would this suffice?
-           (= 0 0)
+           (= 0.0 0.0)
            )
           )
 )
@@ -1055,7 +1039,6 @@
 
           (
            ($verify_contradiction (>= lhs rhs))
-
            (eo::or 
             (eo::gt lhs rhs)
             (eo::eq lhs rhs))

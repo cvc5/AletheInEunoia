@@ -1,0 +1,36 @@
+(include "../../signature/programs/lists.eo")
+
+
+; Unit tests for lists.eo programs
+
+;---------------------------------
+; $list_remove_elem
+;---------------------------------
+
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+(declare-const b Real)
+
+(declare-rule $test_$list_remove_elem ()
+   :requires (
+              (($list_remove_elem + ($f_list_cons + 1 2) 1)
+
+               2)
+
+              (($list_remove_elem + ($f_list_cons + 1 2) 2)
+
+               1)
+
+              (($list_remove_elem + ($f_list_cons + 1 ($f_list_cons + 2 3)) 2)
+
+               ($f_list_cons + 1 3))
+              )
+   
+   :conclusion-explicit true
+   )
+
+; Running every test.
+(step test1 true :rule $test_$list_remove_elem)
+
+
+
