@@ -1,5 +1,6 @@
-(include "./theories/theory.eo")
-(include "./programs/programs.eo")
+(include "../theories/theory.eo")
+(include "../programs/programs.eo")
+(include "../programs/arith.eo")
 
 ; Rule: assume is native
 ; Note: The hole here does not allow for args or premises.
@@ -515,8 +516,8 @@
 
 ; program: $invert_order
 ; args:
-; - order (-> A A A): An order over numeric types.
-; return:
+; - order (-> A A A): An order over numbers of some numeric type A.
+; return: The complement relation of `order`.
 (program $invert_order ((A Type) (rel (-> A A Bool)))
          :signature ((-> A A Bool)) (-> A A Bool)
          (
@@ -589,188 +590,223 @@
 ; note: >
 ;   PRE : { `inequality` is already in its negated form, according to 
 ;           `$negate_inequality` }
-(program $manipulate_inequality ((A Type) (d1 A) (d2 A) (summatory1 A)
-                                 (summatory2 A) (order (-> A A Bool))
-                                 (lhs_c A) (lhs_term A) (rhs_c A) (rhs_term A))
+(program $manipulate_inequality ((A Type) (d1 A :list) (d2 A :list)
+                                 (c1 A) (c2 A)
+                                 (summatory1 A :list) (summatory2 A :list) 
+                                 (order (-> A A Bool))
+                                 (lhs_c A) (lhs_term A :list) (rhs_c A) 
+                                 (rhs_term A :list))
          :signature (Bool) Bool
-         (
-          (
-           ($manipulate_inequality (> (+ d1 summatory1) (+ d2 summatory2)))
-
-           (>= (- summatory1 summatory2)
-              ;; Floor function, as a result of converting to Z.
-              (+ 
-                (eo::ite (eo::and ($is_numeric_literal d1)
-                                  ($is_numeric_literal d2))
-                         
-                         (eo::to_z ($evaluate_arith_term (- d2 d1)))
-
-                         (- d2 d1))
-                1.0))
-           )
-
-          (
-           ($manipulate_inequality (>= (+ d1 summatory1) (+ d2 summatory2)))
-
-           (>= (- summatory1 summatory2)
-              ;; Floor function, as a result of converting to Z.
-              (+ 
-                (eo::ite (eo::and ($is_numeric_literal d1)
-                                  ($is_numeric_literal d2))
-                         
-                         (eo::to_z ($evaluate_arith_term (- d2 d1)))
-
-                         (- d2 d1))
-                1.0))
-           )
-
-          (; Rewrite in terms of >=
-           ($manipulate_inequality (< (+ d1 summatory1) (+ d2 summatory2)))
-
-           (>= 
-            (- summatory2 summatory1)
-
-            ;; Floor function, as a result of converting to Z.
-            (+ 
-              (eo::ite (eo::and ($is_numeric_literal d1)
-                                ($is_numeric_literal d2))
-                       
-                       (eo::to_z ($evaluate_arith_term (- d1 d2)))
-
-                       (- d1 d2))
-              1.0))
-           )
-
-          (; Rewrite in terms of >=
-           ($manipulate_inequality (<= (+ d1 summatory1) (+ d2 summatory2)))
-
-           (>= 
-            (- summatory2 summatory1)
-
-            ;; Floor function, as a result of converting to Z.
-            (+ 
-             (eo::ite (eo::and ($is_numeric_literal d1)
-                               ($is_numeric_literal d2))
-                      
-                      (eo::to_z ($evaluate_arith_term (- d1 d2)))
-
-                      (- d1 d2))
-             1.0))
-           )
-
-          (
-           ($manipulate_inequality (= (+ d1 summatory1) (+ d2 summatory2)))
-
-           (= (- summatory1 summatory2)
-
-              ;; Floor function, as a result of converting to Z.
-              (+ 
-               (eo::ite (eo::and ($is_numeric_literal d1)
-                                 ($is_numeric_literal d2))
-                        
-                        (eo::to_z ($evaluate_arith_term (- d2 d1)))
-
-                        (- d2 d1))
-               1.0))
-           )
-
-          (; Special case, not to be confused with just having additive
-           ; constants.
-           ($manipulate_inequality (> (* lhs_c lhs_term) 
-                                      (* rhs_c rhs_term)))
-
-           (> (- (* lhs_c lhs_term) (* rhs_c rhs_term))
-              0.0)
-           )
-
-          (; Special case, not to be confused with just having additive
-           ; constants.
-           ($manipulate_inequality (>= (* lhs_c lhs_term) 
-                                      (* rhs_c rhs_term)))
-
-           (>= (- (* lhs_c lhs_term) (* rhs_c rhs_term))
-              0.0)
-           )
-
-          (; { d1 and d2 are constants }
-           ($manipulate_inequality (> d1 d2))
-
-           (>= 0.0
-               ;; Floor function, as a result of converting to Z.
-               (+ 
-                 (eo::ite (eo::and ($is_numeric_literal d1)
-                                   ($is_numeric_literal d2))
-                          
-                          (eo::to_z ($evaluate_arith_term (- d2 d1)))
-
-                          (- d2 d1))
-                 1.0))
-           )
-
-          (; { d1 and d2 are constants }
-           ($manipulate_inequality (>= d1 d2))
-
-           (>= 0.0
-               ;; Floor function, as a result of converting to Z.
-               (+ 
-                 (eo::ite (eo::and ($is_numeric_literal d1)
-                                   ($is_numeric_literal d2))
-                          
-                          (eo::to_z ($evaluate_arith_term (- d2 d1)))
-
-                          (- d2 d1))
-                 1.0))
-           )
-
-          (; Special case, not to be confused with just having additive
-           ; constants.
-           ($manipulate_inequality (< (* lhs_c lhs_term) 
-                                      (* rhs_c rhs_term)))
-
-           (> (- (* rhs_c rhs_term) (* lhs_c lhs_term))
-              0.0)
-           )
-
-          (; Special case, not to be confused with just having additive
-           ; constants.
-           ($manipulate_inequality (<= (* lhs_c lhs_term) 
-                                      (* rhs_c rhs_term)))
-
-           (>= (- (* rhs_c rhs_term) (* lhs_c lhs_term))
-              0.0)
-           )
-
+         (; Some "normalization" steps.
           (
            ($manipulate_inequality (< d1 d2))
 
-           (>= 0.0
-                ;; Floor function, as a result of converting to Z.
-                (+ 
-                 (eo::ite (eo::and ($is_numeric_literal d1)
-                                   ($is_numeric_literal d2))
-                          
-                          (eo::to_z ($evaluate_arith_term (- d1 d2)))
+           ($manipulate_inequality (> d2 d1))
+           )
 
-                          (- d1 d2))
-                 1.0))
+          (; NOTE: see how could we rewrite reusing some other case.
+           ($manipulate_inequality (> (+ (* lhs_c lhs_term) d1) 
+                                      (+ (* rhs_c rhs_term) d2)))
+
+           (>= (- (* lhs_c lhs_term) (* rhs_c rhs_term))
+
+              (eo::ite (eo::not 
+                        (eo::is_eq (eo::typeof (- (* lhs_c lhs_term) 
+                                                  (* rhs_c rhs_term))) 
+                                           Int))
+
+                       (- d2 d1)
+
+                       ; { every variable is integer sorted }
+                       ; (- d2 d1) = (to_int (- d2 d1)) if (- d2 d1) is
+                       ; integer sorted, so no need distinguish based on type 
+                       ; of (- d2 d1).
+                       ; Floor function as a result of converting to Z.
+                       ($f_list_cons + (to_int (- d2 d1)) 1.0)))
+           )
+
+          (; NOTE: see how could we rewrite reusing some other case.
+           ($manipulate_inequality (> (+ (+ lhs_c lhs_term) d1) 
+                                      (+ (+ rhs_c rhs_term) d2)))
+
+           (>= (- (+ lhs_c lhs_term) (+ rhs_c rhs_term))
+
+              (eo::ite (eo::not 
+                        (eo::is_eq (eo::typeof (- (+ lhs_c lhs_term) 
+                                                  (+ rhs_c rhs_term))) 
+                                           Int))
+
+                       (- d2 d1)
+
+                       ; { every variable is integer sorted }
+                       ; (- d2 d1) = (to_int (- d2 d1)) if (- d2 d1) is
+                       ; integer sorted, so no need distinguish based on type 
+                       ; of (- d2 d1).
+                       ; Floor function as a result of converting to Z.
+                       ($f_list_cons + (to_int (- d2 d1)) 1.0)))
+           )
+
+          (; { summatory1 and summatory2 are actual additions of monomials }
+           ($manipulate_inequality (> (+ c1 summatory1) (+ c2 summatory2)))
+
+           (>= (- summatory1 summatory2)
+
+              (eo::ite (eo::not (eo::is_eq (eo::typeof (- summatory1 summatory2)) 
+                                           Int))
+
+                       (- c2 c1)
+
+                       ; { every variable is integer sorted }
+                       ; (- d2 d1) = (to_int (- d2 d1)) if (- d2 d1) is
+                       ; integer sorted, so no need distinguish based on type 
+                       ; of (- d2 d1).
+                       ; Floor function as a result of converting to Z.
+                       ($f_list_cons + (to_int (- c2 c1)) 1.0)))
            )
 
           (
+           ($manipulate_inequality (> (* lhs_c lhs_term) (* rhs_c rhs_term)))
+           ; {d1 = d2 = 0}
+           (>= (- (* lhs_c lhs_term) (* rhs_c rhs_term))
+
+              (eo::ite (eo::not (eo::is_eq (eo::typeof (- (* lhs_c lhs_term) 
+                                                          (* rhs_c rhs_term))) 
+                                           Int))
+                       
+                       0/1
+
+                       ; { every variable is integer sorted }
+                       ; d1 = d2 = 0, so we have an integer
+                       1/1))
+           )
+
+          (; { d1 and d2 are additive constants }
+           ($manipulate_inequality (> d1 d2))
+           ; { summatory1 = summatory2 = 0}
+           (> 0/1
+                          
+              ; (- d2 d1) = (to_int (- d2 d1)) if (- d2 d1) is
+              ; integer sorted, so no need distinguish based on type 
+              ; of (- d2 d1).
+              (- d2 d1))
+           )
+
+          ; Some "normalization" steps.
+          (
            ($manipulate_inequality (<= d1 d2))
 
-           (>= 0.0
-               
-               ;; Floor function, as a result of converting to Z.
-               (+ 
-                (eo::ite (eo::and ($is_numeric_literal d1)
-                                  ($is_numeric_literal d2))
-                         
-                         (eo::to_z ($evaluate_arith_term (- d1 d2)))
+           ($manipulate_inequality (>= d2 d1))
+           )
 
-                         (- d1 d2))
-                1.0))
-          )
+          (
+           ($manipulate_inequality (>= (+ (* lhs_c lhs_term) d1) 
+                                      (+ (* rhs_c rhs_term) d2)))
 
+           (>= (- (* lhs_c lhs_term) (* rhs_c rhs_term))
+
+              (eo::ite (eo::not (eo::is_eq (eo::typeof (- (* lhs_c lhs_term) 
+                                                          (* rhs_c rhs_term))) 
+                                           Int))
+
+                       (- d2 d1)
+
+                       ; { every variable is integer sorted }
+                       (eo::ite (eo::is_eq (eo::typeof (- d2 d1)) Int)
+
+                                (- d2 d1)
+
+                                ; { not (eo::is_eq (eo::typeof (- d2 d1)) Int) }
+                                ; Floor function as a result of converting to Z.
+                                ($f_list_cons + (to_int (- d2 d1)) 1.0))))
+           )
+
+          (
+           ($manipulate_inequality (>= (+ (+ lhs_c lhs_term) d1) 
+                                      (+ (+ rhs_c rhs_term) d2)))
+
+           (>= (- (+ lhs_c lhs_term) (+ rhs_c rhs_term))
+
+              (eo::ite (eo::not (eo::is_eq (eo::typeof (- (+ lhs_c lhs_term) 
+                                                          (+ rhs_c rhs_term))) 
+                                           Int))
+
+                       (- d2 d1)
+
+                       ; { every variable is integer sorted }
+                       (eo::ite (eo::is_eq (eo::typeof (- d2 d1)) Int)
+
+                                (- d2 d1)
+
+                                ; { not (eo::is_eq (eo::typeof (- d2 d1)) Int) }
+                                ; Floor function as a result of converting to Z.
+                                ($f_list_cons + (to_int (- d2 d1)) 1.0))))
+           )
+
+          (; { summatory1 and summatory2 are actual additions of monomials }
+           ($manipulate_inequality (>= (+ c1 summatory1) (+ c2 summatory2)))
+
+           (>= (- summatory1 summatory2)
+
+              (eo::ite (eo::not (eo::is_eq (eo::typeof (- summatory1 summatory2)) 
+                                           Int))
+
+                       (- c2 c1)
+
+                       ; { every variable is integer sorted }
+                       (eo::ite (eo::is_eq (eo::typeof (- c2 c1)) Int)
+
+                                (- c2 c1)
+
+                                ; { not (eo::is_eq (eo::typeof (- c2 c1)) Int) }
+                                ; Floor function as a result of converting to Z.
+                                ($f_list_cons + (to_int (- c2 c1)) 1.0))))
+           )
+
+          (
+           ($manipulate_inequality (>= (* lhs_c lhs_term) (* rhs_c rhs_term)))
+           ; {d1 = d2 = 0}
+           (>= (- (* lhs_c lhs_term) (* rhs_c rhs_term))
+
+              (eo::ite (eo::not (eo::is_eq (eo::typeof (- (* lhs_c lhs_term) 
+                                                          (* rhs_c rhs_term))) 
+                                           Int))
+                       
+                       0/1
+
+                       ; { every variable is integer sorted }
+                       ; d1 = d2 = 0, so we have an integer.
+                       1/1))
+           )
+
+          (; { d1 and d2 are additive constants }
+           ($manipulate_inequality (>= d1 d2))
+           ; { summatory1 = summatory2 = 0}
+           ; { every variable is integer sorted }
+           (>= 0/1
+              (- d2 d1))
+           )
+
+          ; Some "normalization" steps.
+          (
+           ($manipulate_inequality (= (+ (* lhs_c lhs_term) d1) (+ (* rhs_c rhs_term) d2)))
+           
+           (= (- (* lhs_c lhs_term) (* rhs_c rhs_term))
+              (- d2 d1))
+           )
+
+          (
+           ($manipulate_inequality (= (+ (+ lhs_c lhs_term) d1) (+ (+ rhs_c rhs_term) d2)))
+           
+           (= (- (+ lhs_c lhs_term) (+ rhs_c rhs_term))
+              (- d2 d1))
+           )
+          
+          (
+           ($manipulate_inequality (= (+ c1 summatory1) (+ c2 summatory2)))
+
+           (= (- summatory1 summatory2)
+              (- c2 c1))
+           )
           (; Special case, not to be confused with just having additive
            ; constants.
            ($manipulate_inequality (= (* lhs_c lhs_term) 
@@ -780,51 +816,10 @@
               0.0)
            )
 
-          (
+          ( ; { d1 and d2 are just additive constants }
            ($manipulate_inequality (= d1 d2))
 
-           (= 0.0
-              
-              ;; Floor function, as a result of converting to Z.
-              (+ 
-               (eo::ite (eo::and ($is_numeric_literal d1)
-                                 ($is_numeric_literal d2))
-                        
-                        (eo::to_z ($evaluate_arith_term (- d2 d1)))
-
-                        (- d2 d1))
-               1.0))
-           )
-          )
-         )
-
-; program: $evaluate_inequality_sides
-; args:
-; - inequality Bool: An arbitrary linear inequality.
-; return: >
-;   An inequality built from `inequality`, where its both sides have been
-;   evaluated with `$evaluate_arith_term`.
-; note: >
-;   It is done so to take advantage of early opportunities of simplification of
-;   inequalities.
-(program $evaluate_inequality_sides ((A Type) (d1 A) (d2 A) (summatory1 A :list)
-                                     (summatory2 A :list) (order (-> A A Bool)))
-         :signature (Bool) Bool
-         (
-          (
-           ($evaluate_inequality_sides (order (+ d1 summatory1) (+ d2 summatory2)))
-
-           (order
-            ($evaluate_arith_term (+ d1 summatory1))
-            ($evaluate_arith_term (+ d2 summatory2)))
-           )
-
-          (
-           ($evaluate_inequality_sides (order d1 d2))
-
-           (order 
-            ($evaluate_arith_term d1)
-            ($evaluate_arith_term d2))
+           (= 0.0 (- d2 d1))
            )
           )
          )
@@ -863,9 +858,9 @@
           (
            ($apply_coefficients (= lhs rhs) coeff)
 
-           (= (* coeff lhs)
+           (= ($f_list_cons * coeff lhs)
                
-              (* coeff rhs))
+              ($f_list_cons * coeff rhs))
            )
 
           (; { order != "=" }
@@ -878,9 +873,9 @@
              )
             
             (order 
-             (* ($abs evaluated_coeff) lhs)
+             ($f_list_cons * ($abs evaluated_coeff) lhs)
 
-             (* ($abs evaluated_coeff) rhs)))
+             ($f_list_cons * ($abs evaluated_coeff) rhs)))
            )
           )
          )
@@ -918,7 +913,7 @@
           (
            ($decide_order > >=)
 
-           >=
+           >
            )
 
           (
@@ -927,13 +922,13 @@
            order1
            )
 
-          ;; (; To avoid repeating previous equations...
-          ;;  ($decide_order order1 order2)
+          (; To avoid repeating previous equations...
+           ($decide_order order1 order2)
 
-          ;;  ($decide_order order2 order1)
-          ;;  )
+           ($decide_order order2 order1)
+           )
           )
-)
+         )
 
 ; program: $add_inequalities
 ; args:
@@ -1027,6 +1022,10 @@
           )
 )
 
+; program: $verify_contradiction
+; args:
+; - inequality A: An inequality whose sides are numeric literals.
+; return: A boolean representing the truth value of `inequality`.
 (program $verify_contradiction ((A Type) (lhs A) (rhs A))
          :signature (Bool) Bool
 
@@ -1034,14 +1033,17 @@
           (
            ($verify_contradiction (> lhs rhs))
 
-           (eo::gt lhs rhs)
+           (eo::gt ($evaluate_arith_term lhs)
+                   ($evaluate_arith_term rhs))
            )
 
           (
            ($verify_contradiction (>= lhs rhs))
            (eo::or 
-            (eo::gt lhs rhs)
-            (eo::eq lhs rhs))
+            (eo::gt ($evaluate_arith_term lhs) 
+                    ($evaluate_arith_term rhs))
+            (eo::eq ($evaluate_arith_term lhs)
+                    ($evaluate_arith_term rhs)))
            )
 
           (
@@ -1059,38 +1061,45 @@
           (
            ($verify_contradiction (= lhs rhs))
 
-           (eo::eq rhs lhs)
+           (eo::eq ($evaluate_arith_term lhs) ($evaluate_arith_term rhs))
            )
           )
          )
 
 ; program: $check_la_generic
 ; args:
-; - coeffs @VarList:
-; - conclusion Bool:
-; return:
+; - coeffs @VarList: >
+;   Coefficients passed to la_generic, as a @VarList. The i-th coefficient 
+;   corresponds to the i-th inequality from the conclusion passed.
+; - conclusion Bool: Conclusion passed to the rule.
+; return: >
+;   A boolean indicating if the conjunction of the negation of each inequality 
+;   in `conclusion` is unsatisfiable.
 (program $check_la_generic ((coeffs @VarList) (conclusion Bool))
   :signature (@VarList Bool) Bool
   (
    (
     ($check_la_generic coeffs conclusion) 
 
-    ;; ($verify_contradiction
-     ($add_processed_inequalities
-      ($process_inequalities coeffs conclusion)
-      )
-     ;; )
+    (eo::not 
+     ($verify_contradiction
+      ($add_processed_inequalities
+       ($process_inequalities coeffs conclusion)))
+     )
     )
    )
 )
 
 ; rule: la_generic
-; implements: TODO?
 ; premises:
-; - coeffs @VarList:
-; - conclusion Bool:
+; - conclusion Bool: A clause whose disjuncts are linear inequalities.
 ; args:
-; requires:
+; - coeffs @VarList: >
+;   Coefficients passed to la_generic, as a @VarList. The i-th coefficient 
+;   corresponds to the i-th inequality from the conclusion passed.
+; requires: >
+;   For the conjunction of the negation of each inequality in `conclusion` 
+;   to be unsatisfiable.
 ; conclusion:
 (declare-rule la_generic ((coeffs @VarList) (conclusion Bool))
   :args (coeffs)

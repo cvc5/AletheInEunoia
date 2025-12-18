@@ -1,11 +1,14 @@
 (include "../theories/theory.eo")
-; Required for LA reasoning: it manipulates arith terms as binary trees.
 (include "../programs/lists.eo")
+(include "../programs/programs.eo")
+; Required for LA reasoning: in some occasions, we manipulate arith terms as 
+; binary trees.
 (include "../programs/trees.eo")
 
 ;-------------------------------------------
 ; Arith theory-related concepts and routines
 ;-------------------------------------------
+
 
 ; program: $is_numeric_literal
 ; args:
@@ -24,6 +27,45 @@
                    ; To deal with numbers with decimal part.
                    (eo::is_ok (eo::to_q c))
                    )
+           )
+          )
+         )
+
+; program: $can_convert_2_integer
+; args:
+; - term A: An arbitrary arith term.
+; return: >
+;   A boolean indicating if `term` can be safely considered an integer value:
+;   either because it has type Int, or because it is a numeric literal with
+;   no decimal part.
+(program $can_convert_2_integer ((A Type) (term A))
+         
+         :signature (A) Bool
+         
+         (
+          (
+           ($can_convert_2_integer term)
+
+           (eo::ite (eo::is_eq (eo::typeof term) Int)
+  
+                    true
+
+                    ; { not (eo::is_eq (eo::typeof lhs) Int) }
+                    
+                    ; Check if it can be converte to integer without losing
+                    ; precision.
+                    (eo::ite ($is_numeric_literal term)
+
+                             (eo::ite (eo::is_eq (eo::to_q term) 
+                                                 (eo::to_q (eo::to_z term)))
+
+                                      true
+
+                                      ; { term has non-zero decimal part }
+                                      false)
+
+                             ; { not ($is_numeric_literal term) }
+                             false))
            )
           )
          )
@@ -63,6 +105,39 @@
 
           (
            ($is_theory_binary_arith_op f)
+           
+           false
+           )
+          )
+         )
+
+; program: $is_theory_unary_arith_op
+; args:
+; - op (-> T T): An arbitrary unary operator.
+; return: A boolean indicating if `op` is equal to -, to_int or to_real.
+(program $is_theory_unary_arith_op ((T Type) (op (-> T T)))
+         :signature ((-> T T)) Bool
+         (
+          (
+           ($is_theory_unary_arith_op -)
+           
+           true
+           )
+
+          (
+           ($is_theory_unary_arith_op to_int)
+           
+           true
+           )
+
+          (
+           ($is_theory_unary_arith_op to_real)
+           
+           true
+           )
+
+          (
+           ($is_theory_unary_arith_op op)
            
            false
            )
@@ -175,47 +250,43 @@
           )
          )
 
-
 ; program: $is_uninterpreted_term
 ; args:
 ; - term A: An arbitrary arith term.
 ; return: >
 ;   A boolean indicating if `term` is a uninterpreted constant, or an 
 ;   uninterpreted function applied over some arbitrary term.
-(program $is_uninterpreted_term ((A Type) (lhs A) (rhs A :list) (term A))
+(program $is_uninterpreted_term ((A Type) (lhs A) (rhs A :list) (term A)
+                                 (op_bin (-> A A A)) (op_un (-> A A)))
          :signature (A) Bool
          (
-          (
-           ($is_uninterpreted_term (+ lhs rhs))
-
-           false
-           )
-
-          (
-           ($is_uninterpreted_term (* lhs rhs))
-
-           false
-           )
-          
-          (
-           ($is_uninterpreted_term (/ lhs rhs))
-
-           false
-           )
-
-          (
+          (; NOTE: we need to consider - in insolation, because of the
+           ; behavior of $is_theory_binary_arith_op
            ($is_uninterpreted_term (- lhs rhs))
 
            false
            )
 
           (
+           ($is_uninterpreted_term (op_bin lhs rhs))
+
+           (eo::not ($is_theory_binary_arith_op op_bin))
+           )
+
+          (; NOTE: we need to consider - in insolation, because of the
+           ; behavior of $is_theory_binary_arith_op
            ($is_uninterpreted_term (- term))
 
            false
            )
 
           (
+           ($is_uninterpreted_term (op_un lhs))
+
+           (eo::not ($is_theory_unary_arith_op op_un))
+           )
+
+          (; { term is atomic }
            ($is_uninterpreted_term term)
 
            (eo::ite ($is_numeric_literal term)
@@ -230,12 +301,75 @@
           )
          )
 
+; program: $has_uninterpreted_term
+; args:
+; - term A: An arbitrary arith term.
+; return: A boolean indicating if `term` has an uninterpreted sub-term.
+(program $has_uninterpreted_term ((A Type) (lhs A) (rhs A :list))
+         :signature (A) Bool
+
+         (
+          (
+           ($has_uninterpreted_term (* lhs rhs))
+
+           (eo::or ($has_uninterpreted_term lhs)
+                   ($has_uninterpreted_term rhs))
+           )
+
+          (
+           ($has_uninterpreted_term lhs)
+
+           ($is_uninterpreted_term lhs)
+           )
+          )
+         )
+
+; program: $extract_uninterpreted_term
+; args:
+; - term A: An arbitrary arith term.
+; return: The uninterpreted sub-term contained in `term`.
+; note: PRE : { `term` has a single uninterpreted sub-term }
+(program $extract_uninterpreted_term ((A Type) (lhs A) (rhs A :list))
+         :signature (A) A
+
+         (
+          (
+           ($extract_uninterpreted_term (+ lhs rhs))
+
+           (eo::ite ($has_uninterpreted_term lhs)
+
+                    ($extract_uninterpreted_term lhs)
+
+                                        ; { not ($has_uninterpreted_term lhs) }
+                    ($extract_uninterpreted_term rhs))
+           )
+
+          (
+           ($extract_uninterpreted_term (* lhs rhs))
+
+           (eo::ite ($has_uninterpreted_term lhs)
+
+                    ($extract_uninterpreted_term lhs)
+
+                                        ; { not ($has_uninterpreted_term lhs) }
+                    ($extract_uninterpreted_term rhs))
+           )
+
+          ( ; { lhs is an uninterpreted term }
+           ($extract_uninterpreted_term lhs)
+
+           lhs
+           )
+          )
+         )
+
 ; program: $is_evaluatable
 ; args:
 ; - term A: An arbitrary arithmetic term.
 ; return: >
 ;   A boolean indicating if `term` can be fully evaluated into a numerical value.
-(program $is_evaluatable ((A Type) (lhs A) (rhs A) (op (-> A A A)))
+(program $is_evaluatable ((A Type) (lhs A) (rhs A) (op_bin (-> A A A))
+                          (op_un (-> A A)))
          :signature (A) Bool
 
          (
@@ -247,9 +381,9 @@
            )
 
           (
-           ($is_evaluatable (op lhs rhs))
+           ($is_evaluatable (op_bin lhs rhs))
 
-           (eo::and ($is_theory_binary_arith_op op)
+           (eo::and ($is_theory_binary_arith_op op_bin)
                     ($is_evaluatable lhs)
                     ($is_evaluatable rhs))
            )
@@ -258,6 +392,13 @@
            ($is_evaluatable (- lhs))
 
            ($is_evaluatable lhs)
+           )
+
+          (
+           ($is_evaluatable (op_un lhs))
+
+           (eo::and ($is_theory_unary_arith_op op_un)
+                    ($is_evaluatable lhs))
            )
 
           ; { lhs is an atomic term or term involving uninterpreted functions}
@@ -335,6 +476,53 @@
           )
          )
 
+; program: $mult_by_proper_type_constant
+; args:
+; - term A: An arbitrary arith term.
+; - constant A: A numeric literal.
+; return: >
+;   A term of the form (* constant' `term`), where constant' is the result of
+;   casting `constant` to the same type of `term`.
+(program $mult_by_proper_type_constant ((A Type) (term A) (constant A))
+         :signature (A A) A
+
+         (
+          (
+           ($mult_by_proper_type_constant term constant)
+           
+           (eo::ite (eo::is_eq (eo::typeof term) Int)
+                    
+                    ($f_list_cons * (eo::to_z constant) term)
+
+                    ; { not (eo::is_eq (eo::typeof term) Int) }
+                    ($f_list_cons * (eo::to_q constant) term))
+           )
+          )
+         )
+
+; program: $cast_to_proper_type_constant
+; args:
+; - term A: An arbitrary arith term.
+; - constant A: A numeric literal.
+; return: >
+;   The constant resulting from casting `constant` to the same type of `term`.
+(program $cast_to_proper_type_constant ((A Type) (term A) (constant A))
+         :signature (A A) A
+
+         (
+          (
+           ($cast_to_proper_type_constant term constant)
+           
+           (eo::ite (eo::is_eq (eo::typeof term) Int)
+                    
+                    (eo::to_z constant)
+
+                    ; { not (eo::is_eq (eo::typeof term) Int) }
+                    (eo::to_q constant))
+           )
+          )
+         )
+
 ; program: $less_or_equal_literal
 ; args:
 ; - lhs A: A numeric literal.
@@ -354,8 +542,8 @@
 
 ; program: $less_or_equal_arith_terms
 ; args:
-; - lhs A: An arbitrary arithmetic term.
-; - rhs A: An arbitrary arithmetic term.
+; - lhs A: An arithmetic term.
+; - rhs A: An arithmetic term.
 ; return: >
 ;   Decides if `lhs` <= `rhs`. The criterion being:
 ;   - numeric literals are <= than uninterpreted constants
@@ -365,14 +553,32 @@
 ; note : >
 ;   PRE : { lhs and rhs are, either:
 ;           - numeric literals
+;           - uninterpreted terms
 ;           - a product between numeric literals, or numeric literals
-;             and a variable (uninterpreted constants or uninterpreted 
-;             functions applied to some value) }
+;             and an uninterpreted term }
 (program $less_or_equal_arith_terms ((A Type) (lhs A) (lhs_a A) (lhs_term A :list)
                                      (rhs A) (rhs_a A) (rhs_term A :list)
                                      (term A :list))
          :signature (A A) Bool
          (
+          (
+           ($less_or_equal_arith_terms (to_int lhs) (to_int rhs))
+
+           ($less_or_equal_arith_terms lhs rhs)
+           )
+
+          (
+           ($less_or_equal_arith_terms (to_int lhs) rhs)
+
+           ($less_or_equal_arith_terms lhs rhs)
+           )
+
+          (
+           ($less_or_equal_arith_terms lhs (to_int rhs))
+
+           ($less_or_equal_arith_terms lhs rhs)
+           )
+
           (
            ($less_or_equal_arith_terms (* lhs_a rhs_term) (* rhs_a rhs_term))
 
@@ -381,30 +587,67 @@
 
           (; { lhs_term != rhs_term }
            ($less_or_equal_arith_terms (* lhs_a lhs_term) (* rhs_a rhs_term))
-           
-           (eo::ite (eo::and ($is_uninterpreted_term lhs_term)
-                             ($is_uninterpreted_term rhs_term))
 
-                    ($less_or_equal_arith_terms lhs_term rhs_term)
+           (eo::ite ($has_uninterpreted_term (* rhs_a rhs_term))
 
-                    ; { not ($is_uninterpreted_term lhs_term)
-                    ;   or
-                    ;   not ($is_uninterpreted_term rhs_term) }
-                    (eo::and ($less_or_equal_arith_terms lhs_a rhs_a)
-                             ($less_or_equal_arith_terms lhs_term rhs_term)))
+                    (eo::ite (eo::not ($has_uninterpreted_term (* lhs_a lhs_term)))
 
+                             true
+
+                             ; { ($has_uninterpreted_term (* lhs_a hs_term)) }
+                             ($less_or_equal_arith_terms
+                              ($extract_uninterpreted_term (* lhs_a lhs_term))
+                              ($extract_uninterpreted_term (* rhs_a rhs_term))))
+
+                    ; { not ($has_uninterpreted_term (* rhs_a rhs_term)) }
+                    (eo::ite ($has_uninterpreted_term (* lhs_a lhs_term))
+                             
+                             false
+
+                             ; { not ($has_uninterpreted_term (* lhs_a lhs_term)) }
+                             (eo::and ($less_or_equal_arith_terms lhs_a rhs_a)
+                                      ($less_or_equal_arith_terms lhs_term rhs_term))))
            )
 
           (; { lhs_term is not a product }
            ($less_or_equal_arith_terms lhs_term (* rhs_a rhs_term))
 
-           true
+           (eo::ite ($has_uninterpreted_term (* rhs_a rhs_term))
+
+                    (eo::ite (eo::not ($has_uninterpreted_term lhs_term))
+
+                             true
+
+                             ; { ($has_uninterpreted_term lhs_a) }
+                             ($less_or_equal_arith_terms
+                              ($extract_uninterpreted_term lhs_term)
+                              ($extract_uninterpreted_term (* rhs_a rhs_term))))
+
+                    ; { not ($has_uninterpreted_term (* rhs_a rhs_term)) }
+                    (eo::ite ($has_uninterpreted_term lhs_term)
+
+                             false
+
+                             ; { (not $has_uninterpreted_term lhs_term) }
+                             true))
            )
 
           (; { rhs_term is not a product }
            ($less_or_equal_arith_terms (* lhs_a lhs_term) rhs_term)
 
-           false
+           (eo::ite ($has_uninterpreted_term rhs_term)
+
+                    (eo::ite (eo::not ($has_uninterpreted_term (* lhs_a lhs_term)))
+
+                             true
+
+                             ; { ($has_uninterpreted_term lhs_a) }
+                             ($less_or_equal_arith_terms
+                              ($extract_uninterpreted_term (* lhs_a lhs_term))
+                              ($extract_uninterpreted_term rhs_term)))
+
+                    ; { not ($has_uninterpreted_term rhs_term) }
+                    false)
            )
 
           (; { lhs and rhs are not products }
@@ -492,16 +735,9 @@
          :signature (A) A
          (
           (
-           ($reorder_arith_term (- lhs rhs))
+           ($reorder_arith_term (to_int lhs))
 
-           (- ($reorder_arith_term lhs) 
-              ($reorder_arith_term rhs))
-           )
-
-          (
-           ($reorder_arith_term (- lhs))
-
-           (- ($reorder_arith_term lhs))
+           (to_int ($reorder_arith_term lhs))
            )
 
           (
@@ -531,79 +767,6 @@
            )
           )
          )
-
-;; (program $get_right_most_arith_term ((A Type) (lhs A) (rhs A) (op (-> A A A)))
-;;          :signature ((-> A A A) A) A
-;;          (
-;;           (
-;;            ($get_right_most_arith_term op (op lhs rhs))
-
-;;            (eo::ite (eo::gt (eo::to_q ($list_len op rhs)) 1/1)
-
-;;                     ($get_right_most_arith_term op rhs)
-
-;;                     ; { $list_len op rhs = 1 }
-;;                     rhs)
-;;            )
-
-;;           ( ; { lhs is not an op-list }
-;;           ($get_right_most_arith_term op lhs)
-          
-;;           lhs
-;;           )
-;;           )
-;;          )
-
-;; ; Exploits assoc of + and *
-;; (program $flatten_arith_term  ((A Type) (lhs A) (rhs A) (op (-> A A A)))
-;;          :signature (A) A
-;;          (
-;;           (
-;;            ($flatten_arith_term (op lhs rhs))
-           
-;;            (eo::ite (eo::or (eo::is_eq op *)
-;;                             (eo::is_eq op +))
-                    
-;;                     (eo::define
-                     
-;;                      (
-;;                       (rhs_flat ($flatten_arith_term rhs))
-;;                       )
-
-;;                      (eo::ite (eo::gt (eo::to_q ($list_len op lhs)) 1/1)
-
-;;                               (eo::define
-;;                                (
-;;                                 (lhs_flat ($flatten_arith_term lhs))
-;;                                 )
-
-;;                                (eo::define
-
-;;                                 (
-;;                                  (lhs_rhs ($get_right_most_arith_term op lhs_flat))
-;;                                  )
-
-;;                                 ($flatten_arith_term (op ($binary_tree_remove_elem op 
-;;                                                                             lhs_flat 
-;;                                                                             lhs_rhs)
-;;                                                          (op lhs_rhs rhs_flat)))))
-                              
-;;                                         ; { $list_len op lhs = 1}
-;;                               (op lhs rhs_flat)
-;;                               )
-;;                      )
-                    
-;;                     ; { op is not * nor + }
-;;                     (op lhs rhs))
-;;            )
-
-;;           (; { lhs is not an op-list }
-;;            ($flatten_arith_term lhs)
-
-;;            lhs
-;;            )
-;;           )
-;;          )
 
 ; program: $small_step_assoc_evaluatable_terms
 ; args:
@@ -769,29 +932,16 @@
           (
            ($build_proper_monomials (+ lhs rhs))
 
-           (eo::ite ($is_uninterpreted_term lhs)
-
-                    ($f_list_cons + 
-                                  ($f_list_cons * 1/1 lhs)
-                                  ($build_proper_monomials rhs))
-
-                    ; { not ($is_uninterpreted_term lhs) }
-                    ($f_list_cons + 
-                                  ($build_proper_monomials lhs)
-                                  ($build_proper_monomials rhs)))
+           ($f_list_cons + 
+                         ($build_proper_monomials lhs)
+                         ($build_proper_monomials rhs))
            )
 
           (
            ($build_proper_monomials (- lhs rhs))
 
-           (eo::ite ($is_uninterpreted_term lhs)
-
-                    (- ($f_list_cons * 1/1 lhs)
-                       ($build_proper_monomials rhs))
-
-                    ; { not ($is_uninterpreted_term lhs) }
-                    (- lhs
-                       ($build_proper_monomials rhs)))
+           (- ($build_proper_monomials lhs)
+              ($build_proper_monomials rhs))
            )
 
           (
@@ -803,12 +953,13 @@
           (
            ($build_proper_monomials (- lhs))
 
-           (eo::ite ($is_uninterpreted_term lhs)
+           (- ($build_proper_monomials lhs))
+           )
+          
+          (
+           ($build_proper_monomials (to_int lhs))
 
-                    (- ($f_list_cons * 1/1 lhs))
-
-                    ; { not ($is_uninterpreted_term lhs) }
-                    (- ($build_proper_monomials lhs)))
+           (to_int ($build_proper_monomials lhs))
            )
 
           (; { lhs is not build through some arith op }
@@ -816,7 +967,9 @@
 
            (eo::ite ($is_uninterpreted_term lhs)
 
-                    ($f_list_cons * 1/1 lhs)
+                    ; Check the type of lhs, to properly preserve it for future 
+                    ; reduction of expressions involving to_int.
+                    ($mult_by_proper_type_constant lhs 1)
 
                     ; { not ($is_uninterpreted_term lhs) }
                     lhs)
@@ -922,19 +1075,19 @@
           (
            ($small_step_reduction_arith_term (* 0.0 rhs))
            
-           0/1
+           ($cast_to_proper_type_constant rhs 0)
            )
 
           (
            ($small_step_reduction_arith_term (* 0 rhs))
            
-           0/1
+           ($cast_to_proper_type_constant rhs 0)
            )
 
           (
            ($small_step_reduction_arith_term (* 0/1 rhs))
            
-           0/1
+           ($cast_to_proper_type_constant rhs 0)
            )
 
           (
@@ -943,7 +1096,7 @@
            (eo::ite ($is_uninterpreted_term rhs)
                     ; We keep the shape of the term, for future opportunities
                     ; of reduction.
-                    (* 1/1  rhs)
+                    ($mult_by_proper_type_constant rhs 1)
 
                     ; { not ($is_uninterpreted_term rhs) }
                     rhs)
@@ -955,7 +1108,7 @@
            (eo::ite ($is_uninterpreted_term rhs)
                     ; We keep the shape of the term, for future opportunities
                     ; of reduction.
-                    (* 1/1  rhs)
+                    ($mult_by_proper_type_constant rhs 1)
 
                     ; { not ($is_uninterpreted_term rhs) }
                     rhs)
@@ -967,7 +1120,7 @@
            (eo::ite ($is_uninterpreted_term rhs)
                     ; We keep the shape of the term, for future opportunities
                     ; of reduction.
-                    (* 1/1  rhs)
+                    ($mult_by_proper_type_constant rhs 1)
 
                     ; { not ($is_uninterpreted_term rhs) }
                     rhs)
@@ -979,15 +1132,15 @@
            (eo::ite ($is_uninterpreted_term rhs)
                     ; We keep the shape of the term, for future opportunities
                     ; of reduction.
-                    (* -1/1  rhs)
+                    ($mult_by_proper_type_constant rhs -1)
 
                     ; { not ($is_uninterpreted_term rhs) }
                     (eo::ite ($is_numeric_literal rhs)
                              
                              (eo::mul -1/1 (eo::to_q rhs))
 
-                                        ; { not ($is_numeric_literal rhs) }
-                             (* -1/1 rhs)))
+                             ; { not ($is_numeric_literal rhs) }
+                             ($mult_by_proper_type_constant rhs -1)))
            )
 
           (
@@ -996,15 +1149,16 @@
            (eo::ite ($is_uninterpreted_term rhs)
                     ; We keep the shape of the term, for future opportunities
                     ; of reduction.
-                    (* -1/1  rhs)
+                    ($mult_by_proper_type_constant rhs -1)
 
                     ; { not ($is_uninterpreted_term rhs) }
                     (eo::ite ($is_numeric_literal rhs)
                              
                              (eo::mul -1/1 (eo::to_q rhs))
 
-                                        ; { not ($is_numeric_literal rhs) }
-                             (* -1/1 rhs)))
+                             ; { not ($is_numeric_literal rhs) }
+                             ; We try to preserve the type of the whole expression.
+                             ($mult_by_proper_type_constant rhs -1)))
            )
 
           (
@@ -1013,7 +1167,8 @@
            (eo::ite ($is_uninterpreted_term rhs)
                     ; We keep the shape of the term, for future opportunities
                     ; of reduction.
-                    (* -1/1  rhs)
+                    ; We try to preserve the type of the whole expression.
+                    ($mult_by_proper_type_constant rhs -1)
 
                     ; { not ($is_uninterpreted_term rhs) }
                     (eo::ite ($is_numeric_literal rhs)
@@ -1021,7 +1176,9 @@
                              (eo::mul -1/1 (eo::to_q rhs))
 
                              ; { not ($is_numeric_literal rhs) }
-                             (* -1/1 rhs)))
+                             ; We try to preserve the type
+                             ; of the whole expression
+                             ($mult_by_proper_type_constant rhs -1)))
            )
 
           (
@@ -1039,7 +1196,7 @@
 
                               (eo::ite (eo::is_eq (eo::to_q rhs) 0/1)
                                        ; Case (* lhs 0.0)
-                                       0/1
+                                       ($cast_to_proper_type_constant lhs 0)
 
                                        ; {not (eo::is_eq rhs_evaluated 0)}
                                        (eo::ite (eo::is_eq (eo::to_q rhs) 1/1)
@@ -1050,7 +1207,9 @@
                                                 (eo::ite (eo::is_eq (eo::to_q rhs) -1/1)
 
                                                          ; Case (* lhs (- 1.0))
-                                                         ($f_list_cons * -1/1 lhs)
+                                                         ; We try to preserve the type
+                                                         ; of the whole expression
+                                                         ($mult_by_proper_type_constant lhs -1)
 
                                                          ; { (eo::is_eq rhs_evaluated -1) }
                                                          ($f_list_cons * lhs rhs))))
@@ -1059,23 +1218,33 @@
                               ($f_list_cons * lhs rhs)))
            )
 
-          ;; ; Negative numbers
-          ;; (
-          ;;  ($small_step_reduction_arith_term (- (- term)))
+          (
+           ($small_step_reduction_arith_term (to_int (+ lhs rhs)))
 
-          ;;  term
-          ;;  )
+           (eo::ite ($can_convert_2_integer lhs)
+                    ; Case to_int (+ n x) = + n to_int x, when n is an integer
+                    ($f_list_cons + lhs (to_int rhs))
 
-          ;; (
-          ;;  ($small_step_reduction_arith_term (- term))
+                    ; { not ($can_convert_2_integer lhs) }
+                    (eo::ite ($can_convert_2_integer rhs)
+                             ; Case to_int (+ x n) = + (to_int x n), when n is an 
+                             ; integer
+                             ($f_list_cons + (to_int lhs) rhs)
 
-          ;;  (eo::ite ($is_numeric_literal term)
+                             ; { not ($can_convert_2_integer rhs) }
+                             (to_int ($f_list_cons + lhs rhs))))
+           )
 
-          ;;            (eo::mul -1/1 (eo::to_q term))
+          (; { term is not an addition }
+           ($small_step_reduction_arith_term (to_int term))
+           
+           (eo::ite ($is_numeric_literal term)
 
-          ;;            ; {not ($is_numeric_literal term)}
-          ;;            ($f_list_cons * -1/1 term))
-          ;;  )
+                    (eo::to_z term)
+
+                    ; { not ($is_numeric_literal term) }
+                    (to_int term))
+           )
 
           (
            ($small_step_reduction_arith_term term)
@@ -1130,36 +1299,37 @@
                       ($small_step_evaluator_arith_term term_evaluated))))
            )
 
-          ;; (
-          ;;  ($small_step_evaluator_arith_term (- lhs))
+          (; { term is not an integer expression, because of normalization }
+           ($small_step_evaluator_arith_term (to_int term))
 
-          ;;  (eo::define 
-          ;;   (
-          ;;    (lhs_evaluated ($small_step_evaluator_arith_term lhs))
-          ;;    )
 
-          ;;   (eo::ite (eo::is_eq lhs_evaluated lhs)
+           (eo::define 
+            (
+             (term_evaluated ($small_step_evaluator_arith_term term))
+             )
+
+            (eo::ite (eo::is_eq term_evaluated term)
                      
-          ;;            ; No progress made, we continue with the whole term.
-          ;;            (eo::define 
-          ;;             (
-          ;;              (term_evaluated ($small_step_reduction_arith_term (- lhs_evaluated)))
-          ;;              )
+                     ; No progress.
+                     (eo::define 
+                      (
+                       (to_int_term_evaluated ($small_step_reduction_arith_term
+                                               (to_int term_evaluated)))
+                       )
 
-          ;;             (eo::ite (eo::is_eq term_evaluated (- lhs_evaluated))
+                      (eo::ite (eo::is_eq to_int_term_evaluated (to_int term_evaluated))
 
-          ;;                               ; No progress made, we give up.
-          ;;                      term_evaluated
+                               ; No progress made, we give up.
+                               to_int_term_evaluated
 
-          ;;                      ; { not (eo::is_eq term_evaluated
-          ;;                      ;       (- lhs_evaluated)) }
-          ;;                      ; Some progress made, we try again.
-          ;;                      ($small_step_evaluator_arith_term term_evaluated)))
+                               ; { not (eo::is_eq term_evaluated (to_int term_evaluated)) }
+                               ; Some progress made, we try again.
+                               ($small_step_evaluator_arith_term 
+                                to_int_term_evaluated)))
 
-          ;;            ; Some progress made, we repeat it.
-          ;;            ($small_step_evaluator_arith_term (- lhs_evaluated))
-          ;;            ))
-          ;;  )
+                     ; { not (eo::is_eq term_evaluated term) }
+                     ($small_step_evaluator_arith_term (to_int term_evaluated))))
+           )
          
          (; { term is not the application of some arithmetic operator }
           ($small_step_evaluator_arith_term term)
@@ -1191,14 +1361,14 @@
            ($small_step_normalize_arith_term (- (+ lhs rhs)))
 
            ($f_list_cons + 
-                         ($f_list_cons * -1/1 lhs) 
-                         ($f_list_cons * -1/1 rhs))
+                         ($mult_by_proper_type_constant lhs -1)
+                         ($mult_by_proper_type_constant rhs -1))
            )
 
           (
            ($small_step_normalize_arith_term (- (* lhs rhs)))
 
-           ($f_list_cons * ($f_list_cons * -1/1 lhs) rhs)
+           ($f_list_cons * ($mult_by_proper_type_constant lhs -1) rhs)
            )
 
           (
@@ -1210,7 +1380,7 @@
           (
            ($small_step_normalize_arith_term (- term))
            
-           ($f_list_cons * -1/1 term)
+           ($mult_by_proper_type_constant term -1)
            )
 
           ; Getting rid of subtraction.
@@ -1219,7 +1389,7 @@
            
            ($f_list_cons + 
                          lhs
-                         ($f_list_cons * -1/1 rhs))
+                         ($mult_by_proper_type_constant rhs -1))
            )
 
           ( 
@@ -1252,60 +1422,59 @@
 
                              ; { not (eo::and ($is_evaluatable rhs)
                              ;                 ($is_addition lhs)) }
-                             ; Associativity to exploit opportunities of reduction.
-                             (eo::ite ($is_product rhs)
+                             ;; ; Associativity to exploit opportunities of reduction.
+                             ;; (eo::ite ($is_product rhs)
 
-                                      (eo::define
-                                       (
-                                        (rhs_lhs ($product_get_lhs rhs))
-                                        (rhs_rhs ($product_get_rhs rhs))
-                                        )
+                             ;;          (eo::define
+                             ;;           (
+                             ;;            (rhs_lhs ($product_get_lhs rhs))
+                             ;;            (rhs_rhs ($product_get_rhs rhs))
+                             ;;            )
 
-                                       (eo::ite (eo::and ($is_evaluatable lhs)
-                                                         ($is_evaluatable rhs_lhs))
+                             ;;           (eo::ite (eo::and ($is_evaluatable lhs)
+                             ;;                             ($is_evaluatable rhs_lhs))
                                                 
-                                                ($f_list_cons *
-                                                              ($f_list_cons * lhs rhs_lhs)
-                                                              rhs_rhs)
+                             ;;                    ($f_list_cons *
+                             ;;                                  ($f_list_cons * lhs rhs_lhs)
+                             ;;                                  rhs_rhs)
 
-                                                ; { not ($is_numeric_literal lhs)
-                                                ;   or
-                                                ;   not ($is_numeric_literal rhs_lhs) }
-                                                ($f_list_cons * lhs rhs)))
+                             ;;                    ; { not ($is_numeric_literal lhs)
+                             ;;                    ;   or
+                             ;;                    ;   not ($is_numeric_literal rhs_lhs) }
+                             ;;                    ($f_list_cons * lhs rhs)))
                                       
-                                      ; { rhs is not a product }
-                                      ($f_list_cons * lhs rhs))))
+                             ;;          ; { rhs is not a product }
+                             ($f_list_cons * lhs rhs)))
            )
 
-          (; Associativity to exploit opportunities of reduction.
-           ($small_step_normalize_arith_term (+ lhs rhs))
+          ;; (; Associativity to exploit opportunities of reduction.
+          ;;  ($small_step_normalize_arith_term (+ lhs rhs))
 
-           (eo::ite ($is_addition rhs)
+          ;;  (eo::ite ($is_addition rhs)
 
-                    (eo::define
-                     (
-                      (rhs_lhs ($addition_get_lhs rhs))
-                      (rhs_rhs ($addition_get_rhs rhs))
-                      )
+          ;;           (eo::define
+          ;;            (
+          ;;             (rhs_lhs ($addition_get_lhs rhs))
+          ;;             (rhs_rhs ($addition_get_rhs rhs))
+          ;;             )
 
-                     (eo::ite (eo::and ($is_evaluatable lhs)
-                                       ($is_evaluatable rhs_lhs))
+          ;;            (eo::ite (eo::and ($is_evaluatable lhs)
+          ;;                              ($is_evaluatable rhs_lhs))
 
-                              ; Associativity to exploit opportunities of reduction.
-                              ($f_list_cons +
-                                            ($f_list_cons + lhs rhs_lhs)
-                                            rhs_rhs)
+          ;;                     ; Associativity to exploit opportunities of reduction.
+          ;;                     ($f_list_cons +
+          ;;                                   ($f_list_cons + lhs rhs_lhs)
+          ;;                                   rhs_rhs)
 
-                              ; { not ($is_numeric_literal lhs)
-                              ;   or
-                              ;   not ($is_numeric_literal rhs_lhs) }
-                              ($f_list_cons + lhs rhs)))
+          ;;                     ; { not ($is_numeric_literal lhs)
+          ;;                     ;   or
+          ;;                     ;   not ($is_numeric_literal rhs_lhs) }
+          ;;                     ($f_list_cons + lhs rhs)))
                     
-                    ; { rhs is not a addition }
-                    ($f_list_cons + lhs rhs))
-           )
-
-
+          ;;           ; { rhs is not a addition }
+          ;;           ($f_list_cons + lhs rhs))
+          ;;  )
+         
           (; { term is not an addition, multiplication or unary substraction }
            ($small_step_normalize_arith_term term)
 
@@ -1331,6 +1500,30 @@
                                 (op (-> A A A)) (term A))
          :signature (A) A
          (
+          ( ; Getting rid of to_int or normalizing within it
+           ($normalize_arith_term (to_int term))
+
+           (eo::ite (eo::is_eq (eo::typeof term) Int)
+
+                    ($normalize_arith_term term)
+                    
+                    ; { not (eo::is_eq (eo::typeof term) Int) }
+                    ; We cannot get rid of to_int
+                    (eo::define 
+                     (
+                      (term_normalized ($normalize_arith_term term))
+                      )
+                     
+                     (eo::ite (eo::is_eq term_normalized term)
+                              
+                              ; No progress made.
+                              (to_int term_normalized)
+
+                              ; { not (eo::is_eq term_normalized  term)
+                              ; Some progress made, we try again.
+                              ($normalize_arith_term (to_int term_normalized)))))
+           )
+          
           (
            ($normalize_arith_term (op lhs rhs))
            
@@ -1380,34 +1573,6 @@
                      ($normalize_arith_term
                       (op lhs_normalized rhs))))
            )
-
-          ;; (
-          ;;  ($normalize_arith_term (- lhs))
-           
-          ;;  (eo::define 
-          ;;   (
-          ;;    (lhs_normalized ($small_step_normalize_arith_term lhs))
-          ;;    )
-
-          ;;   (eo::define 
-          ;;    (
-          ;;     (term_normalized ($small_step_normalize_arith_term
-          ;;                       (- lhs_normalized)))
-          ;;     )
-
-          ;;    (eo::ite (eo::is_eq term_normalized 
-          ;;                        (- lhs_normalized))
-
-          ;;             ; No more progress during normalization.
-          ;;             ; We give up.
-          ;;             term_normalized
-
-          ;;             ; { not (eo::is_eq term_normalized 
-          ;;             ;          (op lhs rhs)}
-          ;;             ; Some progress made, we try again.
-          ;;             ($normalize_arith_term
-          ;;              term_normalized))))
-          ;;  )
           
           (; { term != op lhs rhs }
            ($normalize_arith_term term)
@@ -1445,10 +1610,7 @@
             ($assoc_evaluatable_terms
              ($reorder_arith_term
               ($normalize_arith_term 
-               ($build_proper_monomials term))
-              )
-             )
-            )
+               ($build_proper_monomials term)))))
           )
-         )
+          )
          )

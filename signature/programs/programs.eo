@@ -1,6 +1,5 @@
 (include "../theories/theory.eo")
 (include "./lists.eo")
-(include "./arith.eo")
 
 ; Library of auxiliary programs, useful to manipulate many different
 ; Eunoia constructions.

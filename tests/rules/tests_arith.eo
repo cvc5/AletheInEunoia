@@ -1,0 +1,51 @@
+(include "../../signature/rules/alethe.eo")
+
+
+; Unit tests for arith rules and related auxiliary services.
+
+;---------------------------------
+; $manipulate_inequality
+;---------------------------------
+
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+(declare-const b Real)
+
+(declare-rule $test_$manipulate_inequality ()
+   :requires (
+              ; Case >
+              (($manipulate_inequality (> ($f_list_cons + ($f_list_cons * 1 a) 1)
+                                          ($f_list_cons + ($f_list_cons * 1 b) 2)))
+
+               (>= (- ($f_list_cons * 1 a) ($f_list_cons * 1 b))
+
+                  (- 2 1))
+
+               )
+              )
+
+   :conclusion-explicit true
+)
+
+;---------------------------------
+; $add_processed_inequalities
+;---------------------------------
+
+; Some constants to build arith terms for testing purposes
+(declare-const a Int)
+(declare-const b Real)
+
+(declare-rule $test_$add_processed_inequalities ()
+   :requires (
+              (($add_processed_inequalities (and (> 1 2)
+                                                 (> 1 2)))
+
+               (> 2/1 4/1))
+               )
+
+   :conclusion-explicit true
+)
+
+
+(step test1 true :rule $test_$manipulate_inequality)
+(step test2 true :rule $test_$add_processed_inequalities)
