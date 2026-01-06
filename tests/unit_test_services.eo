@@ -1,0 +1,10 @@
+; Services for unit testing purposes.
+
+; Basic unit test rule.
+(declare-rule $unit_test ((A Type) (query A) (expect A))
+   :args (query expect)
+   :requires (
+              (query expect)
+              )
+   :conclusion-explicit true
+   )
