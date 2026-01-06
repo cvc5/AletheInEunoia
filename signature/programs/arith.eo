@@ -31,20 +31,20 @@
           )
          )
 
-; program: $can_convert_2_integer
+; program: $can_convert_to_integer
 ; args:
 ; - term A: An arbitrary arith term.
 ; return: >
 ;   A boolean indicating if `term` can be safely considered an integer value:
 ;   either because it has type Int, or because it is a numeric literal with
 ;   no decimal part.
-(program $can_convert_2_integer ((A Type) (term A))
+(program $can_convert_to_integer ((A Type) (term A))
          
          :signature (A) Bool
          
          (
           (
-           ($can_convert_2_integer term)
+           ($can_convert_to_integer term)
 
            (eo::ite (eo::is_eq (eo::typeof term) Int)
   
@@ -1221,17 +1221,17 @@
           (
            ($small_step_reduction_arith_term (to_int (+ lhs rhs)))
 
-           (eo::ite ($can_convert_2_integer lhs)
+           (eo::ite ($can_convert_to_integer lhs)
                     ; Case to_int (+ n x) = + n to_int x, when n is an integer
                     ($f_list_cons + lhs (to_int rhs))
 
-                    ; { not ($can_convert_2_integer lhs) }
-                    (eo::ite ($can_convert_2_integer rhs)
+                    ; { not ($can_convert_to_integer lhs) }
+                    (eo::ite ($can_convert_to_integer rhs)
                              ; Case to_int (+ x n) = + (to_int x n), when n is an 
                              ; integer
                              ($f_list_cons + (to_int lhs) rhs)
 
-                             ; { not ($can_convert_2_integer rhs) }
+                             ; { not ($can_convert_to_integer rhs) }
                              (to_int ($f_list_cons + lhs rhs))))
            )
 
@@ -1422,58 +1422,8 @@
 
                              ; { not (eo::and ($is_evaluatable rhs)
                              ;                 ($is_addition lhs)) }
-                             ;; ; Associativity to exploit opportunities of reduction.
-                             ;; (eo::ite ($is_product rhs)
-
-                             ;;          (eo::define
-                             ;;           (
-                             ;;            (rhs_lhs ($product_get_lhs rhs))
-                             ;;            (rhs_rhs ($product_get_rhs rhs))
-                             ;;            )
-
-                             ;;           (eo::ite (eo::and ($is_evaluatable lhs)
-                             ;;                             ($is_evaluatable rhs_lhs))
-                                                
-                             ;;                    ($f_list_cons *
-                             ;;                                  ($f_list_cons * lhs rhs_lhs)
-                             ;;                                  rhs_rhs)
-
-                             ;;                    ; { not ($is_numeric_literal lhs)
-                             ;;                    ;   or
-                             ;;                    ;   not ($is_numeric_literal rhs_lhs) }
-                             ;;                    ($f_list_cons * lhs rhs)))
-                                      
-                             ;;          ; { rhs is not a product }
                              ($f_list_cons * lhs rhs)))
            )
-
-          ;; (; Associativity to exploit opportunities of reduction.
-          ;;  ($small_step_normalize_arith_term (+ lhs rhs))
-
-          ;;  (eo::ite ($is_addition rhs)
-
-          ;;           (eo::define
-          ;;            (
-          ;;             (rhs_lhs ($addition_get_lhs rhs))
-          ;;             (rhs_rhs ($addition_get_rhs rhs))
-          ;;             )
-
-          ;;            (eo::ite (eo::and ($is_evaluatable lhs)
-          ;;                              ($is_evaluatable rhs_lhs))
-
-          ;;                     ; Associativity to exploit opportunities of reduction.
-          ;;                     ($f_list_cons +
-          ;;                                   ($f_list_cons + lhs rhs_lhs)
-          ;;                                   rhs_rhs)
-
-          ;;                     ; { not ($is_numeric_literal lhs)
-          ;;                     ;   or
-          ;;                     ;   not ($is_numeric_literal rhs_lhs) }
-          ;;                     ($f_list_cons + lhs rhs)))
-                    
-          ;;           ; { rhs is not a addition }
-          ;;           ($f_list_cons + lhs rhs))
-          ;;  )
          
           (; { term is not an addition, multiplication or unary substraction }
            ($small_step_normalize_arith_term term)
