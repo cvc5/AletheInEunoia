@@ -1,7 +1,13 @@
-; Services for unit testing purposes.
+; Services for unit testing.
 
-; Basic unit test rule.
-(declare-rule $unit_test ((A Type) (query A) (expect A))
+; rule: $assert_eq
+; args:
+; - query A: Left-hand side of the equality comparison.
+; - expect A: Right-hand side of the equality comparison.
+; requires: For `query` to be equal to `expect`.
+; conclusion-explicit: True, provided `query` = `expect`.
+; note: Basic unit test asserting equality between `query` and `expect`.
+(declare-rule $assert_eq ((A Type) (query A) (expect A))
    :args (query expect)
    :requires (
               (query expect)
