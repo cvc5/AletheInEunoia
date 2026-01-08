@@ -1,0 +1,19 @@
+(include "../../signature/theories/theory.eo")
+(include "../../signature/programs/programs.eo")
+(include "../unit_test_services.eo")
+
+; Unit tests for programs.eo.
+
+;---------------------------------
+; $varlist_concat
+;---------------------------------
+
+(step $test_$varlist_concat true 
+      :rule $assert_eq 
+      :args (($varlist_concat @varlist.nil @varlist.nil)
+             @varlist.nil))
+
+(step $test_$varlist_concat true 
+      :rule $assert_eq 
+      :args (($varlist_concat ($f_list_cons @varlist 1 @varlist.nil) @varlist.nil)
+             ($f_list_cons @varlist 1 @varlist.nil)))
