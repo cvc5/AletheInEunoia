@@ -1,0 +1,73 @@
+(include "../../signature/rules/tautologies.eo")
+(include "../unit_test_services.eo")
+
+
+; Unit tests for rules that introduce tautologies.
+
+;-------------
+; eq_symmetric
+;-------------
+
+; Some constants to build terms, for testing purposes.
+(declare-const a Int)
+(declare-const b Int)
+(declare-const c Real)
+(declare-const d Real)
+(declare-const S Type)
+(declare-const e S)
+(declare-const f S)
+(declare-const g (-> S S))
+
+; Arbitrary arith terms
+(step $test_$eq_symmetric
+      (@cl (= (= 1 2) (= 2 1)))
+      :rule eq_symmetric)
+
+(step $test_$eq_symmetric
+      (@cl (= (= 1.0 2.0) (= 2.0 1.0)))
+      :rule eq_symmetric)
+
+(step $test_$eq_symmetric
+      (@cl (= (= a b) (= b a)))
+      :rule eq_symmetric)
+
+(step $test_$eq_symmetric
+      (@cl (= (= (+ a 1) b) (= b (+ a 1))))
+      :rule eq_symmetric)
+
+(step $test_$eq_symmetric
+      (@cl (= (= (+ c 1) d) (= d (+ c 1))))
+      :rule eq_symmetric)
+
+; Boolean terms
+
+(step $test_$eq_symmetric
+      (@cl (= (= true false) (= false true)))
+      :rule eq_symmetric)
+
+(step $test_$eq_symmetric
+      (@cl (= (= (or true true) false) (= false (or true true))))
+      :rule eq_symmetric)
+
+(step $test_$eq_symmetric
+      (@cl (= (= (or true true) (and false true)) 
+              (= (and false true) (or true true))))
+      :rule eq_symmetric)
+
+; Arbitrary sorts
+
+(step $test_$eq_symmetric
+      (@cl (= (= e f) (= f e)))
+      :rule eq_symmetric)
+
+(step $test_$eq_symmetric
+      (@cl (= (= e e) (= e e)))
+      :rule eq_symmetric)
+
+(step $test_$eq_symmetric
+      (@cl (= (= (g e) e) (= e (g e))))
+      :rule eq_symmetric)
+
+(step $test_$eq_symmetric
+      (@cl (= (= (g e) (g (g f))) (= (g (g f)) (g e))))
+      :rule eq_symmetric)

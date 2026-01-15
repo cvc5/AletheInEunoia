@@ -1,0 +1,15 @@
+(include "../theories/theory.eo")
+
+; Rules that introduce tautologies.
+
+;-----------------------
+; Rule 103: eq_symmetric
+;-----------------------
+
+; rule: eq_symmetric
+; conclusion-explicit: >
+;   Conclusion must have the form (@cl (= (= t1 t2) (= t2 t1))), for terms 
+;   t1 and t2 of arbitrary type.
+(declare-rule eq_symmetric ((A Type) (B Type) (t1 A) (t2 B))
+  :conclusion-explicit (@cl (= (= t1 t2) (= t2 t1)))
+)
