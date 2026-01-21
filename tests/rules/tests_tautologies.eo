@@ -5,6 +5,51 @@
 ; Unit tests for rules that introduce tautologies.
 
 ;-------------
+; not_simplify
+;-------------
+
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+
+; Removing leading double negations
+(step $test_$not_simplify
+      (@cl (= (not (not true)) true))
+      :rule not_simplify)
+
+(step $test_$not_simplify
+      (@cl (= (not (not false)) false))
+      :rule not_simplify)
+
+(step $test_$not_simplify
+      (@cl (= (not (not a)) a))
+      :rule not_simplify)
+
+(step $test_$not_simplify
+      (@cl (= (not (not (not (not false)))) false))
+      :rule not_simplify)
+
+(step $test_$not_simplify
+      (@cl (= (not (not (not (not (not a))))) (not a)))
+      :rule not_simplify)
+
+; Negation over constants
+(step $test_$not_simplify
+      (@cl (= (not true) false))
+      :rule not_simplify)
+
+(step $test_$not_simplify
+      (@cl (= (not false) true))
+      :rule not_simplify)
+
+(step $test_$not_simplify
+      (@cl (= (not (not (not (not (not false))))) true))
+      :rule not_simplify)
+
+(step $test_$not_simplify
+      (@cl (= (not (not (not (not (not true))))) false))
+      :rule not_simplify)
+
+;-------------
 ; eq_symmetric
 ;-------------
 

@@ -2919,20 +2919,6 @@
   :conclusion-explicit conclusion
 )
 
-;TODO
-(program $check_not_simplify ((conclusion Bool))
-  :signature (Bool) Bool
-  (
-   (($check_not_simplify conclusion) true)
-  )
-)
-
-;TRUST
-(declare-rule not_simplify ((conclusion Bool))
-  :requires ((($check_not_simplify conclusion) true))
-  :conclusion-explicit conclusion
-)
-
 ;-------------
 ; Rule 75: implies_simplify
 ;-------------

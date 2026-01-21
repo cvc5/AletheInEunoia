@@ -1,6 +1,76 @@
 (include "../theories/theory.eo")
+(include "../programs/programs.eo")
 
 ; Rules that introduce tautologies.
+
+;-----------------------
+; Rule 74: not_simplify
+;-----------------------
+
+; program: $simplify_not_rec
+; args:
+; - psi Bool: A formula.
+; return: >
+;   The result from applying the following equivalence-preserving transformations until
+;   a fixed point is reached:
+;   - ¬(¬psi) ⇒ psi
+;   - ¬⊥ ⇒ ⊤
+;   - ¬⊤ ⇒ ⊥
+(program $simplify_not_rec ((psi Bool))
+  :signature (Bool) Bool
+  (
+   (
+    ($simplify_not_rec (not (not psi)))
+
+    ($simplify_not_rec psi)
+    )
+
+   (
+    ($simplify_not_rec (not false))
+
+    true
+    )
+
+   (
+    ($simplify_not_rec (not true))
+
+    false
+    )
+
+   (; { psi does not being with double not, nor has the form (not false), (not true)}
+    ($simplify_not_rec psi)
+
+    psi
+    )
+  )
+)
+
+; program: $check_not_simplify
+; args:
+; - not_phi Bool: >
+;   The left-hand side of the equality in the conclusion passed to rule 
+;   `not_simplify`
+; - psi Bool: >
+;   The right-hand side of the equality in the conclusion passed to rule 
+;   `not_simplify`
+; return: >
+;   A boolean indicating if `not_phi` can be reduced to `psi` using 
+;   `$simplify_not_rec`.
+(program $check_not_simplify ((not_phi Bool) (psi Bool))
+  :signature (Bool Bool) Bool
+  (
+   (
+    ($check_not_simplify not_phi psi) 
+
+    ($eo_is_eq ($simplify_not_rec not_phi) psi)
+    )
+  )
+)
+
+(declare-rule not_simplify ((phi Bool) (psi Bool))
+  :requires ((($check_not_simplify (not phi) psi) true))
+  :conclusion-explicit (@cl (= (not phi) psi))
+)
 
 ;-----------------------
 ; Rule 103: eq_symmetric
