@@ -4,10 +4,233 @@
 ; Rules that introduce tautologies.
 
 ;-----------------------
+; Rule 73: or_simplify
+;-----------------------
+
+; program: $remove_leading_negations
+; args:
+; - formula Bool: An arbitrary formula.
+; return: >
+;   The result from removing leading double negations from `formula`.
+(program $remove_leading_negations ((formula Bool))
+         :signature (Bool) Bool
+         (
+          (
+           ($remove_leading_negations (not (not formula)))
+
+           ($remove_leading_negations formula)
+           )
+
+          (; { `formula` does not begin with a double negation }
+           ($remove_leading_negations formula)
+
+           formula
+           )
+          )
+         )
+
+; program: $remove_leading_negations_in_disjuncts
+; args:
+; - disjunct Bool: An disjunct built with `or`.
+; return: >
+;   The result from removing leading double negations from each disjunct
+;   in `disjunct`.
+(program $remove_leading_negations_in_disjuncts ((disjunct Bool) (disjuncts Bool :list))
+         :signature (Bool) Bool
+         (
+          (
+           ($remove_leading_negations_in_disjuncts (or disjunct disjuncts))
+
+           ($f_list_cons or 
+                         ($remove_leading_negations disjunct)
+                         ($remove_leading_negations_in_disjuncts disjuncts))
+           )
+
+          (; { `formula` is not a disjunct }
+           ($remove_leading_negations_in_disjuncts false)
+
+           false
+           )
+          )
+         )
+
+; program: $or_simplify_small_step
+; args:
+; - formula Bool: A formula.
+; return: >
+;   The result from applying one of the following equivalence-preserving transformations:
+;   - ⊥∨ 𝜑 ∨ ⋯ ⇒ 𝜑 ∨ ⋯ 
+;   - 𝜑1 ∨ ⋯ ∨ 𝜑𝑛 ⇒ 𝜑1 ∨ ⋯ ∨ 𝜑𝑛′ where the right-hand side has some ⊥ literal removed.
+;   - 𝜑1 ∨ ⋯ ∨ 𝜑𝑛 ⇒ 𝜑1 ∨ ⋯ ∨ 𝜑𝑛′ where the right-hand side has some repeated literal removed.
+;   - ⊤ ∨ ⋯ ∨ 𝜑 𝑛 ⇒ ⊤
+;   - 𝜑𝑖 ∨ ⋯ ∨ 𝜑𝑗 ∨ ⋯ ∨ 𝜑𝑛 ⇒ ⊤ and 𝜑𝑖 , 𝜑𝑗 are such that one is the
+;     negation of the other formula
+; note: PRE : { $remove_leading_negations_in_disjuncts `formula` = `formula`}
+(program $or_simplify_small_step ((disjunct Bool) (disjuncts Bool :list))
+  :signature (Bool) Bool
+  (
+   (
+    ($or_simplify_small_step (or false disjuncts))
+
+    disjuncts
+    )
+
+   (
+    ($or_simplify_small_step (or true disjuncts))
+
+    true
+    )
+   
+   (
+    ($or_simplify_small_step (or (not disjunct) disjuncts))
+
+    (eo::ite ($eo_is_eq disjuncts false)
+
+             (not disjunct)
+
+              ; { not ($eo_is_eq disjuncts false) }
+             (eo::ite ($eo_is_eq disjuncts true)
+
+                      true
+
+                      ; { not ($eo_is_eq disjuncts true) }
+                      (eo::ite ($f_list_contains_elem or (not disjunct) disjuncts)
+
+                               disjuncts
+
+                               ; { not ($f_list_contains_elem or (not disjunct) disjuncts) }
+                               (eo::ite ($f_list_contains_elem or disjunct disjuncts)
+
+                                        ; We have a or (not disjunct) disjunct ... = true
+                                        true
+
+                                        ; { not ($f_list_contains_elem or disjunct disjuncts) }
+                                        (or (not disjunct) disjuncts)))))
+             )
+
+   ( ; { disjunct != true, false, not ... }
+    ($or_simplify_small_step (or disjunct disjuncts))
+
+    (eo::ite ($eo_is_eq disjuncts false)
+
+             disjunct
+
+             ; { not ($eo_is_eq disjuncts false) }
+             (eo::ite ($eo_is_eq disjuncts true)
+
+                      true
+
+                      ; { not ($eo_is_eq disjuncts true) }
+                      (eo::ite ($f_list_contains_elem or disjunct disjuncts)
+
+                               disjuncts
+
+                               ; { not ($f_list_contains_elem or disjunct disjuncts) }
+                               (eo::ite ($f_list_contains_elem or (not disjunct) disjuncts)
+
+                                        ; We have a or (not disjunct) disjunct ... = true
+                                        true
+
+                                        ; { not ($f_list_contains_elem or (not disjunct) disjuncts) }
+                                        (or disjunct disjuncts)))))
+    )
+
+   ( ; { disjunct != or ... }
+    ($or_simplify_small_step disjunct)
+
+    disjunct
+    )
+  )
+)
+
+; program: $or_simplify_rec
+; args:
+; - formula Bool: A formula.
+; return: >
+;   The result from applying the equivalence-preserving transformations described
+;   in `$or_simplify_small_step` until a fixed point is reached.
+; note: PRE : { $remove_leading_negations_in_disjuncts `formula` = `formula`}
+(program $or_simplify_rec ((disjunct Bool) (disjuncts Bool :list))
+  :signature (Bool) Bool
+  (
+   (
+    ($or_simplify_rec (or disjunct disjuncts))
+
+    (eo::define 
+
+     ((disjuncts_simplified ($or_simplify_rec disjuncts)))
+
+     (eo::ite ($eo_is_eq disjuncts_simplified disjuncts)
+
+              ; We continue reducing, right-to-left.
+              (eo::define 
+
+               ((whole_disjunct_simplified 
+
+                 ($or_simplify_small_step (or disjunct disjuncts))))
+
+               (eo::ite ($eo_is_eq whole_disjunct_simplified 
+                                   (or disjunct disjuncts))
+
+                        ; We reached to a fixed point.
+                        (or disjunct disjuncts)
+
+                        ; { not ($eo_is_eq whole_disjunct_simplified 
+                        ;                  (or disjunct disjuncts)) }
+                        ($or_simplify_rec whole_disjunct_simplified)))
+
+              ; { not ($eo_is_eq disjuncts_simplified disjuncts) }
+              ($or_simplify_rec 
+               ($f_list_cons or disjunct disjuncts_simplified))))
+    )
+
+   ( ; { disjunct != or ...}
+     ($or_simplify_rec disjunct)
+
+     disjunct
+     )
+    )
+  )
+
+; program: $check_or_simplify
+; args:
+; - lhs Bool: >
+;   The left-hand side of the equality in the conclusion passed to rule 
+;   `or_simplify`
+; - rhs: >
+;   The right-hand side of the equality in the conclusion passed to rule 
+;   `or_simplify`
+; return: >
+;   A boolean indicating if `lhs` can be reduced to `rhs` using 
+;   `$or_simplify_rec`.
+(program $check_or_simplify ((lhs Bool) (rhs Bool))
+  :signature (Bool Bool) Bool
+  (
+   (
+    ($check_or_simplify lhs rhs)
+
+    ($eo_is_eq ($or_simplify_rec ($remove_leading_negations_in_disjuncts lhs))
+
+               rhs)
+    )
+  )
+)
+
+; rule: not_simplify
+; requires: >
+;   For `lhs` to be reducible to `rhs` following the rules 
+;   in `$or_simplify_rec`.
+; conclusion-explicit: (@cl (= lhs rhs))
+(declare-rule or_simplify ((lhs Bool) (rhs Bool))
+  :requires ((($check_or_simplify lhs rhs) true))
+  :conclusion-explicit (@cl (= lhs rhs))
+)
+
+;-----------------------
 ; Rule 74: not_simplify
 ;-----------------------
 
-; program: $simplify_not_rec
+; program: $not_simplify_rec
 ; args:
 ; - psi Bool: A formula.
 ; return: >
@@ -16,29 +239,29 @@
 ;   - ¬(¬psi) ⇒ psi
 ;   - ¬⊥ ⇒ ⊤
 ;   - ¬⊤ ⇒ ⊥
-(program $simplify_not_rec ((psi Bool))
+(program $not_simplify_rec ((psi Bool))
   :signature (Bool) Bool
   (
    (
-    ($simplify_not_rec (not (not psi)))
+    ($not_simplify_rec (not (not psi)))
 
-    ($simplify_not_rec psi)
+    ($not_simplify_rec psi)
     )
 
    (
-    ($simplify_not_rec (not false))
+    ($not_simplify_rec (not false))
 
     true
     )
 
    (
-    ($simplify_not_rec (not true))
+    ($not_simplify_rec (not true))
 
     false
     )
 
    (; { psi does not being with double not, nor has the form (not false), (not true)}
-    ($simplify_not_rec psi)
+    ($not_simplify_rec psi)
 
     psi
     )
@@ -55,18 +278,23 @@
 ;   `not_simplify`
 ; return: >
 ;   A boolean indicating if `not_phi` can be reduced to `psi` using 
-;   `$simplify_not_rec`.
+;   `$not_simplify_rec`.
 (program $check_not_simplify ((not_phi Bool) (psi Bool))
   :signature (Bool Bool) Bool
   (
    (
     ($check_not_simplify not_phi psi) 
 
-    ($eo_is_eq ($simplify_not_rec not_phi) psi)
+    ($eo_is_eq ($not_simplify_rec not_phi) psi)
     )
   )
 )
 
+; rule: not_simplify
+; requires: >
+;   For `(not phi)` to be reducible to `psi` following the rules 
+;   in `$not_simplify_rec`.
+; conclusion-explicit: (@cl (= (not phi) psi))
 (declare-rule not_simplify ((phi Bool) (psi Bool))
   :requires ((($check_not_simplify (not phi) psi) true))
   :conclusion-explicit (@cl (= (not phi) psi))

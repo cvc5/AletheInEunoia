@@ -5,6 +5,194 @@
 ; Unit tests for rules that introduce tautologies.
 
 ;-------------
+; $or_simplify_rec
+;-------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+; First case of $or_simplify_rec
+(step $test_$or_simplify_rec true 
+      :rule $assert_eq 
+      :args (($or_simplify_rec (or false false)) false))
+
+
+; Second case of $or_simplify_rec
+(step $test_$or_simplify_rec true 
+      :rule $assert_eq 
+      :args (($or_simplify_rec (or false a b false)) 
+             ($f_list_cons or a b)))
+
+(step $test_$or_simplify_rec true 
+      :rule $assert_eq 
+      :args (($or_simplify_rec (or false a b false c false)) 
+             ($f_list_cons or a ($f_list_cons or b c))))
+
+
+; Fourth case of $or_simplify_rec
+(step $test_$or_simplify_rec true 
+      :rule $assert_eq 
+      :args (($or_simplify_rec (or a true false)) 
+             true))
+
+
+;-------------
+; or_simplify
+;-------------
+
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+; First case of $or_simplify_rec
+(step $test_$or_simplify
+      (@cl (= false false))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or false false) false))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or false false false) false))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or false false false false) false))
+      :rule or_simplify)
+
+; Second case of $or_simplify_rec
+(step $test_$or_simplify
+      (@cl (= (or a false) a))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or false a) a))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or false a false) a))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or false false a false) a))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or false false false a) a))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or false a false b) 
+              ($f_list_cons or a b)))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or false a b c false) 
+              ($f_list_cons or a ($f_list_cons or b c))))
+      :rule or_simplify)
+
+; Third case of $or_simplify_rec
+(step $test_$or_simplify
+      (@cl (= (or a a false) a))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or a false a) a))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or a false a false) a))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or false a false a false) a))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or false a a a) a))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or false a b false a b) 
+              ($f_list_cons or a b)))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or false a b c c false a) 
+              ($f_list_cons or b ($f_list_cons or c a))))
+      :rule or_simplify)
+
+; Fourth case of $or_simplify_rec
+(step $test_$or_simplify
+      (@cl (= (or a true) true))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or a true a) true))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or a false a true) true))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or false a true a false) true))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or false a a true) true))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or false a b false true b) 
+              true))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or false a b c c true a) 
+              true))
+      :rule or_simplify)
+
+; Fifth case of $or_simplify_rec
+(step $test_$or_simplify
+      (@cl (= (or (not a) a) 
+              true))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or a (not a)) 
+              true))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or a (not (not (not a))))
+              true))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or (not (not a)) (not (not (not a))))
+              true))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or (not (not a)) false (not (not (not a))))
+              true))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or (not (not (not (not a)))) false (not (not (not a))))
+              true))
+      :rule or_simplify)
+
+(step $test_$or_simplify
+      (@cl (= (or (not (not (not (not a)))) false (not (not (not a))) b)
+              true))
+      :rule or_simplify)
+
+;-------------
 ; not_simplify
 ;-------------
 

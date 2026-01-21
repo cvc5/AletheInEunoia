@@ -2905,20 +2905,6 @@
   :conclusion (@cl (= l r))
 )
 
-;TODO
-(program $check_or_simplify ((conclusion Bool))
-  :signature (Bool) Bool
-  (
-   (($check_or_simplify conclusion) true)
-  )
-)
-
-;TRUST
-(declare-rule or_simplify ((conclusion Bool))
-  :requires ((($check_or_simplify conclusion) true))
-  :conclusion-explicit conclusion
-)
-
 ;-------------
 ; Rule 75: implies_simplify
 ;-------------
