@@ -13,25 +13,25 @@
 (declare-const c Bool)
 
 ; First case of $or_simplify_rec
-(step $test_$or_simplify_rec true 
+(step $test_$or_simplify_rec_1 true 
       :rule $assert_eq 
       :args (($or_simplify_rec (or false false)) false))
 
 
 ; Second case of $or_simplify_rec
-(step $test_$or_simplify_rec true 
+(step $test_$or_simplify_rec_2 true 
       :rule $assert_eq 
       :args (($or_simplify_rec (or false a b false)) 
              ($f_list_cons or a b)))
 
-(step $test_$or_simplify_rec true 
+(step $test_$or_simplify_rec_3 true 
       :rule $assert_eq 
       :args (($or_simplify_rec (or false a b false c false)) 
              ($f_list_cons or a ($f_list_cons or b c))))
 
 
 ; Fourth case of $or_simplify_rec
-(step $test_$or_simplify_rec true 
+(step $test_$or_simplify_rec_4 true 
       :rule $assert_eq 
       :args (($or_simplify_rec (or a true false)) 
              true))
@@ -47,147 +47,147 @@
 (declare-const c Bool)
 
 ; First case of $or_simplify_rec
-(step $test_$or_simplify
+(step $test_$or_simplify_1
       (@cl (= false false))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_2
       (@cl (= (or false false) false))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_3
       (@cl (= (or false false false) false))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_4
       (@cl (= (or false false false false) false))
       :rule or_simplify)
 
 ; Second case of $or_simplify_rec
-(step $test_$or_simplify
+(step $test_$or_simplify_5
       (@cl (= (or a false) a))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_6
       (@cl (= (or false a) a))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_7
       (@cl (= (or false a false) a))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_8
       (@cl (= (or false false a false) a))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_9
       (@cl (= (or false false false a) a))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_10
       (@cl (= (or false a false b) 
               ($f_list_cons or a b)))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_11
       (@cl (= (or false a b c false) 
               ($f_list_cons or a ($f_list_cons or b c))))
       :rule or_simplify)
 
 ; Third case of $or_simplify_rec
-(step $test_$or_simplify
+(step $test_$or_simplify_12
       (@cl (= (or a a false) a))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_13
       (@cl (= (or a false a) a))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_14
       (@cl (= (or a false a false) a))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_15
       (@cl (= (or false a false a false) a))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_16
       (@cl (= (or false a a a) a))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_17
       (@cl (= (or false a b false a b) 
               ($f_list_cons or a b)))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_18
       (@cl (= (or false a b c c false a) 
               ($f_list_cons or b ($f_list_cons or c a))))
       :rule or_simplify)
 
 ; Fourth case of $or_simplify_rec
-(step $test_$or_simplify
+(step $test_$or_simplify_19
       (@cl (= (or a true) true))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_20
       (@cl (= (or a true a) true))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_21
       (@cl (= (or a false a true) true))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_22
       (@cl (= (or false a true a false) true))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_23
       (@cl (= (or false a a true) true))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_24
       (@cl (= (or false a b false true b) 
               true))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_25
       (@cl (= (or false a b c c true a) 
               true))
       :rule or_simplify)
 
 ; Fifth case of $or_simplify_rec
-(step $test_$or_simplify
+(step $test_$or_simplify_26
       (@cl (= (or (not a) a) 
               true))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_27
       (@cl (= (or a (not a)) 
               true))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_28
       (@cl (= (or a (not (not (not a))))
               true))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_29
       (@cl (= (or (not (not a)) (not (not (not a))))
               true))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_30
       (@cl (= (or (not (not a)) false (not (not (not a))))
               true))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_31
       (@cl (= (or (not (not (not (not a)))) false (not (not (not a))))
               true))
       :rule or_simplify)
 
-(step $test_$or_simplify
+(step $test_$or_simplify_32
       (@cl (= (or (not (not (not (not a)))) false (not (not (not a))) b)
               true))
       :rule or_simplify)
@@ -200,40 +200,40 @@
 (declare-const a Bool)
 
 ; Removing leading double negations
-(step $test_$not_simplify
+(step $test_$not_simplify_1
       (@cl (= (not (not true)) true))
       :rule not_simplify)
 
-(step $test_$not_simplify
+(step $test_$not_simplify_2
       (@cl (= (not (not false)) false))
       :rule not_simplify)
 
-(step $test_$not_simplify
+(step $test_$not_simplify_3
       (@cl (= (not (not a)) a))
       :rule not_simplify)
 
-(step $test_$not_simplify
+(step $test_$not_simplify_4
       (@cl (= (not (not (not (not false)))) false))
       :rule not_simplify)
 
-(step $test_$not_simplify
+(step $test_$not_simplify_5
       (@cl (= (not (not (not (not (not a))))) (not a)))
       :rule not_simplify)
 
 ; Negation over constants
-(step $test_$not_simplify
+(step $test_$not_simplify_6
       (@cl (= (not true) false))
       :rule not_simplify)
 
-(step $test_$not_simplify
+(step $test_$not_simplify_7
       (@cl (= (not false) true))
       :rule not_simplify)
 
-(step $test_$not_simplify
+(step $test_$not_simplify_8
       (@cl (= (not (not (not (not (not false))))) true))
       :rule not_simplify)
 
-(step $test_$not_simplify
+(step $test_$not_simplify_9
       (@cl (= (not (not (not (not (not true))))) false))
       :rule not_simplify)
 
@@ -252,55 +252,55 @@
 (declare-const g (-> S S))
 
 ; Arbitrary arith terms
-(step $test_$eq_symmetric
+(step $test_$eq_symmetric_1
       (@cl (= (= 1 2) (= 2 1)))
       :rule eq_symmetric)
 
-(step $test_$eq_symmetric
+(step $test_$eq_symmetric_2
       (@cl (= (= 1.0 2.0) (= 2.0 1.0)))
       :rule eq_symmetric)
 
-(step $test_$eq_symmetric
+(step $test_$eq_symmetric_3
       (@cl (= (= a b) (= b a)))
       :rule eq_symmetric)
 
-(step $test_$eq_symmetric
+(step $test_$eq_symmetric_4
       (@cl (= (= (+ a 1) b) (= b (+ a 1))))
       :rule eq_symmetric)
 
-(step $test_$eq_symmetric
+(step $test_$eq_symmetric_5
       (@cl (= (= (+ c 1) d) (= d (+ c 1))))
       :rule eq_symmetric)
 
 ; Boolean terms
 
-(step $test_$eq_symmetric
+(step $test_$eq_symmetric_6
       (@cl (= (= true false) (= false true)))
       :rule eq_symmetric)
 
-(step $test_$eq_symmetric
+(step $test_$eq_symmetric_7
       (@cl (= (= (or true true) false) (= false (or true true))))
       :rule eq_symmetric)
 
-(step $test_$eq_symmetric
+(step $test_$eq_symmetric_8
       (@cl (= (= (or true true) (and false true)) 
               (= (and false true) (or true true))))
       :rule eq_symmetric)
 
 ; Arbitrary sorts
 
-(step $test_$eq_symmetric
+(step $test_$eq_symmetric_9
       (@cl (= (= e f) (= f e)))
       :rule eq_symmetric)
 
-(step $test_$eq_symmetric
+(step $test_$eq_symmetric_10
       (@cl (= (= e e) (= e e)))
       :rule eq_symmetric)
 
-(step $test_$eq_symmetric
+(step $test_$eq_symmetric_11
       (@cl (= (= (g e) e) (= e (g e))))
       :rule eq_symmetric)
 
-(step $test_$eq_symmetric
+(step $test_$eq_symmetric_12
       (@cl (= (= (g e) (g (g f))) (= (g (g f)) (g e))))
       :rule eq_symmetric)

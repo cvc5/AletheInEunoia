@@ -58,10 +58,13 @@
 ; args:
 ; - formula Bool: A formula.
 ; return: >
-;   The result from applying one of the following equivalence-preserving transformations:
+;   The result from applying one of the following equivalence-preserving 
+;   transformations:
 ;   - ⊥∨ 𝜑 ∨ ⋯ ⇒ 𝜑 ∨ ⋯ 
-;   - 𝜑1 ∨ ⋯ ∨ 𝜑𝑛 ⇒ 𝜑1 ∨ ⋯ ∨ 𝜑𝑛′ where the right-hand side has some ⊥ literal removed.
-;   - 𝜑1 ∨ ⋯ ∨ 𝜑𝑛 ⇒ 𝜑1 ∨ ⋯ ∨ 𝜑𝑛′ where the right-hand side has some repeated literal removed.
+;   - 𝜑1 ∨ ⋯ ∨ 𝜑𝑛 ⇒ 𝜑1 ∨ ⋯ ∨ 𝜑𝑛′ where the right-hand side has some ⊥ literal 
+;     removed.
+;   - 𝜑1 ∨ ⋯ ∨ 𝜑𝑛 ⇒ 𝜑1 ∨ ⋯ ∨ 𝜑𝑛′ where the right-hand side has some repeated 
+;     literal removed.
 ;   - ⊤ ∨ ⋯ ∨ 𝜑 𝑛 ⇒ ⊤
 ;   - 𝜑𝑖 ∨ ⋯ ∨ 𝜑𝑗 ∨ ⋯ ∨ 𝜑𝑛 ⇒ ⊤ and 𝜑𝑖 , 𝜑𝑗 are such that one is the
 ;     negation of the other formula
