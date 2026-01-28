@@ -361,7 +361,6 @@
           )
 )
 
-
 ;-------------
 ; Clauses
 ;-------------
@@ -723,6 +722,64 @@
           )
          )
 
+; program: $is_implication
+; args:
+; - formula Bool: An arbitrary boolean formula.
+; return: A boolean indicating if `formula` is built with =>
+(program $is_implication ((antecedent Bool) (consequent Bool) (formula Bool))
+
+         :signature (Bool) Bool
+
+         (
+          (
+           ($is_implication (=> antecedent consequent))
+
+           true
+           )
+
+          (
+           ($is_implication formula)
+
+           false
+           )
+          )
+         )
+
+; program: $implication_get_antecedent
+; args:
+; - formula Bool: A formula built with =>.
+; return: The antecedent of `formula`.
+; note: PRE : { `formula` be built with => }
+(program $implication_get_antecedent ((antecedent Bool) (consequent Bool))
+
+         :signature (Bool) Bool
+
+         (
+          (
+           ($implication_get_antecedent (=> antecedent consequent))
+
+           antecedent
+           )
+          )
+         )
+
+; program: $implication_get_consequent
+; args:
+; - formula Bool: A formula built with =>.
+; return: The consequent of `formula`.
+; note: PRE : { `formula` be built with => }
+(program $implication_get_consequent ((antecedent Bool) (consequent Bool))
+
+         :signature (Bool) Bool
+
+         (
+          (
+           ($implication_get_consequent (=> antecedent consequent))
+
+           consequent
+           )
+          )
+         )
 
 ;-------------
 ; contexts
