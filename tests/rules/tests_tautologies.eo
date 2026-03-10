@@ -2,7 +2,7 @@
 (include "../unit_test_services.eo")
 
 
-; Unit tests for rules that introduce tautologies.
+; Unit tests for rules that introduce tautologies and their helper programs.
 
 ;-------------
 ; $or_simplify_rec
@@ -12,28 +12,64 @@
 (declare-const b Bool)
 (declare-const c Bool)
 
-; First case of $or_simplify_rec
+; First case of $or_simplify_rec:
+; ⊥∨⋯∨⊥ ⇒ ⊥
 (step $test_$or_simplify_rec_1 true 
       :rule $assert_eq 
       :args (($or_simplify_rec (or false false)) false))
 
+(step $test_$or_simplify_rec_1 true 
+      :rule $assert_eq 
+      :args (($or_simplify_rec (or false a b false))
+             ($f_list_cons or a b)))
 
-; Second case of $or_simplify_rec
+; Second case of $or_simplify_rec:
+; 𝜑1 ∨ ⋯ ∨ 𝜑𝑛 ⇒ 𝜑1 ∨ ⋯ ∨ 𝜑𝑛′ where the right-hand side has every repeated 
+; literal removed.
 (step $test_$or_simplify_rec_2 true 
       :rule $assert_eq 
-      :args (($or_simplify_rec (or false a b false)) 
+      :args (($or_simplify_rec (or a a b)) 
              ($f_list_cons or a b)))
 
 (step $test_$or_simplify_rec_3 true 
       :rule $assert_eq 
-      :args (($or_simplify_rec (or false a b false c false)) 
+      :args (($or_simplify_rec (or a a b c c)) 
              ($f_list_cons or a ($f_list_cons or b c))))
 
 
-; Fourth case of $or_simplify_rec
+; Third case of $or_simplify_rec:
+; ⊤ ∨ ⋯ ∨ 𝜑𝑛 ⇒ ⊤
 (step $test_$or_simplify_rec_4 true 
       :rule $assert_eq 
       :args (($or_simplify_rec (or a true false)) 
+             true))
+
+(step $test_$or_simplify_rec_4b true 
+      :rule $assert_eq 
+      :args (($or_simplify_rec (or a true b)) 
+             true))
+
+(step $test_$or_simplify_rec_4c true 
+      :rule $assert_eq 
+      :args (($or_simplify_rec (or a a false true b)) 
+             true))
+
+; Fourth case of $or_simplify_rec:
+; 𝜑𝑖 ∨ ⋯ ∨ 𝜑𝑗 ∨ ⋯ ∨ 𝜑𝑛 ⇒ ⊤ and 𝜑𝑖 , 𝜑𝑗 are such that one is the
+; negation of the other formula
+(step $test_$or_simplify_rec_5 true 
+      :rule $assert_eq 
+      :args (($or_simplify_rec (or a (not a)))
+             true))
+
+(step $test_$or_simplify_rec_6 true 
+      :rule $assert_eq 
+      :args (($or_simplify_rec (or a b false b (not a)))
+             true))
+
+(step $test_$or_simplify_rec_7 true 
+      :rule $assert_eq 
+      :args (($or_simplify_rec (or a b false b (not b)))
              true))
 
 
@@ -46,7 +82,8 @@
 (declare-const b Bool)
 (declare-const c Bool)
 
-; First case of $or_simplify_rec
+; First case of or_simplify:
+; ⊥∨⋯∨⊥⇒⊥
 (step $test_$or_simplify_1
       (@cl (= false false))
       :rule or_simplify)
@@ -63,7 +100,8 @@
       (@cl (= (or false false false false) false))
       :rule or_simplify)
 
-; Second case of $or_simplify_rec
+; Second case of or_simplify
+; 𝜑1 ∨⋯∨𝜑𝑛 ⇒ 𝜑1 ∨⋯∨ 𝜑𝑛′ where the right-hand side has all ⊥literals removed.
 (step $test_$or_simplify_5
       (@cl (= (or a false) a))
       :rule or_simplify)
@@ -94,7 +132,9 @@
               ($f_list_cons or a ($f_list_cons or b c))))
       :rule or_simplify)
 
-; Third case of $or_simplify_rec
+; Third case of or_simplify
+; 𝜑1 ∨⋯∨𝜑𝑛⇒𝜑1 ∨⋯∨𝜑𝑛′ where the right-hand side has all repeated literals
+; removed
 (step $test_$or_simplify_12
       (@cl (= (or a a false) a))
       :rule or_simplify)
@@ -125,7 +165,8 @@
               ($f_list_cons or b ($f_list_cons or c a))))
       :rule or_simplify)
 
-; Fourth case of $or_simplify_rec
+; Fourth case of or_simplify
+; 𝜑1 ∨⋯∨⊤∨⋯∨𝜑𝑛 ⇒⊤
 (step $test_$or_simplify_19
       (@cl (= (or a true) true))
       :rule or_simplify)
@@ -156,7 +197,9 @@
               true))
       :rule or_simplify)
 
-; Fifth case of $or_simplify_rec
+; Fifth case of or_simplify:
+; - 𝜑𝑖 ∨ ⋯ ∨ 𝜑𝑗 ∨ ⋯ ∨ 𝜑𝑛 ⇒ ⊤ and 𝜑𝑖 , 𝜑𝑗 are such that one is the
+;   negation of the other formula
 (step $test_$or_simplify_26
       (@cl (= (or (not a) a) 
               true))
