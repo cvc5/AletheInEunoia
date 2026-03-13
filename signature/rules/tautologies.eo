@@ -305,6 +305,218 @@
 )
 
 ;-----------------------
+; Rule 74: bool_simplify
+;-----------------------
+
+; program: $bool_simplify_small_step
+; args:
+; - formula Bool: A formula.
+; return: >
+;   The result from applying one of the following equivalence-preserving 
+;   transformations:
+;   - ¬(𝜑1 →𝜑2) ⇒(𝜑1 ∧¬𝜑2)
+;   - ¬(𝜑1 ∨𝜑2) ⇒(¬𝜑1 ∧¬𝜑2)
+;   - ¬(𝜑1 ∧𝜑2) ⇒(¬𝜑1 ∨¬𝜑2)
+;   - (𝜑1 →(𝜑2 →𝜑3)) ⇒(𝜑1 ∧𝜑2) → 𝜑3
+;   - ((𝜑1 →𝜑2) →𝜑2) ⇒(𝜑1 ∨𝜑2)
+;   - (𝜑1 ∧(𝜑1 →𝜑2)) ⇒(𝜑1 ∧𝜑2)
+;   - ((𝜑1 →𝜑2) ∧𝜑1) ⇒(𝜑1 ∧𝜑2)
+(program $bool_simplify_small_step ((phi1 Bool) (phi2 Bool :list) (phi3 Bool :list))
+  :signature (Bool) Bool
+  (
+   (
+    ($bool_simplify_small_step (not (=> phi1 phi2)))
+
+    ($f_list_cons and phi1 (not phi2))
+    )
+
+   (
+    ($bool_simplify_small_step (not (or phi1 phi2)))
+
+    ($f_list_cons and (not phi1) (not phi2))
+    )
+
+   (
+    ($bool_simplify_small_step (not (and phi1 phi2)))
+
+    ($f_list_cons or (not phi1) (not phi2))
+    )
+
+   (
+    ($bool_simplify_small_step (=> phi1 (=> phi2 phi3)))
+    
+    (=> ($f_list_cons and phi1 phi2) phi3)
+    )
+
+   (
+    ($bool_simplify_small_step (=> (=> phi1 phi2) phi2))
+
+    ($f_list_cons or phi1 phi2)
+    )
+
+   (
+    ($bool_simplify_small_step (and (=> phi3 phi2) phi3))
+
+    ($f_list_cons and phi3 phi2)
+    )
+
+   (; { phi1 != (=> phi3 phi2) }
+    ($bool_simplify_small_step (and phi1 phi2))
+
+    ; Check which case we are into.
+    (eo::ite ($is_implication phi2)
+
+             (eo::define
+              
+              (
+               (antecedent ($implication_get_antecedent phi2))
+
+               (consequent ($implication_get_consequent phi2))
+               )
+
+              (eo::ite ($eo_is_eq phi1 antecedent)
+
+                       ; Sixth case of bool_simplify.
+                       ($f_list_cons and phi1 consequent)
+
+                       ; { not ($eo_is_eq phi1 antecedent) }
+                       ($f_list_cons and phi1 phi2)))
+
+             ; { not ($is_implication phi2) }
+             ($f_list_cons and phi1 phi2))
+    )
+
+   (
+    ($bool_simplify_small_step phi1)
+
+    phi1
+    )
+  )
+)
+
+; program: $bool_simplify_rec
+; args:
+; - formula Bool: A formula.
+; return: >
+;   The result from applying the equivalence-preserving transformations described
+;   in `$bool_simplify_small_step` until a fixed point is reached.
+(program $bool_simplify_rec ((operator (-> Bool Bool Bool)) (op Bool)
+                             (ops Bool :list))
+  :signature (Bool) Bool
+  (
+   (
+    ($bool_simplify_rec (not op))
+
+    (eo::define 
+
+     ; We reduce top-to-bottom
+     ((whole_exp_simplified ($bool_simplify_small_step (not op))))
+
+     (eo::ite ($eo_is_eq whole_exp_simplified (not op))
+
+              ; We continue reducing the sub-term
+              (eo::define 
+
+               ((op_simplified ($bool_simplify_rec op)))
+
+               (eo::ite ($eo_is_eq op_simplified op)
+
+                        ; We reached to a fixed point.
+                        (not op)
+
+                                   
+                         ; { not ($eo_is_eq op_simplified op) }
+                         ($bool_simplify_rec (not op_simplified))))
+
+              ; { not ($eo_is_eq whole_exp_simplified (not op)) }
+              ($bool_simplify_rec whole_exp_simplified)))
+    )
+
+   (
+    ($bool_simplify_rec (operator op ops))
+
+    (eo::define 
+
+     ; We reduce top-to-bottom
+     ((whole_exp_simplified ($bool_simplify_small_step (operator op ops))))
+
+     (eo::ite ($eo_is_eq whole_exp_simplified (operator op ops))
+
+              ; We continue reducing, right-to-left.
+              (eo::define 
+
+               ((ops_simplified ($bool_simplify_rec ops)))
+
+               (eo::ite ($eo_is_eq ops_simplified ops)
+
+                        (eo::define 
+
+                         ((op_simplified ($bool_simplify_rec op)))
+
+                         (eo::ite ($eo_is_eq op_simplified
+                                             op)
+
+                                   ; We reached to a fixed point.
+                                   (operator op ops)
+
+                                   
+                                   ; { not ($eo_is_eq op_simplified op) }
+                                   ($bool_simplify_rec (operator op_simplified 
+                                                                 ops))))
+
+                        ; { not ($eo_is_eq ops_simplified ops) }
+                        ($bool_simplify_rec (operator op ops_simplified))))
+
+              ; { not ($eo_is_eq whole_op_simplified 
+              ;                  (operator op ops)) }
+              ($bool_simplify_rec whole_exp_simplified)))
+    )
+   
+
+   ( ; { op != operator ...}
+     ($bool_simplify_rec op)
+
+     op
+     )
+    )
+  )
+
+; program: $check_bool_simplify
+; args:
+; - lhs Bool: >
+;   The left-hand side of the equality in the conclusion passed to rule 
+;   `bool_simplify`
+; - rhs: >
+;   The right-hand side of the equality in the conclusion passed to rule 
+;   `bool_simplify`
+; return: >
+;   A boolean indicating if `lhs` can be reduced to `rhs` using 
+;   `$bool_simplify_rec`.
+(program $check_bool_simplify ((lhs Bool) (rhs Bool))
+  :signature (Bool Bool) Bool
+  (
+   (
+    ($check_bool_simplify lhs rhs)
+
+    ($eo_is_eq ($bool_simplify_rec lhs)
+
+               rhs)
+    )
+  )
+)
+
+; rule: bool_simplify
+; requires: >
+;   For `lhs` to be reducible to `rhs` following the rules 
+;   in `$bool_simplify_rec`.
+; conclusion-explicit: (@cl (= lhs rhs))
+(declare-rule bool_simplify ((lhs Bool) (rhs Bool))
+  :requires ((($check_bool_simplify lhs rhs) true))
+  :conclusion-explicit (@cl (= lhs rhs))
+)
+
+
+;-----------------------
 ; Rule 86: prod_simplify
 ;-----------------------
 
