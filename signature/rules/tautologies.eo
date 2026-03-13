@@ -1,4 +1,5 @@
 (include "../theories/theory.eo")
+(include "../programs/arith.eo")
 (include "../programs/programs.eo")
 
 ; Rules that introduce tautologies.
@@ -302,6 +303,59 @@
   :requires ((($check_not_simplify (not phi) psi) true))
   :conclusion-explicit (@cl (= (not phi) psi))
 )
+
+;-----------------------
+; Rule 86: prod_simplify
+;-----------------------
+
+; program: $check_prod_simplify
+; args:
+; - lhs A: Left-hand side in the conclusion provided to `prod_simplify`. 
+; - rhs A: Right-hand side in the conclusion provided to `prod_simplify`. 
+; return: >
+;   A boolean indicating if `lhs` and `rhs` evaluates to the same value, by 
+;   virtue of just reordering factors and evaluating products, when possible.
+(program $check_prod_simplify ((A Type) (lhs A) (rhs A))
+  :signature (A A) Bool
+  (
+   (
+    ($check_prod_simplify lhs rhs) 
+    
+    (eo::define
+     (; Only reorder and evaluation of the terms is allowed.
+      (lhs_evaluated ($small_step_evaluator_arith_term 
+                      ($assoc_evaluatable_terms
+                       ($reorder_arith_term lhs))))
+
+      ; We fully evaluate `rhs`, so it can be easily compared with `lhs`.
+      (rhs_evaluated ($evaluate_arith_term rhs))
+      )
+
+     (eo::ite (eo::and ($is_evaluatable lhs_evaluated)
+                       ($is_evaluatable rhs_evaluated))
+
+              ($eo_is_eq (eo::to_q lhs_evaluated) (eo::to_q rhs_evaluated))
+              
+              ; { not (eo::and ($is_evaluatable lhs_evaluated)
+              ;       ($is_evaluatable rhs_evaluated)) }
+              ($eo_is_eq lhs_evaluated rhs_evaluated)
+              )
+     )
+    )
+   )
+)
+
+; rule: prod_simplify
+; requires: > 
+;   For the left-hand side of the conclusion to be reduced to the same value
+;   as the right-hand side, only by virtue of reordering factors and evaluating
+;   products. 
+; conclusion: Conclusion must be of the form 𝑡1 × ⋯× 𝑡𝑛 ≈ 𝑢.
+(declare-rule prod_simplify ((A Type) (lhs A) (rhs A))
+  :requires ((($check_prod_simplify lhs rhs) true))
+  :conclusion-explicit (@cl (= lhs rhs))
+)
+
 
 ;-----------------------
 ; Rule 103: eq_symmetric

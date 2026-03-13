@@ -280,6 +280,69 @@
       (@cl (= (not (not (not (not (not true))))) false))
       :rule not_simplify)
 
+
+;---------------------
+; $check_prod_simplify
+;---------------------
+
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+
+; Arith terms that can be evaluated
+(step $test_$check_prod_simplify_1 true 
+      :rule $assert_eq 
+      :args (($check_prod_simplify (* 1.0 0.0) 0.0) true))
+
+(step $test_$check_prod_simplify_2 true 
+      :rule $assert_eq 
+      :args (($check_prod_simplify (* 1.0 0.0) (* 0.0 1.0)) true))
+
+(step $test_$check_prod_simplify_3 true 
+      :rule $assert_eq 
+      :args (($check_prod_simplify (* 1.0 2.0 3.0) 6.0) true))
+
+(step $test_$check_prod_simplify_4 true 
+      :rule $assert_eq 
+      :args (($check_prod_simplify (* 1.0 2.0 3.0 4.0) 24.0) true))
+
+; Arith terms that cannot be evaluated
+(step $test_$check_prod_simplify_5 true 
+      :rule $assert_eq 
+      :args (($check_prod_simplify (* 1.0 a) a) true))
+
+(step $test_$check_prod_simplify_6 true 
+      :rule $assert_eq 
+      :args (($check_prod_simplify (* a 0.0) 0.0) true))
+
+(step $test_$check_prod_simplify_7 true 
+      :rule $assert_eq 
+      :args (($check_prod_simplify (* 1.0 a 3.0) 
+                                   ($f_list_cons * 3.0 a)) true))
+
+;---------------------
+; $prod_simplify
+;---------------------
+
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+
+; Arith terms that can be evaluated
+(step $test_$prod_simplify_1 
+      (@cl (= (* 1.0 0.0) 0.0)) 
+      :rule prod_simplify)
+
+(step $test_$prod_simplify_2 
+      (@cl (= (* 1.0 0.0) (* 0.0 1.0))) 
+      :rule prod_simplify)
+
+(step $test_$prod_simplify_3 
+      (@cl (= (* 1.0 2.0 3.0) 6.0)) 
+      :rule prod_simplify)
+
+(step $test_$prod_simplify_4 
+      (@cl (= (* 1.0 2.0 3.0 4.0) 24.0)) 
+      :rule prod_simplify)
+
 ;-------------
 ; eq_symmetric
 ;-------------

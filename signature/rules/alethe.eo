@@ -3117,20 +3117,6 @@
 )
 
 ;TODO
-(program $check_prod_simplify ((conclusion Bool))
-  :signature (Bool) Bool
-  (
-   (($check_prod_simplify conclusion) true)
-  )
-)
-
-;TRUST
-(declare-rule prod_simplify ((conclusion Bool))
-  :requires ((($check_prod_simplify conclusion) true))
-  :conclusion-explicit conclusion
-)
-
-;TODO
 (program $check_unary_minus_simplify ((l Bool) (r Bool))
   :signature (Bool Bool) Bool
   (
