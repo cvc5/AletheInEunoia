@@ -472,6 +472,21 @@
       (@cl (= (not ($f_list_cons and a b)) ($f_list_cons or (not a) (not b))))
       :rule bool_simplify)
 
+(step $test_$bool_simplify_3b
+      (@cl (= (not ($f_list_cons and a ($f_list_cons and b c)))
+              ($f_list_cons or (not a) ($f_list_cons or (not b) (not c)))))
+      :rule bool_simplify)
+
+(step $test_$bool_simplify_3c
+      (@cl (= (not ($f_list_cons and a 
+                                 ($f_list_cons and b ($f_list_cons and c d))))
+              ($f_list_cons or 
+                            (not a) 
+                            ($f_list_cons or 
+                                          (not b) 
+                                          ($f_list_cons or (not c) (not d))))))
+      :rule bool_simplify)
+
 ; Fourth case
 (step $test_$bool_simplify_4
       (@cl (= (=> a (=> b c)) (=> ($f_list_cons and a b) c)))
@@ -483,6 +498,10 @@
       :rule bool_simplify)
 
 ; Sixth case
+(step $test_$bool_simplify_6
+      (@cl (= ($f_list_cons and a (=> a b)) ($f_list_cons and a b)))
+      :rule bool_simplify)
+
 (step $test_$bool_simplify_6
       (@cl (= ($f_list_cons and a (=> a b)) ($f_list_cons and a b)))
       :rule bool_simplify)

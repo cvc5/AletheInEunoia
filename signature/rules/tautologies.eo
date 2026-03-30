@@ -176,7 +176,7 @@
                (eo::ite ($eo_is_eq whole_disjunct_simplified 
                                    (or disjunct disjuncts))
 
-                        ; We reached to a fixed point.
+                        ; We reached a fixed point.
                         (or disjunct disjuncts)
 
                         ; { not ($eo_is_eq whole_disjunct_simplified 
@@ -421,7 +421,7 @@
 
                (eo::ite ($eo_is_eq op_simplified op)
 
-                        ; We reached to a fixed point.
+                        ; We reached a fixed point.
                         (not op)
 
                                    
@@ -456,7 +456,7 @@
                          (eo::ite ($eo_is_eq op_simplified
                                              op)
 
-                                   ; We reached to a fixed point.
+                                   ; We reached a fixed point.
                                    (operator op ops)
 
                                    
@@ -483,12 +483,8 @@
 
 ; program: $check_bool_simplify
 ; args:
-; - lhs Bool: >
-;   The left-hand side of the equality in the conclusion passed to rule 
-;   `bool_simplify`
-; - rhs: >
-;   The right-hand side of the equality in the conclusion passed to rule 
-;   `bool_simplify`
+; - lhs Bool: The left-hand side of the equality in the conclusion passed to rule  `bool_simplify`
+; - rhs Bool: The right-hand side of the equality in the conclusion passed to rule `bool_simplify`
 ; return: >
 ;   A boolean indicating if `lhs` can be reduced to `rhs` using 
 ;   `$bool_simplify_rec`.
