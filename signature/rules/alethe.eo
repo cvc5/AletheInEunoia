@@ -2976,20 +2976,6 @@
 )
 
 ;TODO
-(program $check_bool_simplify ((conclusion Bool))
-  :signature (Bool) Bool
-  (
-   (($check_bool_simplify conclusion) true)
-  )
-)
-
-;TRUST
-(declare-rule bool_simplify ((conclusion Bool))
-  :requires ((($check_bool_simplify conclusion) true))
-  :conclusion-explicit conclusion
-)
-
-;TODO
 (program $check_ac_simp ((l Bool) (r Bool))
   :signature (Bool Bool) Bool
   (
