@@ -2068,34 +2068,6 @@
   :conclusion-explicit conclusion
 )
 
-;TODO
-(program $check_eq_congruent ((conclusion Bool))
-  :signature (Bool) Bool
-  (
-   (($check_eq_congruent conclusion) true)
-  )
-)
-
-;TRUST
-(declare-rule eq_congruent ((conclusion Bool))
-  :requires ((($check_eq_congruent conclusion) true))
-  :conclusion-explicit conclusion
-)
-
-;TODO
-(program $check_eq_congruent_pred ((conclusion Bool))
-  :signature (Bool) Bool
-  (
-   (($check_eq_congruent_pred conclusion) true)
-  )
-)
-
-;TRUST
-(declare-rule eq_congruent_pred ((conclusion Bool))
-  :requires ((($check_eq_congruent_pred conclusion) true))
-  :conclusion-explicit conclusion
-)
-
 ;TODO: to preserve previous def
 ; 
 ; (program $check_qnt_cnf ((phi Bool) (phiP Bool) (xs @VarList) (xsP @VarList))

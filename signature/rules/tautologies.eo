@@ -5,6 +5,183 @@
 ; Rules that introduce tautologies.
 
 ;-----------------------
+; Rule 27: eq_congruent
+;-----------------------
+
+; program: $check_n_ary_application_eq_congruent
+; args:
+; - eq Bool: Last equality in the conclusion passed to the eq_congruent rule.
+; - assumptions Bool: >
+;    Clause with the assumptions of the form ¬(𝑡i ≈ 𝑢i) present in the conclusion
+;    passed to the rule, but in the reverse order.
+; return: >
+;    A boolean indicating if `eq` and `assumptions` correspond to the proper
+;    application of the eq_congruent rule, for a n-ary operator. Note that, in 
+;    this case, we are dealing with the single application of a n-ary operator. No 
+;    associativity is involved.
+(program $check_n_ary_application_eq_congruent ((T Type) (U Type) 
+                                                (f (-> T U U)) (f2 (-> T U U)) 
+                                                (t1 T) (t2 T)
+                                                (tail Bool :list))
+    :signature (Bool Bool) Bool
+    (
+     (
+      ($check_n_ary_application_eq_congruent (= (f t1) (f t2)) (@cl (not (= t1 t2))))
+
+      true
+      )
+
+     ( ; TODO: ill-typed?
+      ($check_n_ary_application_eq_congruent (= (f t1) (f2 t2)) (@cl (not (= t1 t2)) tail))
+
+      ($check_n_ary_application_eq_congruent (= f f2) tail)
+      )
+     )
+    )
+
+; program: $check_eq_congruent
+; args:
+; - conclusion Bool: Conclusion clause given to rule cong.
+; return: >
+;   A boolean indicating if `conclusion` has the form 
+;   ¬(𝑡1 ≈ 𝑢1), … ,¬(𝑡𝑛 ≈ 𝑢𝑛), (𝑓 𝑡1 ⋯ 𝑡𝑛) ≈ (𝑓 𝑢1 ⋯ 𝑢𝑛), for some n-ary 
+;   function `f`.
+(program $check_eq_congruent ((hd Bool) (tail Bool :list))
+  :signature (Bool) Bool
+  (
+   (
+    ($check_eq_congruent (@cl hd tail))
+
+    (eo::define
+
+     (
+      (equality ($f_list_last_element @cl false (@cl hd tail)))
+      )
+     
+     (eo::define
+      
+      (
+       (assumptions ($f_list_remove_elem @cl (@cl hd tail) equality false))
+       )
+
+     ($check_n_ary_application_eq_congruent equality 
+                                            (eo::list_rev @cl assumptions))))
+     )
+    )
+   )
+
+
+; rule: eq_congruent
+; requires: >
+;   For the conclusion to be built with @cl and to have the form:
+;   ¬(𝑡1 ≈ 𝑢1), … ,¬(𝑡𝑛 ≈ 𝑢𝑛), (𝑓 𝑡1 ⋯ 𝑡𝑛) ≈ (𝑓 𝑢1 ⋯ 𝑢𝑛)
+; conclusion-explicit: A clause built with @cl.
+(declare-rule eq_congruent ((hd Bool) (tail Bool :list))
+  :requires ((($check_eq_congruent (@cl hd tail)) true))
+  :conclusion-explicit (@cl hd tail)
+)
+
+;---------------------------
+; Rule 28: eq_congruent_pred
+;---------------------------
+
+; program: $check_n_ary_application_eq_congruent_pred
+; args:
+; - not_p_app Bool: >
+;   For a conclusion of an instantiation of the rule `eq_congruent_pred`, of the
+;   form ¬(𝑡1 ≈ 𝑢1), … ,¬(𝑡𝑛 ≈ 𝑢𝑛), ¬(p 𝑡1 ⋯ 𝑡𝑛), (p 𝑢1 ⋯ 𝑢𝑛), this parameter should
+;   be the term ¬(p 𝑡1 ⋯ 𝑡𝑛).
+; - p_app Bool: The term (p 𝑢1 ⋯ 𝑢𝑛) in the conclusion of the instantiation of the `eq_congruent_pred` rule.
+; - assumptions Bool: >
+;    Clause with the assumptions of the form ¬(𝑡i ≈ 𝑢i) present in the instantiation
+;    of the rule, but in the reverse order.
+; return: >
+;    A boolean indicating if `not_p_app`, `p_app` and `assumptions` correspond to 
+;    a proper instantiation of the `eq_congruent_pred` rule, for a n-ary predicate.
+(program $check_n_ary_application_eq_congruent_pred ((T Type) (U Type) 
+                                                     (p (-> T U Bool)) 
+                                                     (lhs_p (-> T U Bool))
+                                                     (rhs_p (-> T U Bool))
+                                                     (t1 T) (u1 T)
+                                                     (ti T) (ui T)
+                                                     (tail Bool :list))
+    :signature (Bool Bool Bool) Bool
+    (
+     (; First part of the (not (p ...)) and (p ...) terms.
+      ($check_n_ary_application_eq_congruent_pred (not (p t1)) (p u1) 
+                                                  (@cl (not (= t1 u1))))
+
+      true
+      )
+
+     (; TODO: ill-typed?
+      ; For a conclusion of the form:
+      ; ¬(𝑡1 ≈ 𝑢1), ... ,¬(𝑡𝑛 ≈ 𝑢𝑛), ¬(p 𝑡1 ... 𝑡𝑛), (p 𝑢1 ... 𝑢𝑛),
+      ; (lhs_p ti) should be the term (p 𝑡1 ... 𝑡i) while (rhs_p ui) should be 
+      ; (p 𝑢1 ... ui ), for some i <= n.
+      ($check_n_ary_application_eq_congruent_pred (not (lhs_p ti)) (rhs_p ui)
+                                                  (@cl (not (= ti ui)) tail))
+
+      ($check_n_ary_application_eq_congruent_pred (not lhs_p) rhs_p tail)
+      )
+     )
+    )
+
+; program: $check_eq_congruent_pred
+; args:
+; - conclusion Bool: Conclusion clause given to rule eq_congruent_pred.
+; return: >
+;   A boolean indicating if `conclusion` has the form 
+;   ¬(𝑡1 ≈ 𝑢1), … ,¬(𝑡𝑛 ≈ 𝑢𝑛), ¬(p 𝑡1 ⋯ 𝑡𝑛), (p 𝑢1 ⋯ 𝑢𝑛), for some n-ary 
+;   predicate `p`.
+(program $check_eq_congruent_pred ((hd Bool) (tail Bool :list))
+  :signature (Bool) Bool
+  (
+   (
+    ($check_eq_congruent_pred (@cl hd tail))
+
+    (eo::define
+
+     (
+      (predicate_p ($f_list_last_element @cl false (@cl hd tail)))
+      )
+     
+     (eo::define
+      
+      (
+       (remaining_elements ($f_list_remove_elem @cl (@cl hd tail) predicate_p false))
+       )
+
+      (eo::define
+
+       (
+        (predicate_not_p ($f_list_last_element @cl false remaining_elements))
+        )
+       
+       (eo::define
+        
+        (
+         (assumptions ($f_list_remove_elem @cl remaining_elements predicate_not_p false))
+         )
+
+        ($check_n_ary_application_eq_congruent_pred predicate_not_p predicate_p
+                                                    (eo::list_rev @cl assumptions))))
+      )))
+   )
+  )
+
+; rule: eq_congruent_pred
+; requires: >
+;   For the conclusion to be built with @cl and to have the form:
+;   ¬(𝑡1 ≈ 𝑢1), … ,¬(𝑡𝑛 ≈ 𝑢𝑛), ¬(P 𝑡1 ⋯ 𝑡𝑛), (P 𝑢1 ⋯ 𝑢𝑛), 
+;   where 𝑃 is a predicate symbol.
+; conclusion-explicit: A clause built with @cl satisfying the previous side-condition.
+(declare-rule eq_congruent_pred ((hd Bool) (tail Bool :list))
+  :requires ((($check_eq_congruent_pred (@cl hd tail)) true))
+  :conclusion-explicit (@cl hd tail)
+)
+
+;-----------------------
 ; Rule 73: or_simplify
 ;-----------------------
 

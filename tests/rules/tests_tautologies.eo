@@ -4,6 +4,107 @@
 
 ; Unit tests for rules that introduce tautologies and their helper programs.
 
+;--------------------------------------
+; $check_n_ary_application_eq_congruent
+;--------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const U Type)
+(declare-const a U)
+(declare-const b U)
+(declare-const c U)
+(declare-const d U)
+(declare-const e U)
+(declare-const j U)
+(declare-const g (-> U U))
+(declare-const f (-> U U U))
+(declare-const h (-> U U U U))
+
+(step $test_$check_n_ary_application_eq_congruent_1 true 
+      :rule $assert_eq 
+      :args (($check_n_ary_application_eq_congruent (= (g a) (g b))
+                                                    (@cl (not (= a b)))) 
+             true))
+
+(step $test_$check_n_ary_application_eq_congruent_2 true 
+      :rule $assert_eq 
+      :args (($check_n_ary_application_eq_congruent (= (f b c) (f d e))
+                                                    (@cl (not (= c e))
+                                                         (not (= b d)))) 
+             true))
+
+(step $test_$check_n_ary_application_eq_congruent_3 true 
+      :rule $assert_eq 
+      :args (($check_n_ary_application_eq_congruent (= (h a b c) (h d e j))
+              (@cl (not (= c j)) (not (= b e)) (not (= a d)))) 
+             true))
+
+;--------------------
+; $check_eq_congruent
+;--------------------
+; Some constants to build terms, for testing purposes.
+(declare-const U Type)
+(declare-const a U)
+(declare-const b U)
+(declare-const c U)
+(declare-const d U)
+(declare-const e U)
+(declare-const j U)
+(declare-const g (-> U U))
+(declare-const f (-> U U U))
+(declare-const h (-> U U U U))
+
+(step $test_$check_eq_congruent_1 true 
+      :rule $assert_eq 
+      :args (($check_eq_congruent 
+              (@cl (not (= a b))  (= (g a) (g b)))) true))
+
+(step $test_$check_eq_congruent_2 true 
+      :rule $assert_eq 
+      :args (($check_eq_congruent (@cl (not (= b d)) (not (= c e)) (= (f b c) (f d e)))) 
+             true))
+
+(step $test_$check_eq_congruent_3 true 
+      :rule $assert_eq 
+      :args (($check_eq_congruent (@cl (not (= a d)) (not (= b e)) (not (= c j)) 
+                                       (= (h a b c) (h d e j)))) 
+             true))
+
+;--------------------
+; $check_eq_congruent_pred
+;--------------------
+; Some constants to build terms, for testing purposes.
+(declare-const U Type)
+(declare-const a U)
+(declare-const b U)
+(declare-const c U)
+(declare-const d U)
+(declare-const e U)
+(declare-const j U)
+(declare-const g (-> U U))
+(declare-const f (-> U U Bool))
+(declare-const h (-> U U U Bool))
+
+(step $test_$check_eq_congruent_pred_1 true 
+      :rule $assert_eq 
+      :args (($check_eq_congruent_pred 
+              (@cl (not (= a b)) (not (g a)) (g b))) 
+
+             true))
+
+(step $test_$check_eq_congruent_pred_2 true 
+      :rule $assert_eq 
+      :args (($check_eq_congruent_pred (@cl (not (= b d)) (not (= c e)) 
+                                            (not (f b c)) (f d e)))
+             
+             true))
+
+(step $test_$check_eq_congruent_pred_3 true 
+      :rule $assert_eq 
+      :args (($check_eq_congruent_pred (@cl (not (= a d)) (not (= b e)) (not (= c j))
+                                       (not (h a b c)) (h d e j)))
+
+             true))
+
 ;-------------
 ; $or_simplify_rec
 ;-------------
