@@ -4,6 +4,154 @@
 
 ; Unit tests for rules that introduce tautologies and their helper programs.
 
+;------------------------------------------
+; $check_eq_transitive_remaining_equalities
+;------------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const U Type)
+(declare-const a U)
+(declare-const b U)
+(declare-const c U)
+(declare-const d U)
+(declare-const e U)
+
+(step $test_$check_eq_transitive_remaining_equalities_1 true
+      :rule $assert_eq 
+      :args (($check_eq_transitive_remaining_equalities
+              a d (@cl (not (= a b)) (not (= b d))))
+
+             true))
+
+(step $test_$check_eq_transitive_remaining_equalities_2 true
+      :rule $assert_eq 
+      :args (($check_eq_transitive_remaining_equalities
+              a d (@cl (not (= a b)) (not (= b c)) (not (= c d))))
+
+             true))
+
+(step $test_$check_eq_transitive_remaining_equalities_3 true
+      :rule $assert_eq 
+      :args (($check_eq_transitive_remaining_equalities
+              a d (@cl (not (= a b)) (not (= b c)) (not (= c d))))
+
+             true))
+
+(step $test_$check_eq_transitive_remaining_equalities_4 true
+      :rule $assert_eq 
+      :args (($check_eq_transitive_remaining_equalities
+              a e (@cl (not (= a b)) (not (= b c)) (not (= c d)) (not (= d e))))
+
+             true))
+
+;------------------------------------------
+; $check_eq_transitive_from_first_equality
+;------------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const U Type)
+(declare-const a U)
+(declare-const b U)
+(declare-const c U)
+(declare-const d U)
+(declare-const e U)
+
+(step $test_$check_eq_transitive_from_first_equality_1 true
+      :rule $assert_eq 
+      :args (($check_eq_transitive_from_first_equality
+              (= a d) (@cl (not (= a b)) (not (= b d))))
+
+             true))
+
+(step $test_$check_eq_transitive_from_first_equality_2 true
+      :rule $assert_eq 
+      :args (($check_eq_transitive_from_first_equality
+              (= a d) (@cl (not (= a b)) (not (= b c)) (not (= c d))))
+
+             true))
+
+(step $test_$check_eq_transitive_from_first_equality_3 true
+      :rule $assert_eq 
+      :args (($check_eq_transitive_from_first_equality
+              (= a d) (@cl (not (= a b)) (not (= b c)) (not (= c d))))
+
+             true))
+
+(step $test_$check_eq_transitive_from_first_equality_4 true
+      :rule $assert_eq 
+      :args (($check_eq_transitive_from_first_equality
+              (= a e) (@cl (not (= a b)) (not (= b c)) (not (= c d)) (not (= d e))))
+
+             true))
+
+;------------------------------------------
+; $check_eq_transitive
+;------------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const U Type)
+(declare-const a U)
+(declare-const b U)
+(declare-const c U)
+(declare-const d U)
+(declare-const e U)
+
+(step $test_$check_eq_transitive_1 true
+      :rule $assert_eq 
+      :args (($check_eq_transitive
+              (@cl (not (= a b)) (not (= b d)) (= a d)))
+
+             true))
+
+(step $test_$check_eq_transitive_2 true
+      :rule $assert_eq 
+      :args (($check_eq_transitive
+              (@cl (not (= a b)) (not (= b c)) (not (= c d)) (= a d)))
+
+             true))
+
+(step $test_$check_eq_transitive_3 true
+      :rule $assert_eq 
+      :args (($check_eq_transitive
+              (@cl (not (= a b)) (not (= b c)) (not (= c d)) (= a d)))
+
+             true))
+
+(step $test_$check_eq_transitive_4 true
+      :rule $assert_eq 
+      :args (($check_eq_transitive
+              (@cl (not (= a b)) (not (= b c)) (not (= c d)) (not (= d e))
+                   (= a e) ))
+
+             true))
+
+;------------------------------------------
+; eq_transitive
+;------------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const U Type)
+(declare-const a U)
+(declare-const b U)
+(declare-const c U)
+(declare-const d U)
+(declare-const e U)
+
+(step $test_eq_transitive_1 
+      (@cl (not (= a b)) (not (= b d)) (= a d))
+      :rule eq_transitive)
+
+(step $test_eq_transitive_2 
+      (@cl (not (= a b)) (not (= b c)) (not (= c d)) (= a d))
+      :rule eq_transitive)
+
+(step $test_eq_transitive_3
+      (@cl (not (= a b)) (not (= b c)) (not (= c d)) (= a d))
+      :rule eq_transitive)
+
+(step $test_eq_transitive_4
+      (@cl (not (= a b)) (not (= b c)) (not (= c d)) (not (= d e))
+                   (= a e))
+      :rule eq_transitive)
+
+
+
 ;--------------------------------------
 ; $check_n_ary_application_eq_congruent
 ;--------------------------------------
@@ -102,6 +250,103 @@
       :rule $assert_eq 
       :args (($check_eq_congruent_pred (@cl (not (= a d)) (not (= b e)) (not (= c j))
                                        (not (h a b c)) (h d e j)))
+
+             true))
+
+;--------------------
+; $connective_def
+;--------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+; First case
+(step $test_$connective_def_1 true 
+      :rule $assert_eq 
+      :args (($connective_def (xor a b)) 
+             
+             ($f_list_cons or 
+                  ($f_list_cons and (not a) b)
+                  ($f_list_cons and a (not b)))))
+
+; Second case
+(step $test_$connective_def_2 true 
+      :rule $assert_eq 
+      :args (($connective_def (= a b)) 
+             
+             ($f_list_cons and (=> a b) (=> b a))))
+
+; Third case
+(step $test_$connective_def_3 true 
+      :rule $assert_eq 
+      :args (($connective_def (ite a b c)) 
+             
+             ($f_list_cons and (=> a b) (=> (not a) c))))
+
+; Fourth case
+(step $test_$connective_def_4 true 
+      :rule $assert_eq 
+      :args (($connective_def (forall @varlist.nil a)) 
+             
+             (not (exists @varlist.nil (not a)))))
+
+; Fifth case
+(step $test_$connective_def_4 true 
+      :rule $assert_eq 
+      :args (($connective_def (exists @varlist.nil (not a))) 
+             
+             (not (forall @varlist.nil (not (not a))))))
+
+;--------------------
+; $check_connective_def
+;--------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+; First case
+(step $test_$check_connective_def_1 true 
+      :rule $assert_eq 
+      :args (($check_connective_def 
+              (@cl (= (xor a b)
+
+                      ($f_list_cons or 
+                                    ($f_list_cons and (not a) b)
+                                    ($f_list_cons and a (not b))))))
+
+             true))
+
+; Second case
+(step $test_$check_connective_def_2 true 
+      :rule $assert_eq 
+      :args (($check_connective_def (@cl (= (= a b)
+                                            ($f_list_cons and (=> a b) (=> b a)))))
+             
+             true))
+
+; Third case
+(step $test_$check_connective_def_3 true 
+      :rule $assert_eq 
+      :args (($check_connective_def (@cl (= (ite a b c)
+                                            ($f_list_cons and (=> a b) (=> (not a) c)))))
+
+             true))
+
+; Fourth case
+(step $test_$check_connective_def_4 true 
+      :rule $assert_eq 
+      :args (($check_connective_def (@cl (= (forall @varlist.nil a)
+                                            (not (exists @varlist.nil (not a))))))
+             
+             true))
+
+; Fifth case
+(step $test_$check_connective_def_4 true 
+      :rule $assert_eq 
+      :args (($check_connective_def (@cl (= (exists @varlist.nil (not a))
+                                            (not (forall @varlist.nil (not (not a)))))))
 
              true))
 

@@ -2054,20 +2054,6 @@
   :conclusion-explicit (@cl (= t t))
 )
 
-;TODO
-(program $check_eq_transitive ((conclusion Bool))
-  :signature (Bool) Bool
-  (
-   (($check_eq_transitive conclusion) true)
-  )
-)
-
-;TRUST
-(declare-rule eq_transitive ((conclusion Bool))
-  :requires ((($check_eq_transitive conclusion) true))
-  :conclusion-explicit conclusion
-)
-
 ;TODO: to preserve previous def
 ; 
 ; (program $check_qnt_cnf ((phi Bool) (phiP Bool) (xs @VarList) (xsP @VarList))
@@ -2846,20 +2832,6 @@
   :premises ((@cl (not (ite phi1 phi2 phi3))))
   :conclusion-explicit (@cl (not phi1) (not phi2))
 
-)
-
-;TODO
-(program $check_connective_def ((conclusion Bool))
-  :signature (Bool) Bool
-  (
-   (($check_connective_def conclusion) true)
-  )
-)
-
-;TRUST
-(declare-rule connective_def ((conclusion Bool))
-  :requires ((($check_connective_def conclusion) true))
-  :conclusion-explicit conclusion
 )
 
 ;TODO

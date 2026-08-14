@@ -5,6 +5,113 @@
 ; Rules that introduce tautologies.
 
 ;-----------------------
+; Rule 26: eq_transitive
+;-----------------------
+
+; program: $check_eq_transitive_remaining_equalities
+; args:
+; - t2 A: Left-hand side of the next equation that we should look for.
+; - tn A: Right-hand side of the equation of the last disjunct, in the conclusion.
+; - assumptions Bool: Clause with the remaining equations from the conclusion.
+; return: >
+;   A boolean indicating if there is a chain of equivalences between terms, beginning
+;   from `t2`, following the equalities contained into `assumptions`, and reaching
+;   to term `tn`.
+; note: >
+;  PRE : { `assumptions` is properly ordered: if the last disjunct of the conclusion
+;          is 𝑡1 ≈ 𝑡𝑛, `assumptions` should have the form ¬(𝑡1 ≈ 𝑡2), … , ¬(𝑡𝑛−1 ≈ 𝑡𝑛) }
+(program $check_eq_transitive_remaining_equalities ((A Type) (t2 A) (t3 A)
+                                                    (tn_1 A) (tn A) 
+                                                    (tail Bool :list))
+
+         :signature (A A Bool) Bool
+
+         (
+          (; Last case
+           ($check_eq_transitive_remaining_equalities tn_1 tn (@cl (not (= tn_1 tn))))
+
+           true
+           )
+
+          (; Intermediate step.
+           ($check_eq_transitive_remaining_equalities t2 tn (@cl (not (= t2 t3)) tail))
+
+           ($check_eq_transitive_remaining_equalities t3 tn tail)
+           )
+          )
+         )
+
+; program: $check_eq_transitive_from_first_equality
+; args:
+; - last_equality Bool: >
+;   Last disjunct present in the conclusion clause passed to `eq_transitive`.
+;   It must be an equality among arbitrary terms.
+; - assumptions Bool: Clause with the remaining assumptions passed to `eq_transitive`.
+; return: >
+;   A boolean indicating if there is a chain of equivalences between terms, beginning
+;   from the left-hand side of `last-equality`, following the equalities contained 
+;   into `assumptions`, and reaching to right-hand side of `last-equality`.
+; note: >
+;  PRE : { `assumptions` is properly ordered: if `last_equality` is of the form
+;          `𝑡1 ≈ 𝑡𝑛`, `assumptions` should have the form ¬(𝑡1 ≈ 𝑡2), … , ¬(𝑡𝑛−1 ≈ 𝑡𝑛) }
+(program $check_eq_transitive_from_first_equality ((A Type) (t1 A) (t2 A) (tn A)
+                                                   (tail Bool :list))
+
+         :signature (Bool Bool) Bool
+
+         (
+          (; First case
+           ($check_eq_transitive_from_first_equality (= t1 tn) (@cl (not (= t1 t2)) tail))
+
+           ($check_eq_transitive_remaining_equalities t2 tn tail)
+           )
+          )
+         )
+
+; program: $check_trans
+; args:
+; - conclusion Bool: Conclusion given to rule `eq_transitive`. Must be built with @cl.
+; return: >
+;   A boolean indicating if `conclusion` is of the form
+;   ¬(𝑡1 ≈ 𝑡2), … , ¬(𝑡𝑛−1 ≈ 𝑡𝑛), 𝑡1 ≈ 𝑡𝑛
+; note: >
+;  PRE : { `conclusion` is properly ordered: it has the form ¬(𝑡1 ≈ 𝑡2), … , ¬(𝑡𝑛−1 ≈ 𝑡𝑛), 𝑡1 ≈ 𝑡𝑛}
+(program $check_eq_transitive ((hd Bool) (tail Bool :list))
+  :signature (Bool) Bool
+  (
+   (
+    ($check_eq_transitive (@cl hd tail))
+    
+    (eo::define
+
+     (
+      (last_equality ($f_list_last_element @cl false (@cl hd tail)))
+      )
+
+     (eo::define
+      
+      (
+       (assumptions ($f_list_remove_elem @cl (@cl hd tail) last_equality false))
+       )
+
+      ($check_eq_transitive_from_first_equality last_equality assumptions)))
+    )
+   )
+  )
+
+; rule: eq_transitive
+; requires: >
+;   For "conclusion" to be exactly of the form:
+;   ¬(𝑡1 ≈ 𝑡2), … , ¬(𝑡𝑛−1 ≈ 𝑡𝑛), 𝑡1 ≈ 𝑡𝑛
+; conclusion-explicit: >
+;   Conclusion should be a clause built with @cl, satisfying the described
+;   side-condition.
+(declare-rule eq_transitive ((hd Bool) (tail Bool :list))
+  :requires ((($check_eq_transitive (@cl hd tail)) true))
+  :conclusion-explicit (@cl hd tail)
+)
+
+;-----------------------
 ; Rule 27: eq_congruent
 ;-----------------------
 
@@ -180,6 +287,90 @@
   :requires ((($check_eq_congruent_pred (@cl hd tail)) true))
   :conclusion-explicit (@cl hd tail)
 )
+
+;------------------------
+; Rule 71: connective_def
+;------------------------
+
+
+; program: $connective_def
+; args:
+; - formula Bool: An arbitrary formula.
+; return: >
+;   A formula equivalent to `formula`, using the dual operators of those in
+;   `formula`, according to rule `connective_def`.
+; note: >
+;   Doing so is cheaper than writing an Eunoia program that pattern matches
+;   over the conclusion passed to `connective_def`.
+(program $connective_def ((phi1 Bool) (phi2 Bool :list) (phi3 Bool)
+                          (varlist @VarList) (body Bool))
+  :signature (Bool) Bool
+  (
+   (
+    ($connective_def (xor phi1 phi2))
+    
+    ($f_list_cons or 
+                  ($f_list_cons and (not phi1) phi2)
+                  ($f_list_cons and phi1 (not phi2)))
+    )
+
+   (
+    ($connective_def (= phi1 phi2))
+    
+    ($f_list_cons and (=> phi1 phi2) (=> phi2 phi1))
+    )
+
+   (
+    ($connective_def (ite phi1 phi2 phi3))
+    
+    ($f_list_cons and (=> phi1 phi2) (=> (not phi1) phi3))
+    )
+
+   (
+    ($connective_def (forall varlist body))
+
+    (not (exists varlist (not body)))
+    )
+
+   (
+    ($connective_def (exists varlist body))
+
+    (not (forall varlist (not body)))
+    )
+  )
+)
+
+
+; program: $check_connective_def
+; args:
+; - conclusion Bool: Conclusion passed to rule `connective_def`
+; return: >
+;   A boolean indicating if `conclusion` has one of the following forms:
+;   - (xor 𝜑1 𝜑2) ≈((¬𝜑1 ∧ 𝜑2) ∨(𝜑1 ∧ ¬𝜑2))
+;   - (𝜑1 ≈ 𝜑2) ≈ ((𝜑1 → 𝜑2) ∧ (𝜑2 → 𝜑1))
+;   - (ite 𝜑1 𝜑2 𝜑3) ≈ ((𝜑1 → 𝜑2) ∧(¬𝜑1 → 𝜑3))
+;   - (∀𝑥1, … , 𝑥𝑛. 𝜑) ≈ ¬(∃𝑥1, … , 𝑥𝑛. ¬𝜑)
+;   - (∃𝑥1, … , 𝑥𝑛. 𝜑) ≈ ¬(∀𝑥1, … , 𝑥𝑛. ¬𝜑)
+(program $check_connective_def ((lhs Bool) (rhs Bool))
+  :signature (Bool) Bool
+  (
+   (
+    ($check_connective_def (@cl (= lhs rhs)))
+    ;   Doing so is cheaper than writing an Eunoia program that pattern matches
+    ;   over the conclusion passed to `connective_def`.
+    ($eo_is_eq ($connective_def lhs) rhs)
+    )
+  )
+)
+
+; rule: connective_def
+; requires: For the conclusion to satisfy the `$check_connective_def` predicate.
+; conclusion-explicit: A conclusion of the form (@cl (= lhs rhs)).
+(declare-rule connective_def ((lhs Bool) (rhs Bool))
+  :requires ((($check_connective_def (@cl (= lhs rhs))) true))
+  :conclusion-explicit (@cl (= lhs rhs))
+)
+
 
 ;-----------------------
 ; Rule 73: or_simplify
