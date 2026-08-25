@@ -3475,9 +3475,9 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 91: let
-;-------------
+;----------
+; Rule let
+;----------
 
 (program $verify_let_premises ((context Bool) (premises Bool) 
                               (A Type) (var A)
