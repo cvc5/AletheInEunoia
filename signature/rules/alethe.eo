@@ -3446,19 +3446,110 @@
 )
 
 ;TODO
-(program $check_onepoint ((conclusion Bool))
-  :signature (Bool) Bool
+(program $check_ite_simplify ((l Bool) (r Bool))
+  :signature (Bool Bool) Bool
   (
-   (($check_onepoint conclusion) true)
+   (($check_ite_simplify l r) true)
+  )
+)
+
+;TRUST
+(declare-rule ite_simplify ((l Bool) (r Bool))
+  :args ((@cl (= l r)))
+  :requires ((($check_ite_simplify l r) true))
+  :conclusion (@cl (= l r))
+)
+
+;------------------
+; Rule onepoint
+;------------------
+
+; program: $flag_non_fixed_variables
+; args:
+; - $flag_non_fixed_variables nil:
+; return:
+(program $flag_non_fixed_variables ((A Type) (var A) (tail @VarList :list)
+                                    (fixed_vars @VarList))
+
+         :signature (@VarList @VarList) @VarList
+
+         (
+          (
+           ($flag_non_fixed_variables (@varlist var tail) fixed_vars)
+
+           (eo::ite ($f_list_contains_elem @varlist var fixed_vars)
+                    ; We should remove the variable.
+                    ($f_list_cons @varlist 
+                                  true
+                                  ($flag_non_fixed_variables tail fixed_vars))
+
+                    ($f_list_cons @varlist 
+                                  false
+                                  ($flag_non_fixed_variables tail fixed_vars)))
+           )
+
+          (
+           ($flag_non_fixed_variables @varlist.nil fixed_vars)
+
+           @varlist.nil
+          )
+         )
+)
+
+; program: $check_onepoint
+; args:
+; - conclusion Bool:
+; return:
+(program $check_onepoint ((old_context Bool) (new_context Bool)
+                          (lhs_vars @VarList) (rhs_vars @VarList)
+                          (lhs_body Bool) (rhs_body Bool)
+                          (quantifier (-> @VarList Bool Bool)))
+
+  :signature (Bool Bool Bool Bool) Bool
+  (
+   (
+    ($check_onepoint old_context new_context 
+                     (quantifier lhs_vars lhs_body) 
+                     (quantifier rhs_vars rhs_body))
+
+    (eo::and
+     ; rhs_vars is contained in lhs_vars.
+     ($f_list_contains_f_list @varlist rhs_vars lhs_vars)
+
+     ; new_context must be just an extension of old_context.
+     ($context_is_extended new_context old_context)
+
+     ; Every variable in rhs_vars appear fixed in `new_context`.
+     ($context_vars_are_fixed new_context rhs_vars)
+
+     ; The remaining variables should be assigned one "point".
+     ($context_vars_are_defined new_context 
+                                ($f_list_filter @varlist @varlist.nil lhs_vars
+                                                ($flag_non_fixed_variables lhs_vars 
+                                                                           rhs_vars))))
+    )
    )
   )
- 
-;TRUST
-(declare-rule onepoint ((ctx Bool) (old_ctx Bool) (T Type) (l T) (r T) (l1 T) (r1 T)
-                        (conclusion Bool))
-  :assumption ctx
-  :requires ((($check_onepoint conclusion) true))
-  :conclusion-explicit conclusion
+
+; rule: onepoint
+; premises:
+; - onepoint nil:
+; args:
+; requires:
+; conclusion:
+(declare-rule onepoint ((old_context Bool) (new_context Bool) (lhs Bool) (rhs Bool)
+                        (quantifier (-> @VarList Bool Bool)) (varlist_1 @VarList)
+                        (varlist_2 @VarList))
+
+  :assumption new_context ; Context of the premise, extends `old_context`
+  :premises ((@cl (= lhs rhs)))
+  ; Context that extends `new_context`, and is the context of the conclusion.
+  :args (old_context)
+  :requires ((($check_onepoint old_context new_context
+                               (quantifier varlist_1 lhs) (quantifier varlist_2 rhs))
+              true))
+  :conclusion-explicit (@cl (= (quantifier varlist_1 lhs)
+                               (quantifier varlist_2 rhs)))
 )
 
 ;------------------
