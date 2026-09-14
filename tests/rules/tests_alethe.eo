@@ -2,7 +2,745 @@
 (include "../unit_test_services.eo")
 
 
-; Unit tests for rules that introduce tautologies.
+; Unit tests for rules in `alethe.eo`.
+
+;------------------------------------------
+; $negative_normal_form
+;------------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+; Atomic props.
+(step $test_$negative_normal_form_1 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (not (not a)) true)
+
+             a))
+
+(step $test_$negative_normal_form_2 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (not a) true)
+
+             (not a)))
+
+; Non-atomic
+; and
+(step $test_$negative_normal_form_3 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (not ($f_list_cons and a b)) true)
+
+             ($f_list_cons or (not a) (not b))))
+
+(step $test_$negative_normal_form_4 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (not ($f_list_cons and a b)) false)
+
+             ($f_list_cons and a b)))
+
+; or
+(step $test_$negative_normal_form_5 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (not ($f_list_cons or a b)) true)
+
+             ($f_list_cons and (not a) (not b))))
+
+(step $test_$negative_normal_form_6 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (not ($f_list_cons or a b)) false)
+
+             ($f_list_cons or a b)))
+
+; =>
+(step $test_$negative_normal_form_7 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (not (=> a b)) true)
+
+             ($f_list_cons and a (not b))))
+
+(step $test_$negative_normal_form_8 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (=> a b) true)
+
+             ($f_list_cons or (not a) b)))
+
+(step $test_$negative_normal_form_9 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (not (=> a b)) false)
+
+             ($f_list_cons or (not a) b)))
+
+; ite
+(step $test_$negative_normal_form_10 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (ite a b c) true)
+
+             ($f_list_cons and 
+                           ($f_list_cons or (not a) b)
+                           ($f_list_cons or a c))))
+
+(step $test_$negative_normal_form_11 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (ite a b c) false)
+
+             ($f_list_cons or
+                           ($f_list_cons and a (not b))
+                           ($f_list_cons and (not a) (not c)))))
+
+; forall
+(step $test_$negative_normal_form_12 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (forall (@varlist (eo::var "x" Int)) a) true)
+
+             (forall (@varlist (eo::var "x" Int)) a)))
+
+(step $test_$negative_normal_form_13 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (forall (@varlist (eo::var "x" Int)) a) false)
+
+             (exists (@varlist (eo::var "x" Int)) (not a))))
+
+; exists
+(step $test_$negative_normal_form_14 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (exists (@varlist (eo::var "x" Int)) a) true)
+
+             (exists (@varlist (eo::var "x" Int)) a)))
+
+(step $test_$negative_normal_form_15 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (exists (@varlist (eo::var "x" Int)) a) false)
+
+             (forall (@varlist (eo::var "x" Int)) (not a))))
+
+; Misc.
+(step $test_$negative_normal_form_16 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form a true)
+
+             a))
+
+(step $test_$negative_normal_form_17 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form a false)
+
+             (not a)))
+
+
+;------------------------------------------
+; $small_step_prenex_normal_form
+;------------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+; Atomic props.
+(step $test_$small_step_prenex_normal_form_1 true 
+      :rule $assert_eq 
+      :args (($small_step_prenex_normal_form a)
+
+             a))
+
+(step $test_$small_step_prenex_normal_form_2 true 
+      :rule $assert_eq 
+      :args (($small_step_prenex_normal_form (not a))
+
+             (not a)))
+
+; or
+(step $test_$small_step_prenex_normal_form_3 true 
+      :rule $assert_eq 
+      :args (($small_step_prenex_normal_form (or a b))
+
+             (or a b)))
+
+(step $test_$small_step_prenex_normal_form_4 true 
+      :rule $assert_eq 
+      :args (($small_step_prenex_normal_form (or (forall (@varlist (eo::var "x" Int)) a) b))
+
+             (forall (@varlist (eo::var "x" Int)) (or  a b))))
+
+(step $test_$small_step_prenex_normal_form_5 true 
+      :rule $assert_eq 
+      :args (($small_step_prenex_normal_form ($f_list_cons or b (forall (@varlist (eo::var "x" Int)) a)))
+
+             (forall (@varlist (eo::var "x" Int)) ($f_list_cons or b a))))
+
+; and
+(step $test_$small_step_prenex_normal_form_7 true 
+      :rule $assert_eq 
+      :args (($small_step_prenex_normal_form (and a b))
+
+             (and a b)))
+
+(step $test_$small_step_prenex_normal_form_8 true 
+      :rule $assert_eq 
+      :args (($small_step_prenex_normal_form (and (forall (@varlist (eo::var "x" Int)) a) b))
+
+             (forall (@varlist (eo::var "x" Int)) (and  a b))))
+
+(step $test_$small_step_prenex_normal_form_9 true 
+      :rule $assert_eq 
+      :args (($small_step_prenex_normal_form 
+              ($f_list_cons and b (forall (@varlist (eo::var "x" Int)) a)))
+
+             (forall (@varlist (eo::var "x" Int)) 
+                     ($f_list_cons and b a))))
+
+;------------------------------------------
+; $prenex_normal_form
+;------------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+; Atomic props.
+(step $test_$prenex_normal_form_1 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form a)
+
+             a))
+
+(step $test_$prenex_normal_form_2 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (not a))
+
+             (not a)))
+
+; or
+(step $test_$prenex_normal_form_3 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (or a b))
+
+             (or a b)))
+
+(step $test_$prenex_normal_form_4 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (or (forall (@varlist (eo::var "x" Int)) a) b))
+
+             (forall (@varlist (eo::var "x" Int)) (or  a b))))
+
+(step $test_$prenex_normal_form_5 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (or b (forall (@varlist (eo::var "x" Int)) a)))
+
+             (forall (@varlist (eo::var "x" Int)) (or b a))))
+
+(step $test_$prenex_normal_form_6 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form ($f_list_cons or a
+                                                ($f_list_cons or 
+                                                              b 
+                                                              (forall (@varlist (eo::var "x" Int)) c))))
+
+             (forall (@varlist (eo::var "x" Int)) 
+                     ($f_list_cons or a ($f_list_cons or b c)))))
+
+; and
+(step $test_$prenex_normal_form_7 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (and a b))
+
+             (and a b)))
+
+(step $test_$prenex_normal_form_8 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (and (forall (@varlist (eo::var "x" Int)) a) b))
+
+             (forall (@varlist (eo::var "x" Int)) (and  a b))))
+
+(step $test_$prenex_normal_form_9 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (and b (forall (@varlist (eo::var "x" Int)) a)))
+
+             (forall (@varlist (eo::var "x" Int)) (and b a))))
+
+(step $test_$prenex_normal_form_10 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form ($f_list_cons and a
+                                                ($f_list_cons and 
+                                                              b 
+                                                              (forall (@varlist (eo::var "x" Int)) c))))
+
+             (forall (@varlist (eo::var "x" Int)) 
+                     ($f_list_cons and a ($f_list_cons and b c)))))
+
+; forall
+(step $test_$prenex_normal_form_11 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (forall (@varlist (eo::var "x" Int))
+                                          ($f_list_cons or 
+                                                        a
+                                                        (forall (@varlist (eo::var "y" Int)) b))))
+             (forall (@varlist (eo::var "x" Int))
+                     (forall (@varlist (eo::var "y" Int))
+                                          ($f_list_cons or a b)))))
+
+(step $test_$prenex_normal_form_12 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form 
+              (forall (@varlist (eo::var "x" Int))
+                      ($f_list_cons or 
+                                    a
+                                    ($f_list_cons and
+                                                  b
+                                                  (forall (@varlist (eo::var "y" Int)) c)))))
+             (forall (@varlist (eo::var "x" Int))
+                     (forall (@varlist (eo::var "y" Int))
+                                          ($f_list_cons or 
+                                                        a 
+                                                        ($f_list_cons and b c))))))
+
+; exists
+(step $test_$prenex_normal_form_13 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (exists (@varlist (eo::var "x" Int))
+                                          ($f_list_cons or 
+                                                        a
+                                                        (exists (@varlist (eo::var "y" Int)) b))))
+             (exists (@varlist (eo::var "x" Int))
+                     (exists (@varlist (eo::var "y" Int))
+                                          ($f_list_cons or a b)))))
+
+(step $test_$prenex_normal_form_14 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form 
+              (exists (@varlist (eo::var "x" Int))
+                      ($f_list_cons or 
+                                    a
+                                    ($f_list_cons and
+                                                  b
+                                                  (exists (@varlist (eo::var "y" Int)) c)))))
+             (exists (@varlist (eo::var "x" Int))
+                     (exists (@varlist (eo::var "y" Int))
+                                          ($f_list_cons or 
+                                                        a 
+                                                        ($f_list_cons and b c))))))
+
+;------------------------------------------
+; $small_step_conjunctive_normal_form
+;------------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+; Atomic props.
+(step $test_$small_step_conjunctive_normal_form_1 true 
+      :rule $assert_eq 
+      :args (($small_step_conjunctive_normal_form a)
+
+             a))
+
+(step $test_$small_step_conjunctive_normal_form_2 true 
+      :rule $assert_eq 
+      :args (($small_step_conjunctive_normal_form (not a))
+
+             (not a)))
+
+; or
+(step $test_$small_step_conjunctive_normal_form_3 true 
+      :rule $assert_eq 
+      :args (($small_step_conjunctive_normal_form (or a b))
+
+             (or a b)))
+
+(step $test_$small_step_conjunctive_normal_form_4 true 
+      :rule $assert_eq 
+      :args (($small_step_conjunctive_normal_form (or a (or b c)))
+
+             (or a (or b c))))
+
+(step $test_$small_step_conjunctive_normal_form_5 true 
+      :rule $assert_eq 
+      :args (($small_step_conjunctive_normal_form 
+              ($f_list_cons or a ($f_list_cons and b c)))
+
+             ($f_list_cons and ($f_list_cons or a b) ($f_list_cons or a c))))
+
+(step $test_$small_step_conjunctive_normal_form_5 true 
+      :rule $assert_eq 
+      :args (($small_step_conjunctive_normal_form 
+              ($f_list_cons or ($f_list_cons and b c) a))
+
+             ($f_list_cons and ($f_list_cons or b a) ($f_list_cons or c a))))
+
+; and
+(step $test_$small_step_conjunctive_normal_form_6 true 
+      :rule $assert_eq 
+      :args (($small_step_conjunctive_normal_form (and a b))
+
+             (and a b)))
+
+(step $test_$small_step_conjunctive_normal_form_7 true 
+      :rule $assert_eq 
+      :args (($small_step_conjunctive_normal_form (and a (or b c)))
+
+             (and a (or b c))))
+
+;------------------------------------------
+; $rec_conjunctive_normal_form
+;------------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+(declare-const e Bool)
+
+; Atomic props.
+(step $test_$rec_conjunctive_normal_form_1 true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form a)
+
+             a))
+
+(step $test_$rec_conjunctive_normal_form_2 true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form (not a))
+
+             (not a)))
+
+; or
+(step $test_$rec_conjunctive_normal_form_3 true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form (or a b))
+
+             (or a b)))
+
+(step $test_$rec_conjunctive_normal_form_4 true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form (or a (or b c)))
+
+             (or a (or b c))))
+
+(step $test_$rec_conjunctive_normal_form_5 true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form 
+              ($f_list_cons or a ($f_list_cons and b c)))
+
+             ($f_list_cons and ($f_list_cons or a b) ($f_list_cons or a c))))
+
+(step $test_$rec_conjunctive_normal_form_5a true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form 
+              ($f_list_cons or 
+                            a 
+                            ($f_list_cons and 
+                                          ($f_list_cons and b c)
+                                          ($f_list_cons and d e))))
+
+             ($f_list_cons and 
+                           ($f_list_cons and 
+                                         ($f_list_cons or a b) 
+                                         ($f_list_cons or a c)) 
+                           ($f_list_cons and 
+                                         ($f_list_cons or a d) 
+                                         ($f_list_cons or a e)))))
+
+; and
+(step $test_$rec_conjunctive_normal_form_6 true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form (and a b))
+
+             (and a b)))
+
+(step $test_$rec_conjunctive_normal_form_7 true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form (and a (or b c)))
+
+             (and a (or b c))))
+
+(step $test_$rec_conjunctive_normal_form_8 true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form 
+              ($f_list_cons and
+                            a 
+                            ($f_list_cons or
+                                          ($f_list_cons and b c)
+                                          ($f_list_cons and d e))))
+
+             ($f_list_cons and 
+                           a
+                           ($f_list_cons and 
+                                         ($f_list_cons and
+                                                       ($f_list_cons or b d)
+                                                       ($f_list_cons or c d))
+                                         ($f_list_cons and
+                                                       ($f_list_cons or b e)
+                                                       ($f_list_cons or c e))))))
+
+;------------------------------------------
+; $conjunctive_normal_form
+;------------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+(declare-const e Bool)
+(declare-const U Type)
+(declare-const f1 U)
+(declare-const f2 U)
+(declare-const f3 U)
+(declare-const f4 U)
+(declare-const p (-> U Bool))
+
+; Atomic props.
+(step $test_$conjunctive_normal_form_1 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form (forall @varlist.nil a))
+
+             (forall @varlist.nil a)))
+
+(step $test_$conjunctive_normal_form_2 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form (not a))
+
+             (not a)))
+
+; or
+(step $test_$conjunctive_normal_form_3 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form (or a b))
+
+             (or a b)))
+
+(step $test_$conjunctive_normal_form_4 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form (or a (or b c)))
+
+             (or a (or b c))))
+
+(step $test_$conjunctive_normal_form_5 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form 
+              ($f_list_cons or a ($f_list_cons and b c)))
+
+             ($f_list_cons and ($f_list_cons or a b) ($f_list_cons or a c))))
+
+(step $test_$conjunctive_normal_form_5a true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form 
+              ($f_list_cons or 
+                            a 
+                            ($f_list_cons and 
+                                          ($f_list_cons and b c)
+                                          ($f_list_cons and d e))))
+
+             ($f_list_cons and 
+                           ($f_list_cons or a b)
+                           ($f_list_cons and 
+                                         ($f_list_cons or a c)
+                                         ($f_list_cons and 
+                                                       ($f_list_cons or a d) 
+                                                       ($f_list_cons or a e))))))
+
+; and
+(step $test_$conjunctive_normal_form_6 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form (and a b))
+
+             (and a b)))
+
+(step $test_$conjunctive_normal_form_7 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form (and a (or b c)))
+
+             (and a (or b c))))
+
+(step $test_$conjunctive_normal_form_8 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form 
+              ($f_list_cons and
+                            a 
+                            ($f_list_cons or
+                                          ($f_list_cons and b c)
+                                          ($f_list_cons and d e))))
+
+             ($f_list_cons and 
+                           a
+                           ($f_list_cons and 
+                                         ($f_list_cons or b d)
+                                         ($f_list_cons and
+                                                       ($f_list_cons or c d)
+                                                       ($f_list_cons and
+                                                                     ($f_list_cons or b e)
+                                                                     ($f_list_cons or c e)))))))
+
+; quantifiers
+(step $test_$conjunctive_normal_form_9 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form
+              (forall (@varlist (eo::var "x" Int))
+                      ($f_list_cons and
+                                    a 
+                                    ($f_list_cons or
+                                                  ($f_list_cons and b c)
+                                                  ($f_list_cons and d e)))))
+
+             (forall (@varlist (eo::var "x" Int))
+                     ($f_list_cons and 
+                                   a
+                                   ($f_list_cons and 
+                                                 ($f_list_cons or b d)
+                                                 ($f_list_cons and
+                                                               ($f_list_cons or c d)
+                                                               ($f_list_cons and
+                                                                             ($f_list_cons or b e)
+                                                                             ($f_list_cons or c e))))))))
+
+(step $test_$conjunctive_normal_form_10 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form
+              (exists (@varlist (eo::var "x" Int))
+                      ($f_list_cons and
+                                    a 
+                                    ($f_list_cons or
+                                                  ($f_list_cons and b c)
+                                                  ($f_list_cons and d e)))))
+
+             (exists (@varlist (eo::var "x" Int))
+                     ($f_list_cons and 
+                                   a
+                                   ($f_list_cons and 
+                                                 ($f_list_cons or b d)
+                                                 ($f_list_cons and
+                                                               ($f_list_cons or c d)
+                                                 ($f_list_cons and
+                                                               ($f_list_cons or b e)
+                                                               ($f_list_cons or c e))))))))
+
+; Misc.
+(step $test_$conjunctive_normal_form_11 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form
+              ($prenex_normal_form 
+               ($negative_normal_form 
+                ($f_list_cons
+                 and 
+                 (p f1)
+                 ($f_list_cons and
+                     ($f_list_cons or (= f1 f2) 
+                         ($f_list_cons 
+                          and 
+                          (not (= f4 (@var ( ( veriT_vr1 U ) ) veriT_vr1)))
+                          ($f_list_cons and
+                                        (not (= f2 (@var ( ( veriT_vr1 U ) ) veriT_vr1))) 
+                                        (not (= f2 f4)))))
+                     (not (= f1 f2)))) true)))
+
+             ($f_list_cons 
+              and 
+              (p f1) 
+              ($f_list_cons 
+               and
+               ($f_list_cons 
+                 or 
+                 (= f1 f2)
+                 (not (= f4 (@var ( ( veriT_vr1 U ) ) veriT_vr1))))
+               ($f_list_cons 
+                and 
+                ($f_list_cons 
+                  or 
+                  (= f1 f2)
+                  (not (= f2 (@var ( ( veriT_vr1 U ) ) veriT_vr1))))
+                ($f_list_cons 
+                 and
+                 ($f_list_cons 
+                  or 
+                  (= f1 f2)
+                  (not (= f2 f4)))
+                 (not (= f1 f2))))))))
+
+;-----------------
+; qnt_cnf
+;-----------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const U Type)
+(declare-const f1 U)
+(declare-const f2 U)
+(declare-const f3 U)
+(declare-const f4 U)
+(declare-const p (-> U Bool))
+
+; Adapted from VeriT certificates
+(step $test_qnt_cnf_1 
+      (@cl 
+       ($f_list_cons or 
+        (not 
+         (forall ( ( veriT_vr1 U ) ) 
+                 ($f_list_cons
+                 and 
+                 (p f1)
+                 (= f1 f2))))
+
+           (forall ( ( veriT_vr1 U ) ) (p f1)))) 
+      :rule qnt_cnf)
+
+(step $test_qnt_cnf_2
+      (@cl 
+       ($f_list_cons or 
+        (not 
+         (forall ( ( veriT_vr1 U ) ) 
+                 ($f_list_cons
+                 and 
+                 (p f1)
+                 ($f_list_cons and
+                               (= f1 f2) 
+                               (not (= f4 (@var ( ( veriT_vr1 U ) ) veriT_vr1)))))))
+
+           (forall ( ( veriT_vr1 U ) ) (not (= f4 (@var ( ( veriT_vr1 U ) ) veriT_vr1)))))) 
+      :rule qnt_cnf)
+
+(step $test_qnt_cnf_3 
+      (@cl 
+       ($f_list_cons or 
+        (not 
+         (forall ( ( veriT_vr1 U ) ) 
+                 ($f_list_cons
+                 and 
+                 (p f1)
+                 ($f_list_cons and
+                               (= f1 f2) 
+                               ($f_list_cons 
+                                and 
+                                (not (= f4 (@var ( ( veriT_vr1 U ) ) veriT_vr1)))
+                                (not (= f2 (@var ( ( veriT_vr1 U ) ) veriT_vr1))))))))
+
+           (forall ( ( veriT_vr1 U ) ) (= f1 f2)))) 
+      :rule qnt_cnf)
+
+(step $test_qnt_cnf_4 
+      (@cl 
+       ($f_list_cons or 
+        (not 
+         (forall ( ( veriT_vr1 U ) ) 
+                 ($f_list_cons
+                 and 
+                 (p f1)
+                 ($f_list_cons and
+                     ($f_list_cons or (= f1 f2) 
+                         ($f_list_cons 
+                          and 
+                          (not (= f4 (@var ( ( veriT_vr1 U ) ) veriT_vr1)))
+                          ($f_list_cons and
+                                        (not (= f2 (@var ( ( veriT_vr1 U ) ) veriT_vr1))) 
+                                        (not (= f2 f4)))))
+                     (not (= f1 f2))))))
+
+           (forall ( ( veriT_vr1 U ) ) 
+                   ($f_list_cons
+                     or 
+                     (= f1 f2) 
+                     (not (= f2 (@var ( ( veriT_vr1 U ) ) veriT_vr1)))))))
+      :rule qnt_cnf)
 
 ;------------------------------------------
 ; $ite_intro_check_conjuncts
