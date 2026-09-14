@@ -1,0 +1,199 @@
+(include "../../signature/rules/alethe.eo")
+(include "../unit_test_services.eo")
+
+
+; Unit tests for rules that introduce tautologies.
+
+;------------------------------------------
+; $ite_intro_check_conjuncts
+;------------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const U Type)
+(declare-const f1 U)
+(declare-const f2 U)
+(declare-const f3 U)
+(declare-const f4 U)
+(declare-const p (-> U Bool))
+
+; Taken from VeriT certificates
+(step $test_$ite_intro_check_conjuncts_1 true 
+      :rule $assert_eq 
+      :args (($ite_intro_check_conjuncts (@varlist (ite a b c))
+                                         (and (ite a
+                                                   (= (ite a b c) b) 
+                                                   (= (ite a b c) c))))
+
+             true))
+
+(step $test_$ite_intro_check_conjuncts_2 true 
+      :rule $assert_eq 
+      :args (($ite_intro_check_conjuncts (@varlist (ite (p f1) f4 f2))
+                                         (and (ite (p f1)
+                                                   (= (ite (p f1) f4 f2) f4) 
+                                                   (= (ite (p f1) f4 f2) f2))))
+
+             true))
+
+;---------------
+; $get_ite_terms
+;---------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const U Type)
+(declare-const f1 U)
+(declare-const f2 U)
+(declare-const f3 U)
+(declare-const f4 U)
+(declare-const p (-> U Bool))
+
+; Taken from VeriT certificates
+(step $test_$get_ite_terms_1 true 
+      :rule $assert_eq 
+      :args (($get_ite_terms (not (= b (ite c b a))))
+
+             (@varlist (ite c b a))))
+
+(step $test_$get_ite_terms_2 true 
+      :rule $assert_eq 
+      :args (($get_ite_terms (=> (and (p f1) 
+                                     (or (= f1 f2) 
+                                         (not (= (ite (p f1) f4 f2) f3)))) 
+                                (p f3)))
+
+             (@varlist (ite (p f1) f4 f2))))
+
+(step $test_$get_ite_terms_3 true 
+      :rule $assert_eq 
+      :args (($get_ite_terms (= a
+                                (ite b
+                                     (ite c a b)
+                                     (ite c b a))))
+
+             (@varlist (ite b (ite c a b) (ite c b a))
+                       (ite c a b)
+                       (ite c b a))))
+
+;-----------------
+; $check_ite_intro
+;-----------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const U Type)
+(declare-const f1 U)
+(declare-const f2 U)
+(declare-const f3 U)
+(declare-const f4 U)
+(declare-const p (-> U Bool))
+
+; Taken from VeriT certificates
+(step $test_$check_ite_intro_1 true 
+      :rule $assert_eq 
+      :args (($check_ite_intro (not (= b (ite c b a)))
+                               (not (= b (ite c b a)))
+                               (and (ite c 
+                                         (= (ite c b a) b) 
+                                         (= (ite c b a) a))))
+
+             true))
+
+(step $test_$check_ite_intro_2 true 
+      :rule $assert_eq 
+      :args (($check_ite_intro 
+              (=> (and (p f1) (or (= f1 f2) (not (= (ite (p f1) f4 f2) f3)))) (p f3))
+
+              (=> (and (p f1) (or (= f1 f2) (not (= (ite (p f1) f4 f2) f3)))) (p f3))
+
+              (and (ite (p f1)
+                        (= (ite (p f1) f4 f2) f4) 
+                        (= (ite (p f1) f4 f2) f2))))
+
+             true))
+
+(declare-const C_tt Bool) 
+(declare-const C_tf Bool) 
+(declare-const C_ft Bool) 
+(declare-const C_ff Bool)
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)  
+
+(step $test_$check_ite_intro_3 true 
+      :rule $assert_eq 
+      :args (($check_ite_intro 
+              (= a
+                 (ite b
+                      (ite c C_tt C_tf)
+                      (ite c C_ft C_ff)))
+
+              (= a
+                 (ite b
+                      (ite c C_tt C_tf)
+                      (ite c C_ft C_ff)))
+
+              (and (ite b
+                        (= (ite c C_tt C_tf)
+                           (ite b
+                                (ite c C_tt C_tf)
+                                (ite c C_ft C_ff)))
+                        (= (ite c C_ft C_ff)
+                           (ite b
+                                (ite c C_tt C_tf)
+                                (ite c C_ft C_ff))))
+
+                   (ite c
+                        (= C_tt (ite c C_tt C_tf))
+                        (= C_tf (ite c C_tt C_tf)))
+
+                   (ite c
+                        (= C_ft (ite c C_ft C_ff))
+                        (= C_ff (ite c C_ft C_ff))))
+              )
+
+             true)
+)
+
+;-----------------
+; ite_intro
+;-----------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+(declare-const U Type)
+(declare-const f1 U)
+(declare-const f2 U)
+(declare-const f3 U)
+(declare-const f4 U)
+(declare-const p (-> U Bool))
+
+; Taken from VeriT certificates
+(step $test_ite_intro_1 
+      (@cl (= (not (= b (ite c b a)))
+              (and (not (= b (ite c b a)))
+                   (ite c 
+                        (= b (ite c b a)) 
+                        (= a (ite c b a)))))) 
+      :rule ite_intro)
+
+(step $test_ite_intro_2 
+      (@cl
+       (= (=> (and (p f1) (or (= f1 f2) (not (= (ite (p f1) f4 f2) f3)))) (p f3))
+          (and (=> (and (p f1) (or (= f1 f2) (not (= (ite (p f1) f4 f2) f3)))) (p f3))
+               (ite (p f1)
+                    (= f4 (ite (p f1) f4 f2)) 
+                    (= f2 (ite (p f1) f4 f2)))))) 
+      :rule ite_intro)
+
+(step $test_ite_intro_3
+      (@cl (= (= a (ite b c d)) 
+              (and (= a (ite b c d)) 
+                   (ite b (= c (ite b c d)) (= d (ite b c d)))))) :rule ite_intro)
+
