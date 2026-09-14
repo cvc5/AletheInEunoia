@@ -3004,20 +3004,6 @@
 )
 
 ;TODO
-(program $check_qnt_rm_unused ((conclusion Bool))
-  :signature (Bool) Bool
-  (
-   (($check_qnt_rm_unused conclusion) true)
-  )
-)
-
-;TRUST
-(declare-rule qnt_rm_unused ((conclusion Bool))
-  :requires ((($check_qnt_rm_unused conclusion) true))
-  :conclusion-explicit conclusion
-)
-
-;TODO
 (program $check_eq_simplify ((conclusion Bool))
   :signature (Bool) Bool
   (
