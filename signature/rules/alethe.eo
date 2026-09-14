@@ -2854,20 +2854,6 @@
 )
 
 ;TODO
-(program $check_qnt_rm_unused ((conclusion Bool))
-  :signature (Bool) Bool
-  (
-   (($check_qnt_rm_unused conclusion) true)
-  )
-)
-
-;TRUST
-(declare-rule qnt_rm_unused ((conclusion Bool))
-  :requires ((($check_qnt_rm_unused conclusion) true))
-  :conclusion-explicit conclusion
-)
-
-;TODO
 (program $check_eq_simplify ((conclusion Bool))
   :signature (Bool) Bool
   (
@@ -3302,18 +3288,137 @@
   :conclusion (@cl phi)
 )
 
-;TODO
-(program $check_ite_intro ((conclusion Bool))
-  :signature (Bool) Bool
+;-------------------
+; Rule ite_intro
+;-------------------
+
+; program: $ite_intro_check_conjuncts
+; args:
+; - ites @VarList: >
+;   A @VarList containing each of the ite constructions present on the left-hand
+;   side of the conclusion passed to rule `ite_intro`.
+; - conjuncts Bool: >
+;   and-list of terms of the form "ite 𝜓𝑖 (𝑠𝑖 ≈ 𝑟𝑖) (𝑠𝑖 ≈ 𝑟′𝑖)" that are part
+;   of the conjunction in the right-hand side of the conclusion passed to rule 
+;   `ite_intro`.
+; return: >
+;   A boolean indicating if for every ite construction of the form
+;   "ite 𝜓𝑖 ri 𝑟′𝑖" present on `ites`, there is a corresponding ite
+;   construction of the form "ite 𝜓𝑖 (𝑠𝑖 ≈ 𝑟𝑖) (𝑠𝑖 ≈ 𝑟′𝑖)" in `conjuncts`.
+(program $ite_intro_check_conjuncts ((guard Bool) (if Bool) (else Bool) 
+                                     (conjuncts Bool)
+                                     (tail @VarList :list))
+
+         :signature (@VarList Bool) Bool
+
+         (
+          (
+           ($ite_intro_check_conjuncts (@varlist (ite guard if else) tail) conjuncts)
+
+           (eo::and (eo::or
+                     ($f_list_contains_elem 
+                     and 
+                     (ite guard (= (ite guard if else) if) (= (ite guard if else) else))
+                     conjuncts)
+
+                     ($f_list_contains_elem 
+                      and 
+                      (ite guard (= if (ite guard if else)) (= else (ite guard if else)))
+                      conjuncts))
+
+                    ($ite_intro_check_conjuncts tail conjuncts))
+           )
+
+          (
+           ($ite_intro_check_conjuncts @varlist.nil conjuncts)
+           
+           true
+           )
+          )
+         )
+
+; program: $get_ite_terms
+; args:
+; - formula Bool: An arbitrary boolean formula.
+; return: A @VarList containing every ite construction present in `formula`.
+(program $get_ite_terms ((guard Bool) (if Bool) (else Bool) (hd Bool) (tail Bool)
+                         (op (-> Bool Bool Bool)))
+
+         :signature (Bool) @VarList
+
+         (
+          (
+           ($get_ite_terms (ite guard if else))
+
+           ($varlist_concat
+            (@varlist (ite guard if else))
+            ($varlist_concat ($get_ite_terms guard)
+                             ($varlist_concat ($get_ite_terms if) 
+                                              ($get_ite_terms else))))
+           )
+
+          (
+           ($get_ite_terms (op hd tail))
+
+           ($varlist_concat ($get_ite_terms hd) ($get_ite_terms tail))
+           )
+
+          (
+           ($get_ite_terms (not hd))
+
+           ($get_ite_terms hd)
+           )
+
+          (
+           ($get_ite_terms hd)
+
+           @varlist.nil
+           )
+          )
+         )
+
+; program: $check_ite_intro
+; args:
+; - t1 Bool: The left-hand side of the conclusion passed to rule `ite_intro`.
+; - t2 Bool: >
+;   The first conjunct from the right-hand side of the conclusion passed to rule 
+;   `ite_intro`.
+; - conjuncts Bool: >
+;   The remaining conjuncts from the right-hand side of the conclusion passed to 
+;   rule `ite_intro`.
+; return: >
+;   A boolean indicating if for every ite construction of the form
+;   "ite 𝜓𝑖 ri 𝑟′𝑖" present on `t1`, there is a corresponding ite
+;   construction of the form "ite 𝜓𝑖 (𝑠𝑖 ≈ 𝑟𝑖) (𝑠𝑖 ≈ 𝑟′𝑖)" in `conjuncts`.
+(program $check_ite_intro ((t1 Bool) (t2 Bool) (conjuncts Bool :list))
+
+  :signature (Bool Bool Bool) Bool
   (
-   (($check_ite_intro conclusion) true)
+   (; Case t1 = t2 in the ite_intro rule.
+    ($check_ite_intro t1 t1 conjuncts)
+    
+    ($ite_intro_check_conjuncts ($get_ite_terms t1) conjuncts)
+    )
+
+   (; Case t1 = t2 in the ite_intro rule.
+    ($check_ite_intro t1 t2 conjuncts)
+    
+    ($ite_intro_check_conjuncts ($get_ite_terms t1) conjuncts)
+    )
   )
 )
 
-;TRUST
-(declare-rule ite_intro ((conclusion Bool))
-  :requires ((($check_ite_intro conclusion) true))
-  :conclusion-explicit conclusion
+; rule: ite_intro
+; requires: >
+;   For every ite construction of the form "ite 𝜓𝑖 ri 𝑟′𝑖" present on `t1`, 
+;   to be a corresponding ite construction of the form 
+;   "ite 𝜓𝑖 (𝑠𝑖 ≈ 𝑟𝑖) (𝑠𝑖 ≈ 𝑟′𝑖)" in `conjuncts`.
+; conclusion-explicit: >
+;   A conclusion of the form (@cl (= t (and t' conjuncts))), such that it 
+;   satisfies the previous side-condition.
+(declare-rule ite_intro ((t1 Bool) (t2 Bool) (conjuncts Bool :list))
+  :requires ((($check_ite_intro t1 t2 conjuncts) true))
+  :conclusion-explicit (@cl (= t1 (and t2 conjuncts)))
 )
 
 ;-------------

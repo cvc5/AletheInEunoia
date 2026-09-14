@@ -1078,7 +1078,7 @@
 ;   A boolean indicating if `conclusion` has the form:
 ;   𝑄 𝑥1, … , 𝑥𝑛. 𝜑 ≈ 𝑄 𝑥𝑘1, … , 𝑥𝑘𝑚. 𝜑
 ;   Where the list of variables 𝑥𝑘1, … , 𝑥𝑘𝑚 is obtained from the original list
-;   𝑥1, … , 𝑥n, by removing variables that are already bound in 𝜑.
+;   𝑥1, … , 𝑥n, by removing variables that are not-free in 𝜑.
 (program $check_qnt_rm_unused ((varlist_1 @VarList) (varlist_2 @VarList) (phi Bool))
   :signature (Bool) Bool
   (
