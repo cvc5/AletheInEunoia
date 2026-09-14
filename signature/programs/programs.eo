@@ -1,5 +1,6 @@
 (include "../theories/theory.eo")
 (include "./lists.eo")
+(include "./trees.eo")
 
 ; Library of auxiliary programs, useful to manipulate many different
 ; Eunoia constructions.
@@ -781,6 +782,49 @@
           )
          )
 
+;-------------------------------
+; Misc. boolean formula services
+;-------------------------------
+
+; program: $flat_and_or
+; args:
+; - formula Bool: >
+;   An arbitrary boolean formula, built just with conjunctions or disjunctions.
+; return: A flattened version of `formula`.
+(program $flat_and_or ((formula Bool) (formulas Bool)
+                       (op (-> Bool Bool Bool)))
+
+         :signature ((-> Bool Bool Bool) Bool) Bool
+
+         (
+          (
+           ($flat_and_or op (op formula formulas))
+
+           (eo::define
+
+            (
+             (left_most_leaf ($binary_tree_get_left_most_leaf 
+                              op
+                              (op formula formulas)))
+             )
+
+            ($f_list_cons op
+                          left_most_leaf
+                          ($flat_and_or 
+                           op
+                           ($binary_tree_remove_elem op
+                                                     (op formula formulas) 
+                                                     left_most_leaf))))
+           )
+         
+          (; { `formula` is not an application of op }
+           ($flat_and_or op formula)
+
+           formula
+           )
+          )
+         )
+
 ;-------------
 ; contexts
 ;-------------
@@ -876,14 +920,14 @@
           (
            ($context_get_variables (@ctx varlist subst))
            
-           ($f_list_remove_duplicates @varlist @varlist.nil
+           ($f_list_remove_duplicates @varlist
                                       ($varlist_concat varlist ($context_get_variables subst)))
            )
 
           (
            ($context_get_variables (and (@ctx varlist subst)))
            
-           ($f_list_remove_duplicates @varlist @varlist.nil
+           ($f_list_remove_duplicates @varlist
                                       ($varlist_concat varlist ($context_get_variables subst)))
            )
 

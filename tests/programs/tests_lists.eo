@@ -1,0 +1,440 @@
+(include "../../signature/theories/theory.eo")
+(include "../../signature/programs/lists.eo")
+(include "../unit_test_services.eo")
+
+; Unit tests for lists.eo.
+
+;---------------------------------
+; $f_list_length
+;---------------------------------
+
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Int)
+(declare-const e Int)
+(declare-const f Int)
+
+(step $test_$f_list_length_1 true 
+      :rule $assert_eq 
+      :args (($f_list_length and (and a))
+             
+             2))
+
+(step $test_$f_list_length_2 true 
+      :rule $assert_eq 
+      :args (($f_list_length and (and a b))
+             
+             3))
+
+(step $test_$f_list_length_3 true 
+      :rule $assert_eq 
+      :args (($f_list_length and (and a b c))
+             
+             4))
+
+(step $test_$f_list_length_4 true 
+      :rule $assert_eq 
+      :args (($f_list_length and (and a b (and a b c)))
+             
+             4))
+
+(step $test_$f_list_length_5 true 
+      :rule $assert_eq 
+      :args (($f_list_length or (or a))
+             
+             2))
+
+(step $test_$f_list_length_6 true 
+      :rule $assert_eq 
+      :args (($f_list_length or (or a b))
+             
+             3))
+
+(step $test_$f_list_length_7 true 
+      :rule $assert_eq 
+      :args (($f_list_length or (or a b c))
+             
+             4))
+
+(step $test_$f_list_length_8 true 
+      :rule $assert_eq 
+      :args (($f_list_length or (or a b (or a b c)))
+             
+             4))
+
+(step $test_$f_list_length_9 true 
+      :rule $assert_eq 
+      :args (($f_list_length or (or a (or a b c) b))
+             
+             4))
+
+(step $test_$f_list_length_10 true 
+      :rule $assert_eq 
+      :args (($f_list_length + (+ d e))
+             
+             3))
+
+(step $test_$f_list_length_11 true 
+      :rule $assert_eq 
+      :args (($f_list_length + (+ d d e))
+             
+             4))
+
+(step $test_$f_list_length_12 true 
+      :rule $assert_eq 
+      :args (($f_list_length + (+ d d (* d d e)))
+             
+             4))
+
+(step $test_$f_list_length_13 true 
+      :rule $assert_eq 
+      :args (($f_list_length + (+ d (* d d e) b))
+             
+             4))
+
+
+;---------------------------------
+; $f_list_equal_mod_commut
+;---------------------------------
+
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Int)
+(declare-const e Int)
+(declare-const f Int)
+
+(step $test_$f_list_equal_mod_commut_1 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut and (and a b) (and b a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_2 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut and (and a b c) (and b c a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_3 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut and (and a (and a b c) c) (and (and a b c) c a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_4 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut and (and a (and b a c) c) (and (and a b c) c a))
+             
+             false))
+
+(step $test_$f_list_equal_mod_commut_5 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut or (or a b) (or b a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_6 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut or (or a b c) (or b c a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_7 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut or (or a (or a b c) c) (or (or a b c) c a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_8 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut or (or a (or b a c) c) (or (or a b c) c a))
+             
+             false))
+
+;--------------------------
+; $f_list_remove_every_elem
+;--------------------------
+
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Int)
+(declare-const e Int)
+(declare-const f Int)
+
+(step $test_$f_list_remove_every_elem_1 true 
+      :rule $assert_eq 
+      :args (($f_list_remove_every_elem and (and a true) true true)
+             
+             (and a)))
+
+(step $test_$f_list_remove_every_elem_1b true 
+      :rule $assert_eq 
+      :args (($f_list_remove_every_elem and (and a b true) true true)
+             
+             (and a b)))
+
+(step $test_$f_list_remove_every_elem_1c true 
+      :rule $assert_eq 
+      :args (($f_list_remove_every_elem and (and a b true c) true true)
+             
+             (and a b c)))
+
+(step $test_$f_list_remove_every_elem_2 true 
+      :rule $assert_eq 
+      :args (($f_list_remove_every_elem and (and a true b true c) true true)
+             
+             (and a b c)))
+
+(step $test_$f_list_remove_every_elem_3 true 
+      :rule $assert_eq 
+      :args (($f_list_remove_every_elem and (and true a true b true c) true true)
+             
+             (and a b c)))
+
+(step $test_$f_list_remove_every_elem_4 true 
+      :rule $assert_eq 
+      :args (($f_list_remove_every_elem and (and true a a true b b true c) true true)
+             
+             (and a a b b c)))
+
+;--------------------------
+; $to_nil_terminated_f_list
+;--------------------------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+(step $test_$to_nil_terminated_f_list_1 true 
+      :rule $assert_eq 
+      :args (($to_nil_terminated_f_list and true a)
+             
+             a))
+
+(step $test_$to_nil_terminated_f_list_2 true 
+      :rule $assert_eq 
+      :args (($to_nil_terminated_f_list and true 
+                                        ($f_list_cons and a b))
+             
+             (and a b)))
+
+(step $test_$to_nil_terminated_f_list_2 true 
+      :rule $assert_eq 
+      :args (($to_nil_terminated_f_list and true ($f_list_cons and 
+                                                               a 
+                                                               ($f_list_cons and b c)))
+             
+             (and a b c)))
+
+(step $test_$to_nil_terminated_f_list_3 true 
+      :rule $assert_eq 
+      :args (($to_nil_terminated_f_list and true (and a ($f_list_cons and b c)))
+             
+             (and a (and b c))))
+
+(step $test_$to_nil_terminated_f_list_4 true 
+      :rule $assert_eq 
+      :args (($to_nil_terminated_f_list and true (and a ($f_list_cons or b c)))
+             
+             (and a ($f_list_cons or b c))))
+
+(step $test_$to_nil_terminated_f_list_5 true 
+      :rule $assert_eq 
+      :args (($to_nil_terminated_f_list and true (and ($f_list_cons or a b) 
+                                                      ($f_list_cons or b c)))
+             
+             (and ($f_list_cons or a b) ($f_list_cons or b c))))
+
+(step $test_$to_nil_terminated_f_list_6 true 
+      :rule $assert_eq 
+      :args (($to_nil_terminated_f_list and true (and ($f_list_cons and a b)
+                                                      ($f_list_cons and b c)))
+             
+             (and (and a b) (and b c))))
+
+(step $test_$to_nil_terminated_f_list_7 true 
+      :rule $assert_eq 
+      :args (($to_nil_terminated_f_list and true (and ($f_list_cons and a b)
+                                                      (and b c) c))
+             
+             (and (and a b) (and b c) c)))
+
+; It is the identity function for already nil-terminated f-lists.
+(step $test_$to_nil_terminated_f_list_8 true 
+      :rule $assert_eq 
+      :args (($to_nil_terminated_f_list and true (and a b))
+             
+             (and a b)))
+
+(step $test_$to_nil_terminated_f_list_9 true 
+      :rule $assert_eq 
+      :args (($to_nil_terminated_f_list and true (and a b c))
+             
+             (and a b c)))
+
+(step $test_$to_nil_terminated_f_list_10 true 
+      :rule $assert_eq 
+      :args (($to_nil_terminated_f_list and true (and a b c a))
+             
+             (and a b c a)))
+
+(step $test_$to_nil_terminated_f_list_11 true 
+      :rule $assert_eq 
+      :args (($to_nil_terminated_f_list and true (and a b c (and a c)))
+             
+             (and a b c (and a c))))
+
+;--------------------------
+; $to_non_nil_terminated_f_list
+;--------------------------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+(step $test_$to_non_nil_terminated_f_list_1 true 
+      :rule $assert_eq 
+      :args (($to_non_nil_terminated_f_list and true a)
+             
+             a))
+
+(step $test_$to_non_nil_terminated_f_list_2 true 
+      :rule $assert_eq 
+      :args (($to_non_nil_terminated_f_list and true (and a b))
+             
+             ($f_list_cons and a b)))
+
+(step $test_$to_non_nil_terminated_f_list_2 true 
+      :rule $assert_eq 
+      :args (($to_non_nil_terminated_f_list and true (and a b c))
+             ($f_list_cons and 
+                           a 
+                           ($f_list_cons and b c))
+             ))
+
+(step $test_$to_non_nil_terminated_f_list_3 true 
+      :rule $assert_eq 
+      :args (($to_non_nil_terminated_f_list and true (and a (and b c)))
+             
+             ($f_list_cons and a ($f_list_cons and b c))))
+
+(step $test_$to_non_nil_terminated_f_list_4 true 
+      :rule $assert_eq 
+      :args (($to_non_nil_terminated_f_list and true (and a ($f_list_cons or b c)))
+             
+             ($f_list_cons and a ($f_list_cons or b c))))
+
+(step $test_$to_non_nil_terminated_f_list_5 true 
+      :rule $assert_eq 
+      :args (($to_non_nil_terminated_f_list and true 
+                                            (and ($f_list_cons or a b) 
+                                                 ($f_list_cons or b c)))
+             
+             ($f_list_cons and 
+                           ($f_list_cons or a b) 
+                           ($f_list_cons or b c))))
+
+(step $test_$to_non_nil_terminated_f_list_6 true 
+      :rule $assert_eq 
+      :args (($to_non_nil_terminated_f_list and true 
+                                            (and (and a b) (and b c)))
+             
+             ($f_list_cons and 
+                           ($f_list_cons and a b)
+                           ($f_list_cons and b c))))
+
+(step $test_$to_non_nil_terminated_f_list_7 true 
+      :rule $assert_eq 
+      :args (($to_non_nil_terminated_f_list and true
+                                            (and (and a b) (and b c) c))
+             
+             ($f_list_cons and 
+                           ($f_list_cons and a b)
+                           ($f_list_cons and ($f_list_cons and b c) c))))
+
+; It is the identity function for already non-nil-terminated f-lists.
+(step $test_$to_non_nil_terminated_f_list_8 true 
+      :rule $assert_eq 
+      :args (($to_non_nil_terminated_f_list and true ($f_list_cons and a b))
+             
+             ($f_list_cons and a b)))
+
+(step $test_$to_non_nil_terminated_f_list_9 true 
+      :rule $assert_eq 
+      :args (($to_non_nil_terminated_f_list and true 
+                                            ($f_list_cons and a 
+                                                          ($f_list_cons and b c)))
+             
+             ($f_list_cons and a 
+                           ($f_list_cons and b c))))
+
+(step $test_$to_non_nil_terminated_f_list_10 true 
+      :rule $assert_eq 
+      :args (($to_non_nil_terminated_f_list and true 
+                                            ($f_list_cons and a 
+                                                          ($f_list_cons and b ($f_list_cons and c a))))
+             
+             ($f_list_cons and a 
+                           ($f_list_cons and b ($f_list_cons and c a)))))
+
+(step $test_$to_non_nil_terminated_f_list_11 true 
+      :rule $assert_eq 
+      :args (($to_non_nil_terminated_f_list and true 
+                                            ($f_list_cons and a 
+                                                          ($f_list_cons and b 
+                                                                        ($f_list_cons and c 
+                                                                                      ($f_list_cons and a c)))))
+             
+             ($f_list_cons and a 
+                           ($f_list_cons and b 
+                                         ($f_list_cons and c 
+                                                       ($f_list_cons and a c))))))
+
+; $to_non_nil_terminated_f_list and $to_nil_terminated_f_list are inverses
+(step $test_$to_non_nil_terminated_f_list_12 true 
+      :rule $assert_eq 
+      :args (($to_nil_terminated_f_list and true 
+                                            ($to_non_nil_terminated_f_list and true a))
+             
+             a))
+
+(step $test_$to_non_nil_terminated_f_list_12b true 
+      :rule $assert_eq 
+      :args (($to_non_nil_terminated_f_list and true 
+                                            ($to_nil_terminated_f_list and true a))
+             
+             a))
+
+(step $test_$to_non_nil_terminated_f_list_13 true 
+      :rule $assert_eq 
+      :args (($to_nil_terminated_f_list and true 
+                                            ($to_non_nil_terminated_f_list and true (and a b)))
+             
+             (and a b)))
+
+(step $test_$to_non_nil_terminated_f_list_13b true 
+      :rule $assert_eq 
+      :args (($to_non_nil_terminated_f_list and true 
+                                            ($to_nil_terminated_f_list and true ($f_list_cons and a b)))
+             
+             ($f_list_cons and a b)))
+
+(step $test_$to_non_nil_terminated_f_list_14 true 
+      :rule $assert_eq 
+      :args (($to_nil_terminated_f_list and true 
+                                            ($to_non_nil_terminated_f_list and true (and a b c)))
+             
+             (and a b c)))
+
+(step $test_$to_non_nil_terminated_f_list_14b true 
+      :rule $assert_eq 
+      :args (($to_non_nil_terminated_f_list and true 
+                                            ($to_nil_terminated_f_list and true ($f_list_cons and a ($f_list_cons and b c))))
+             
+             ($f_list_cons and a ($f_list_cons and b c))))

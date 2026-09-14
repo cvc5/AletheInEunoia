@@ -110,6 +110,54 @@
   )
 )
 
+; program: $f_list_length
+; args:
+; - f (-> A B B): Operator used to build the f-list.
+; - list B: An f-list.
+; return: Quantity of elements of `list`, including the nil terminator.
+(program $f_list_length ((B Type) (f (-> B B B)) (hd B) (tl B :list))
+
+  :signature ((-> B B B) B) Int
+
+  (
+   (
+    ($f_list_length f (f hd tl))
+
+    (eo::add 1 ($f_list_length f tl))
+    )
+
+   (; { hd != f ...}
+    ($f_list_length f hd)
+
+    1
+    )
+  )
+)
+
+; program: $f_list_equal_mod_commut
+; args:
+; - f (-> A B B): Operator used to build the f-list.
+; - list_1 B: An f-list.
+; - list_2 B: An f-list.
+; return: >
+; A boolean indicating if the operands from list_1 and list_2 are the 
+; same, regardless of the order.
+(program $f_list_equal_mod_commut ((A Type) (B Type) (f (-> A B B))
+                       (f_list_1 B) (f_list_2 B))
+  :signature ((-> A B B) B B) Bool
+  (
+   (
+    ($f_list_equal_mod_commut f f_list_1 f_list_2)
+
+    (eo::and 
+     (eo::is_eq ($f_list_length f f_list_1)
+                ($f_list_length f f_list_2))
+     ($f_list_contains_f_list f f_list_1 f_list_2)
+     ($f_list_contains_f_list f f_list_2 f_list_1))
+    )
+  )
+)
+
 ; program: $f_list_equal
 ; args:
 ; - f (-> A B B): Operator used to build the f-list.
@@ -124,6 +172,27 @@
   (
    (
     ($f_list_equal f f_list_1 f_list_2)
+
+    (eo::and ($f_list_contains_f_list f f_list_1 f_list_2)
+             ($f_list_contains_f_list f f_list_2 f_list_1))
+    )
+  )
+)
+
+; program: $f_list_equal_mod_commut_and_length
+; args:
+; - f (-> A B B): Operator used to build the f-list.
+; - list_1 B: An f-list.
+; - list_2 B: An f-list.
+; return: >
+; A boolean indicating if the operands from list_1 and list_2 are the 
+; same, regardless of the order and possible repetitions.
+(program $f_list_equal_mod_commut_and_length ((A Type) (B Type) (f (-> A B B))
+                       (f_list_1 B) (f_list_2 B))
+  :signature ((-> A B B) B B) Bool
+  (
+   (
+    ($f_list_equal_mod_commut_and_length f f_list_1 f_list_2)
 
     (eo::and ($f_list_contains_f_list f f_list_1 f_list_2)
              ($f_list_contains_f_list f f_list_2 f_list_1))
@@ -268,31 +337,33 @@
 ; program: $f_list_remove_duplicates
 ; args:
 ; - f (-> A B B): An Eunoia's "variadic" function.
-; - f_nil B: Nil element of "f".
 ; - f_list B: An f-list from which we want to remove repeated elements.
 ; return: >
 ;   A f-list obtained from removing repeated elements from "f_list".
 ;   Removes the first repeated occurrence of an element, traversing 
-;   "f_list" from left to right.
+;   "f_list" from left to right. It preserves the nil-terminator.
 (program $f_list_remove_duplicates ((A Type) (B Type) (f (-> A B B)) (hd A) 
-                                    (f_nil B) (tl B :list))
-         :signature ((-> A B B) B B) B
+                                    (tl B))
+         :signature ((-> A B B) B) B
          (
           (
-           ($f_list_remove_duplicates f f_nil (f hd tl))
+           ($f_list_remove_duplicates f (f hd tl))
            
-           ($f_list_cons f hd 
-                         ($f_list_remove_every_elem f  ($f_list_remove_duplicates f f_nil tl)
-                                                    hd f_nil))
+           (eo::ite ($f_list_contains_elem f hd tl)
+
+                    ($f_list_remove_duplicates f tl)
+
+                    ; { not ($f_list_contains_elem f hd tl) }
+                    ($f_list_cons f hd ($f_list_remove_duplicates f tl)))
            )
 
           (; { hd <> f some_element tail }
-           ($f_list_remove_duplicates f f_nil hd)
+           ($f_list_remove_duplicates f hd)
            
            hd
            )
           )
-)
+         )
 
 ; program: $f_list_last_element
 ; args:
@@ -318,6 +389,108 @@
            )
           )
          )
+
+; program: $to_nil_terminated_f_list
+; args:
+; - f (-> A A A): Constructor of f-lists, that is righ-assoc-nil.
+; - nil A: Nil terminator of `f`-lists.
+; - value A: A single element or `f`-list.
+; return: The injection of `value` into the set of properly `nil`-terminated `f`-lists.
+; note: >
+;   Useful to guarantee that a function returns `nil`-terminated `f`-lists, when 
+;   required. It considers sub-terms such that every sub-`f`-list is also 
+;   `nil`-terminated.
+(program $to_nil_terminated_f_list ((A Type) (f (-> A A A)) (op (-> A A A))
+                                    (hd_1 A) (hd_2 A) (tl_1 A) (tl_2 A) (elem A) (nil A))
+         :signature ((-> A A A) A A) A
+         (
+          (
+           ($to_nil_terminated_f_list f nil (f (f hd_1 tl_1) nil))
+
+           (f ($to_nil_terminated_f_list f nil (f hd_1 tl_1)) nil)
+           )
+
+          (; { tl_2 != nil }
+           ($to_nil_terminated_f_list f nil (f (f hd_1 tl_1) tl_2))
+
+           (f ($to_nil_terminated_f_list f nil (f hd_1 tl_1)) 
+              ($to_nil_terminated_f_list f nil tl_2))
+           )
+
+          (; { hd_1 != op ... }
+           ($to_nil_terminated_f_list f nil (f hd_1 nil))
+
+           (f hd_1 nil)
+           )
+
+          (; { hd_1 != f ... }
+           ($to_nil_terminated_f_list f nil (f hd_1 (f hd_2 tl_1)))
+
+           (f hd_1 ($to_nil_terminated_f_list f nil (f hd_2 tl_1)))
+           )
+
+          (; { hd_1 != f ..., hd_2 != f ... }
+           ($to_nil_terminated_f_list f nil (f hd_1 hd_2))
+           ; f is righ-assoc-nil.
+           (f hd_1 (f hd_2 nil))
+           )
+
+          (; { hd != f ... }
+           ($to_nil_terminated_f_list f nil hd_1)
+
+           ;; (f hd_1 nil)
+           hd_1
+           )
+          )
+         )
+
+; program: $to_non_nil_terminated_f_list
+; args:
+; - f (-> A A A): Constructor of f-lists, that is righ-assoc-nil.
+; - nil A: Nil terminator of `f`-lists.
+; - value A: A single element or `f`-list.
+; return: The injection of `value` into the set of non-`nil`-terminated `f`-lists.
+; note: >
+;   Useful to compare values generated by functions against values received from
+;   the user (through surface syntax, that is then desugared into nil-terminated
+;   terms).
+(program $to_non_nil_terminated_f_list ((A Type) (f (-> A A A)) (op (-> A A A))
+                                    (hd_1 A) (tl_1 A) (tl_2 A) (elem A) (nil A))
+         :signature ((-> A A A) A A) A
+         (
+          (
+           ($to_non_nil_terminated_f_list f nil (f (f hd_1 tl_1) nil))
+
+           ($to_non_nil_terminated_f_list f nil (f hd_1 tl_1))
+           )
+
+          (; { hd_1 != op ... }
+           ($to_non_nil_terminated_f_list f nil (f hd_1 nil))
+
+           hd_1
+           )
+
+          (; { tl_2 != nil }
+           ($to_non_nil_terminated_f_list f nil (f (f hd_1 tl_1) tl_2))
+
+           (f ($to_non_nil_terminated_f_list f nil (f hd_1 tl_1)) 
+              ($to_non_nil_terminated_f_list f nil tl_2))
+           )
+
+          (; { hd != f ... }
+           ($to_non_nil_terminated_f_list f nil (f hd_1 tl_1))
+
+           (f hd_1 ($to_non_nil_terminated_f_list f nil tl_1))
+           )
+
+          (; { hd != f ... }
+           ($to_non_nil_terminated_f_list f nil hd_1)
+
+           hd_1
+           )
+          )
+         )
+
 
 ;-------------
 ; Reflection
