@@ -879,7 +879,6 @@
   :conclusion-explicit (@cl (= lhs rhs))
 )
 
-
 ;-----------------------
 ; Rule 86: prod_simplify
 ;-----------------------

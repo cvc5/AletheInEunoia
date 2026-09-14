@@ -80,7 +80,7 @@
   )
 )
 
-; program: f_list_contains_elem
+; program: $f_list_contains_f_list
 ; args:
 ; - f (-> A B B): Operator used to build the f-list.
 ; - list_1 B: An f-list.
@@ -110,7 +110,7 @@
   )
 )
 
-; program: f_list_equal
+; program: $f_list_equal
 ; args:
 ; - f (-> A B B): Operator used to build the f-list.
 ; - list_1 B: An f-list.

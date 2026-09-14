@@ -910,9 +910,6 @@
                  (p c))))
       :rule bool_simplify)
 
-
-
-
 ;-------------
 ; eq_symmetric
 ;-------------
