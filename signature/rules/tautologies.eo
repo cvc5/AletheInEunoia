@@ -879,6 +879,95 @@
   :conclusion-explicit (@cl (= lhs rhs))
 )
 
+;-----------------------
+; Rule 83: qnt_rm_unused
+;-----------------------
+
+; program: $check_free_variables
+; args:
+; - varlist1 VarList: Original list of quantified variables.
+; - varlist2 VarList: >
+;   List of quantified variables where unused variables where removed
+; - free_variables VarList: >
+;   List of free variables in the body of the original quantified formula.
+; return: >
+;   A boolean indicating if every variable in `varlist1` that is not 
+;   present in `varlist2` does not in `free_variables` (i.e., does not 
+;   appear free in the body of the original quantified formula).
+(program $check_free_variables ((varlist1 @VarList) (varlist2 @VarList)
+                                (free_variables @VarList)
+                                (A Type) (var A) (tail A :list))
+
+         :signature (@VarList @VarList @VarList) Bool
+
+         (
+          (
+           ($check_free_variables @varlist.nil varlist2 free_variables)
+           
+           true
+           )
+
+          (
+           ($check_free_variables (@varlist var tail) varlist2 free_variables)
+           
+           (eo::ite (eo::not ($f_list_contains_elem @varlist var varlist2))
+
+                    (eo::and (eo::not ($f_list_contains_elem @varlist var free_variables))
+
+                             ($check_free_variables tail varlist2 free_variables))
+
+                    ; { (f_list_contains_elem @varlist var varlist2) }
+                    ($check_free_variables tail varlist2 free_variables))
+           )
+          )
+         )
+
+
+; program: $check_qnt_rm_unused
+; args:
+; - conclusion Bool: Conclusion given to rule `qnt_rm_unused`.
+; return: >
+;   A boolean indicating if `conclusion` has the form:
+;   𝑄 𝑥1, … , 𝑥𝑛. 𝜑 ≈ 𝑄 𝑥𝑘1, … , 𝑥𝑘𝑚. 𝜑
+;   Where the list of variables 𝑥𝑘1, … , 𝑥𝑘𝑚 is obtained from the original list
+;   𝑥1, … , 𝑥n, by removing variables that are not-free in 𝜑.
+(program $check_qnt_rm_unused ((varlist_1 @VarList) (varlist_2 @VarList) (phi Bool))
+  :signature (Bool) Bool
+  (
+   (
+    ($check_qnt_rm_unused (@cl (= (forall varlist_1 phi) (forall varlist_2 phi))))
+
+    
+    (eo::and ; varlist_2 is contained in varlist_1
+             ($f_list_contains_f_list @varlist varlist_2 varlist_1)
+             
+             ($check_free_variables varlist_1 varlist_2 ($fv phi)))
+    )
+
+   (
+    ($check_qnt_rm_unused (@cl (= (exists varlist_1 phi) (exists varlist_2 phi))))
+
+    
+    (eo::and ; varlist_2 is contained in varlist_1
+             ($f_list_contains_f_list @varlist varlist_2 varlist_1)
+             
+             ($check_free_variables varlist_1 varlist_2 ($fv phi)))
+    )
+  )
+)
+
+; rule: qnt_rm_unused
+; requires: >
+;   For the conclusion to be of the form:
+;   𝑄 𝑥1, … , 𝑥𝑛. 𝜑 ≈ 𝑄 𝑥𝑘1, … , 𝑥𝑘𝑚. 𝜑
+;   Where the list of variables 𝑥𝑘1, … , 𝑥𝑘𝑚 is obtained from the original list
+;   𝑥1, … , 𝑥n, by removing variables that are already bound in 𝜑.
+; conclusion-explicit: A conclusion of the form (@cl (= lhs rhs)), satisfying the previous side-condition.
+(declare-rule qnt_rm_unused ((lhs Bool) (rhs Bool))
+  :requires ((($check_qnt_rm_unused (@cl (= lhs rhs))) true))
+  :conclusion-explicit (@cl (= lhs rhs))
+)
+
 
 ;-----------------------
 ; Rule 86: prod_simplify

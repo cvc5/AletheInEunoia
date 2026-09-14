@@ -910,8 +910,128 @@
                  (p c))))
       :rule bool_simplify)
 
+;----------------------
+; $check_free_variables
+;----------------------
 
+(step $test_$check_free_variables_1 true 
+      :rule $assert_eq 
+      :args (($check_free_variables (@varlist (eo::var "x" Int) (eo::var "y" Int))
+                                    (@varlist (eo::var "y" Int))
+                                    @varlist.nil)
 
+             true))
+
+(step $test_$check_free_variables_2 true 
+      :rule $assert_eq 
+      :args (($check_free_variables (@varlist (eo::var "x" Int) (eo::var "y" Int))
+                                    (@varlist (eo::var "y" Int))
+                                    (@varlist (eo::var "x" Int)))
+
+             false))
+
+(step $test_$check_free_variables_2 true 
+      :rule $assert_eq 
+      :args (($check_free_variables (@varlist (eo::var "x" Int) 
+                                              (eo::var "y" Int)
+                                              (eo::var "z" Int))
+                                    (@varlist (eo::var "y" Int)
+                                              (eo::var "z" Int))
+                                    (@varlist (eo::var "y" Int)))
+
+             true))
+
+(step $test_$check_free_variables_2 true 
+      :rule $assert_eq 
+      :args (($check_free_variables (@varlist (eo::var "x" Int) 
+                                              (eo::var "y" Int)
+                                              (eo::var "z" Int))
+                                    (@varlist (eo::var "y" Int)
+                                              (eo::var "z" Int))
+                                    (@varlist (eo::var "y" Int)
+                                              (eo::var "z" Int)))
+
+             true))
+
+;----------------------
+; $check_qnt_rm_unused
+;----------------------
+
+(step $test_$check_qnt_rm_unused_1 true 
+      :rule $assert_eq 
+      :args (($check_qnt_rm_unused 
+              (@cl (= (forall (@varlist (eo::var "x" Int) (eo::var "y" Int))
+                              (forall (@varlist (eo::var "x" Int)) true))
+                      (forall (@varlist (eo::var "y" Int))
+                              (forall (@varlist (eo::var "x" Int)) true)))))
+
+             true))
+
+(step $test_$check_qnt_rm_unused_2 true 
+      :rule $assert_eq 
+      :args (($check_qnt_rm_unused 
+              (@cl (= (forall (@varlist (eo::var "x" Int) (eo::var "y" Int)
+                                        (eo::var "z" Int))
+                              (forall (@varlist (eo::var "x" Int)) true))
+                      (forall (@varlist (eo::var "y" Int))
+                              (forall (@varlist (eo::var "x" Int)) true)))))
+
+             true))
+
+(step $test_$check_qnt_rm_unused_3 true 
+      :rule $assert_eq 
+      :args (($check_qnt_rm_unused 
+              (@cl (= (exists (@varlist (eo::var "x" Int) (eo::var "y" Int))
+                              (exists (@varlist (eo::var "x" Int)) true))
+                      (exists (@varlist (eo::var "y" Int))
+                              (exists (@varlist (eo::var "x" Int)) true)))))
+
+             true))
+
+(step $test_$check_qnt_rm_unused_4 true 
+      :rule $assert_eq 
+      :args (($check_qnt_rm_unused 
+              (@cl (= (exists (@varlist (eo::var "x" Int) (eo::var "y" Int)
+                                        (eo::var "z" Int))
+                              (exists (@varlist (eo::var "x" Int)) true))
+                      (exists (@varlist (eo::var "y" Int))
+                              (exists (@varlist (eo::var "x" Int)) true)))))
+
+             true))
+
+;----------------------
+; qnt_rm_unused
+;----------------------
+
+(step $test_qnt_rm_unused_1 
+      (@cl (= (forall (@varlist (eo::var "x" Int) (eo::var "y" Int))
+                              (forall (@varlist (eo::var "x" Int)) true))
+                      (forall (@varlist (eo::var "y" Int))
+                              (forall (@varlist (eo::var "x" Int)) true)))) 
+      :rule qnt_rm_unused)
+
+(step $test_qnt_rm_unused_2 
+      (@cl (= (forall (@varlist (eo::var "x" Int) (eo::var "y" Int)
+                                        (eo::var "z" Int))
+                              (forall (@varlist (eo::var "x" Int)) true))
+                      (forall (@varlist (eo::var "y" Int))
+                              (forall (@varlist (eo::var "x" Int)) true)))) 
+      :rule qnt_rm_unused)
+
+(step $test_qnt_rm_unused_3 
+      (@cl (= (exists (@varlist (eo::var "x" Int) (eo::var "y" Int))
+                              (exists (@varlist (eo::var "x" Int)) true))
+                      (exists (@varlist (eo::var "y" Int))
+                              (exists (@varlist (eo::var "x" Int)) true)))) 
+      :rule qnt_rm_unused)
+
+(step $test_qnt_rm_unused_4 
+      (@cl (= (exists (@varlist (eo::var "x" Int) (eo::var "y" Int)
+                                        (eo::var "z" Int))
+                              (exists (@varlist (eo::var "x" Int)) true))
+                      (exists (@varlist (eo::var "y" Int))
+                              (exists (@varlist (eo::var "x" Int)) true))))
+      :rule qnt_rm_unused)
 
 ;-------------
 ; eq_symmetric
