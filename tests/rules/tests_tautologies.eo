@@ -253,6 +253,245 @@
 
              true))
 
+;---------
+; xor_pos1
+;---------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+
+(step $test_xor_pos1_1
+      (@cl (not (xor a b)) a b)
+      :rule xor_pos1)
+
+(step $test_xor_pos1_2
+      (@cl (not (xor (or a true) b)) (or a true) b)
+      :rule xor_pos1)
+
+(step $test_xor_pos1_3
+      (@cl (not (xor (or a true) (and b false))) (or a true) (and b false))
+      :rule xor_pos1)
+
+(step $test_xor_pos1_4
+      (@cl (not (xor (xor a true) (and b false))) (xor a true) (and b false))
+      :rule xor_pos1)
+
+;---------
+; xor_pos2
+;---------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+
+(step $test_xor_pos2_1
+      (@cl (not (xor a b)) (not a) (not b))
+      :rule xor_pos2)
+
+(step $test_xor_pos2_2
+      (@cl (not (xor (or a true) b)) (not (or a true)) (not b))
+      :rule xor_pos2)
+
+(step $test_xor_pos2_3
+      (@cl (not (xor (or a true) (and b false))) (not (or a true)) (not (and b false)))
+      :rule xor_pos2)
+
+(step $test_xor_pos2_4
+      (@cl (not (xor (xor a true) (and b false))) (not (xor a true)) (not (and b false)))
+      :rule xor_pos2)
+
+;---------
+; xor_neg1
+;---------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+
+(step $test_xor_neg1_1
+      (@cl (xor a b) a (not b))
+      :rule xor_neg1)
+
+(step $test_xor_neg1_2
+      (@cl (xor (or a true) b) (or a true) (not b))
+      :rule xor_neg1)
+
+(step $test_xor_neg1_3
+      (@cl (xor (or a true) (and b false)) (or a true) (not (and b false)))
+      :rule xor_neg1)
+
+(step $test_xor_neg1_4
+      (@cl (xor (xor a true) (and b false)) (xor a true) (not (and b false)))
+      :rule xor_neg1)
+
+;---------
+; xor_neg2
+;---------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+
+(step $test_xor_neg2_1
+      (@cl (xor a b) (not a) b)
+      :rule xor_neg2)
+
+(step $test_xor_neg2_2
+      (@cl (xor (or a true) b) (not (or a true)) b)
+      :rule xor_neg2)
+
+(step $test_xor_neg2_3
+      (@cl (xor (or a true) (and b false)) (not (or a true)) (and b false))
+      :rule xor_neg2)
+
+(step $test_xor_neg2_4
+      (@cl (xor (xor a true) (and b false)) (not (xor a true)) (and b false))
+      :rule xor_neg2)
+
+;---------
+; equiv_neg1
+;---------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+
+(step $test_equiv_neg1_1
+      (@cl (= a b) (not a) (not b))
+      :rule equiv_neg1)
+
+(step $test_equiv_neg1_2
+      (@cl (= (or a true) b) (not (or a true)) (not b))
+      :rule equiv_neg1)
+
+(step $test_equiv_neg1_3
+      (@cl (= (or a true) (and b false)) (not (or a true)) (not (and b false)))
+      :rule equiv_neg1)
+
+(step $test_equiv_neg1_4
+      (@cl (= (xor a true) (and b false)) (not (xor a true)) (not (and b false)))
+      :rule equiv_neg1)
+
+;------------
+; equiv_neg2
+;------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+
+(step $test_equiv_neg2_1
+      (@cl (= a b) a b)
+      :rule equiv_neg2)
+
+(step $test_equiv_neg2_2
+      (@cl (= (or a true) b) (or a true) b)
+      :rule equiv_neg2)
+
+(step $test_equiv_neg2_3
+      (@cl (= (or a true) (and b false)) (or a true) (and b false))
+      :rule equiv_neg2)
+
+(step $test_equiv_neg2_4
+      (@cl (= (xor a true) (and b false)) (xor a true) (and b false))
+      :rule equiv_neg2)
+
+
+;---------
+; ite_pos1
+;---------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+(step $test_ite_pos1_1
+      (@cl (not (ite a c b)) a b)
+      :rule ite_pos1)
+
+(step $test_ite_pos1_2
+      (@cl (not (ite (or a true) c b)) (or a true) b)
+      :rule ite_pos1)
+
+(step $test_ite_pos1_3
+      (@cl (not (ite (or a true) c (and b false))) (or a true) (and b false))
+      :rule ite_pos1)
+
+(step $test_ite_pos1_4
+      (@cl (not (ite (xor a true) c (and b false))) (xor a true) (and b false))
+      :rule ite_pos1)
+
+;---------
+; ite_pos2
+;---------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+(step $test_ite_pos2_1
+      (@cl (not (ite a b c)) (not a) b)
+      :rule ite_pos2)
+
+(step $test_ite_pos2_2
+      (@cl (not (ite (or a true) b c)) (not (or a true)) b)
+      :rule ite_pos2)
+
+(step $test_ite_pos2_3
+      (@cl (not (ite (or a true) (and b false) c)) 
+           (not (or a true)) 
+           (and b false))
+      :rule ite_pos2)
+
+(step $test_ite_pos2_4
+      (@cl (not (ite (xor a true) (and b false) c)) 
+           (not (xor a true)) 
+           (and b false))
+      :rule ite_pos2)
+
+;---------
+; ite_neg1
+;---------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+(step $test_ite_neg1_1
+      (@cl (ite a c b) a (not b))
+      :rule ite_neg1)
+
+(step $test_ite_neg1_2
+      (@cl (ite (or a true) c b) (or a true) (not b))
+      :rule ite_neg1)
+
+(step $test_ite_neg1_3
+      (@cl (ite (or a true) c (and b false)) (or a true) (not (and b false)))
+      :rule ite_neg1)
+
+(step $test_ite_neg1_4
+      (@cl (ite (xor a true) c (and b false)) (xor a true) (not (and b false)))
+      :rule ite_neg1)
+
+;---------
+; ite_neg2
+;---------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+(step $test_ite_neg2_1
+      (@cl (ite a b c) (not a) (not b))
+      :rule ite_neg2)
+
+(step $test_ite_neg2_2
+      (@cl (ite (or a true) b c) (not (or a true)) (not b))
+      :rule ite_neg2)
+
+(step $test_ite_neg2_3
+      (@cl (ite (or a true) (and b false) c) (not (or a true)) (not (and b false)))
+      :rule ite_neg2)
+
+(step $test_ite_neg2_4
+      (@cl (ite (xor a true) (and b false) c) (not (xor a true)) (not (and b false)))
+      :rule ite_neg2)
+
 ;--------------------
 ; $connective_def
 ;--------------------
@@ -1100,3 +1339,16 @@
 (step $test_$eq_symmetric_12
       (@cl (= (= (g e) (g (g f))) (= (g (g f)) (g e))))
       :rule eq_symmetric)
+
+;-------------
+; qnt_simplify
+;-------------
+; NOTE: it would be interesting to be able to check the cases where this rule should
+;       not apply.
+(step $test_qnt_simplify_1
+      (@cl (= (forall @varlist.nil true) true))
+      :rule qnt_simplify)
+
+(step $test_qnt_simplify_2
+      (@cl (= (forall @varlist.nil false) false))
+      :rule qnt_simplify)

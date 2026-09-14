@@ -288,6 +288,106 @@
   :conclusion-explicit (@cl hd tail)
 )
 
+;------------------
+; Rule 52: xor_pos1
+;------------------
+
+; rule: xor_pos1
+; conclusion-explicit: Conclusion must be of the form ¬(xor 𝜑1 𝜑2), 𝜑1, 𝜑2.
+(declare-rule xor_pos1 ((phi_1 Bool) (phi_2 Bool))
+  :conclusion-explicit (@cl (not (xor phi_1 phi_2)) phi_1 phi_2)
+)
+
+;------------------
+; Rule 53: xor_pos2
+;------------------
+
+; rule: xor_pos2
+; conclusion-explicit: Conclusion must be of the form ¬(xor 𝜑1 𝜑2), ¬𝜑1, ¬𝜑2.
+(declare-rule xor_pos2 ((phi_1 Bool) (phi_2 Bool))
+  :conclusion-explicit (@cl (not (xor phi_1 phi_2)) (not phi_1) (not phi_2))
+)
+
+;------------------
+; Rule 54: xor_neg1
+;------------------
+
+; rule: xor_neg1
+; conclusion-explicit: Conclusion must be of the form (xor 𝜑1 𝜑2), 𝜑1, ¬𝜑2.
+(declare-rule xor_neg1 ((phi_1 Bool) (phi_2 Bool))
+  :conclusion-explicit (@cl (xor phi_1 phi_2) phi_1 (not phi_2))
+)
+
+;------------------
+; Rule 55: xor_neg2
+;------------------
+
+; rule: xor_neg2
+; conclusion-explicit: Conclusion must be of the form (xor 𝜑1 𝜑2), ¬𝜑1, 𝜑2.
+(declare-rule xor_neg2 ((phi_1 Bool) (phi_2 Bool))
+  :conclusion-explicit (@cl (xor phi_1 phi_2) (not phi_1) phi_2)
+)
+
+;--------------------
+; Rule equiv_neg1
+;--------------------
+
+; rule: equiv_neg1
+; conclusion-explicit: Conclusion must be of the form 𝜑1 ≈ 𝜑2, ¬𝜑1, ¬𝜑2.
+(declare-rule equiv_neg1 ((phi_1 Bool) (phi_2 Bool))
+  :conclusion-explicit (@cl (= phi_1 phi_2) (not phi_1) (not phi_2))
+)
+
+;--------------------
+; Rule equiv_neg2
+;--------------------
+
+; rule: equiv_neg2
+; conclusion-explicit: Conclusion must be of the form 𝜑1 ≈ 𝜑2, 𝜑1, 𝜑2.
+(declare-rule equiv_neg2 ((phi_1 Bool) (phi_2 Bool))
+  :conclusion-explicit (@cl (= phi_1 phi_2) phi_1 phi_2)
+)
+
+;------------------
+; Rule ite_pos1
+;------------------
+
+; rule: ite_pos1
+; conclusion-explicit: Conclusion must be of the form ¬(ite 𝜑1 𝜑2 𝜑3), 𝜑1, 𝜑3.
+(declare-rule ite_pos1 ((phi_1 Bool) (phi_2 Bool) (phi_3 Bool))
+  :conclusion-explicit (@cl (not (ite phi_1 phi_2 phi_3)) phi_1 phi_3)
+)
+
+;------------------
+; Rule ite_pos2
+;------------------
+
+; rule: ite_pos2
+; conclusion-explicit: Conclusion must be of the form ¬(ite 𝜑1 𝜑2 𝜑3), ¬𝜑1, 𝜑2.
+(declare-rule ite_pos2 ((phi_1 Bool) (phi_2 Bool) (phi_3 Bool))
+  :conclusion-explicit (@cl (not (ite phi_1 phi_2 phi_3)) (not phi_1) phi_2)
+)
+
+;------------------
+; Rule 67: ite_neg1
+;------------------
+
+; rule: ite_neg1
+; conclusion-explicit: Conclusion must be of the form (ite 𝜑1 𝜑2 𝜑3), 𝜑1, ¬𝜑3.
+(declare-rule ite_neg1 ((phi_1 Bool) (phi_2 Bool) (phi_3 Bool))
+  :conclusion-explicit (@cl (ite phi_1 phi_2 phi_3) phi_1 (not phi_3))
+)
+
+;------------------
+; Rule 68: ite_neg2
+;------------------
+
+; rule: ite_neg2
+; conclusion-explicit: Conclusion must be of the form (ite 𝜑1 𝜑2 𝜑3), 𝜑1, ¬𝜑3.
+(declare-rule ite_neg2 ((phi_1 Bool) (phi_2 Bool) (phi_3 Bool))
+  :conclusion-explicit (@cl (ite phi_1 phi_2 phi_3) (not phi_1) (not phi_2))
+)
+
 ;------------------------
 ; Rule 71: connective_def
 ;------------------------
@@ -878,6 +978,54 @@
   :requires ((($check_bool_simplify lhs rhs) true))
   :conclusion-explicit (@cl (= lhs rhs))
 )
+
+;-----------------------
+; Rule 80: qnt_simplify
+;-----------------------
+
+; program: $check_qnt_simplify
+; args:
+; - formula Bool: >
+;   The body of the quantification present in the conclusion passed to rule
+;   qnt_simplify.
+; return: >
+;   A boolean indicating if `formula` is equal to true or false.
+(program $check_qnt_simplify ((formula Bool))
+         
+         :signature (Bool) Bool
+
+         (
+          (
+           ($check_qnt_simplify true)
+
+           true
+           )
+
+          (
+           ($check_qnt_simplify false)
+
+           true
+           )
+
+          (; { formula != true, false }
+           ($check_qnt_simplify formula)
+
+           false
+           )
+          )
+         )
+
+; rule: qnt_simplify
+; requires: >
+;   For a given conclusion of the form (@cl (= (forall varlist phi) phi)), phi
+;   must be "true" or "false".
+; conclusion-explicit: >
+;   The conclusion should be of the form (@cl (= (forall varlist phi) phi)).
+(declare-rule qnt_simplify ((phi Bool) (varlist @VarList))
+  :requires ((($check_qnt_simplify phi) true))
+  :conclusion-explicit (@cl (= (forall varlist phi) phi))
+)
+
 
 ;-----------------------
 ; Rule 83: qnt_rm_unused

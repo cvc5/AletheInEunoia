@@ -2,7 +2,7 @@
 (include "../unit_test_services.eo")
 
 
-; Unit tests for rules that introduce tautologies.
+; Unit tests for rules in `alethe.eo`.
 
 ;------------------------------------------
 ; $ite_intro_check_conjuncts
@@ -196,4 +196,92 @@
       (@cl (= (= a (ite b c d)) 
               (and (= a (ite b c d)) 
                    (ite b (= c (ite b c d)) (= d (ite b c d)))))) :rule ite_intro)
+
+;-----------------
+; not_equiv1
+;-----------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+
+; Taken from VeriT certificates
+(assume premise_1 (@cl (not (= a b))))
+
+(step $test_not_equiv1_1 
+      (@cl a b)
+      :rule not_equiv1
+      :premises (premise_1))
+
+(assume premise_2 (@cl (not (= (or a true) b))))
+
+(step $test_not_equiv1_2
+      (@cl (or a true) b)
+      :rule not_equiv1
+      :premises (premise_2))
+
+(assume premise_3 (@cl (not (= (or a true) (and b false)))))
+
+(step $test_not_equiv1_3
+      (@cl (or a true) (and b false))
+      :rule not_equiv1
+      :premises (premise_3))
+
+;-----------------
+; not_equiv2
+;-----------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+; Taken from VeriT certificates
+(assume premise_1 (@cl (not (= a b))))
+
+(step $test_not_equiv2_1 
+      (@cl (not a) (not b))
+      :rule not_equiv2
+      :premises (premise_1))
+
+(assume premise_2 (@cl (not (= (or a true) b))))
+
+(step $test_not_equiv2_2
+      (@cl (not (or a true)) (not b))
+      :rule not_equiv2
+      :premises (premise_2))
+
+(assume premise_3 (@cl (not (= (or a true) (and b false)))))
+
+(step $test_not_equiv2_3
+      (@cl (not (or a true)) (not (and b false)))
+      :rule not_equiv2
+      :premises (premise_3))
+
+;-----------------
+; not_symm
+;-----------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+
+; Taken from VeriT certificates
+(assume premise_not_symm_1 (@cl (not (= a b))))
+
+(step $test_not_symm_1 
+      (@cl (not (= b a)))
+      :rule not_symm
+      :premises (premise_not_symm_1))
+
+(assume premise_not_symm_2 (@cl (not (= (or a true) b))))
+
+(step $test_not_symm_2
+      (@cl (not (= b (or a true))))
+      :rule not_symm
+      :premises (premise_not_symm_2))
+
+(assume premise_not_symm_3 (@cl (not (= (or a true) (and b false)))))
+
+(step $test_not_symm_3
+      (@cl (not (= (and b false) (or a true))))
+      :rule not_symm
+      :premises (premise_not_symm_3))
 
