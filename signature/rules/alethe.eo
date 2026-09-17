@@ -3368,20 +3368,6 @@
 )
 
 ;TODO
-(program $check_qnt_join ((conclusion Bool))
-  :signature (Bool) Bool
-  (
-   (($check_qnt_join conclusion) true)
-  )
-)
-
-;TRUST
-(declare-rule qnt_join ((conclusion Bool))
-  :requires ((($check_qnt_join conclusion) true))
-  :conclusion-explicit conclusion
-)
-
-;TODO
 (program $check_eq_simplify ((conclusion Bool))
   :signature (Bool) Bool
   (
@@ -3469,6 +3455,85 @@
   :requires ((($check_comp_simplify l r) true))
   :conclusion (@cl (= l r))
 )
+
+;------------------
+; Rule qnt_join
+;------------------
+
+; program: $check_qnt_join
+; args:
+; - quantifier (-> @VarList Bool Bool): >
+;   The quantifier that appears on both sides of the conclusion of qnt_join.
+; - lhs_varlist_1 @VarList: >
+;   List of quantified variables from the outer quantification in the left-hand
+;   side of the conclusion of qnt_join.
+; - lhs_varlist_2 @VarList: >
+;   List of quantified variables from the nested quantification in the left-hand
+;   side of the conclusion of qnt_join.
+; - rhs_varlist @VarList: >
+;   List of quantified variables from the right-hand side of the conclusion 
+;   of qnt_join.
+; return: >
+;   A boolean indicating if variables in `rhs_varlist` can be obtained by removing
+;   duplicates from ($varlist_concat `lhs_varlist_1` `lhs_varlist_2`); and, also,
+;   if `quantifier` is a universal or existential quantification. 
+(program $check_qnt_join ((lhs_varlist_1 @VarList) (lhs_varlist_2 @VarList) (rhs_varlist @VarList)
+                          (quantifier (-> @VarList Bool Bool)))
+  :signature ((-> @VarList Bool Bool) @VarList @VarList @VarList) Bool
+  (
+   (
+    ($check_qnt_join forall lhs_varlist_1 lhs_varlist_2 rhs_varlist)
+
+    ($f_list_equal_mod_commut
+     @varlist 
+     rhs_varlist
+     ($f_list_remove_duplicates @varlist
+                                ($varlist_concat lhs_varlist_1 lhs_varlist_2)))
+    )
+
+   (
+    ($check_qnt_join exists lhs_varlist_1 lhs_varlist_2 rhs_varlist)
+
+    ($f_list_equal_mod_commut
+     @varlist 
+     rhs_varlist
+     ($f_list_remove_duplicates @varlist
+                                ($varlist_concat lhs_varlist_1 lhs_varlist_2)))
+    )
+
+   (; { quantifier != ∀, ∃ }
+    ($check_qnt_join quantifier lhs_varlist_1 lhs_varlist_2 rhs_varlist)
+
+    false
+    )
+  )
+)
+ 
+; rule: qnt_join
+; requires: >
+;  Variables in right-hand side of the conclusion can be obtained by removing
+;  duplicates from the list of quantified variables in the left-hand side.
+; conclusion-explicit: >
+;  A conclusion that satisfies the previous side-condition, and is of the form:
+;
+;  (@cl (= (quantifier (@varlist var_1 varlist_1)
+;                          (quantifier (@varlist var_2 varlist_2) body))
+;          (quantifier varlist_3 body)))
+;
+;  where `quantifier` is an universal or existential quantification.
+(declare-rule qnt_join ((A Type) (var_1 A) (var_2 A) 
+                        (varlist_1 @VarList :list) (varlist_2 @VarList :list) (varlist_3 @VarList) 
+                        (quantifier (-> @VarList Bool Bool))
+                        (body Bool))
+
+  :requires ((($check_qnt_join quantifier (@varlist var_1 varlist_1) (@varlist var_2 varlist_2) varlist_3) 
+              true))
+  ; Syntactic check that quantifications in the left-hand side have at least one 
+  ; quantified variable.
+  :conclusion-explicit (@cl (= (quantifier (@varlist var_1 varlist_1)
+                                           (quantifier (@varlist var_2 varlist_2) body))
+                               (quantifier varlist_3 body)))
+ )
 
 ;----------
 ; Rule let
