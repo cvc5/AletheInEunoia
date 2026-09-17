@@ -678,7 +678,9 @@
 
 (step $test_$to_non_nil_terminated_f_list_14b true 
       :rule $assert_eq 
-      :args (($to_non_nil_terminated_f_list and true 
-                                            ($to_nil_terminated_f_list and true ($f_list_cons and a ($f_list_cons and b c))))
+      :args (($to_non_nil_terminated_f_list 
+              and 
+              true 
+              ($to_nil_terminated_f_list and true ($f_list_cons and a ($f_list_cons and b c))))
              
              ($f_list_cons and a ($f_list_cons and b c))))
