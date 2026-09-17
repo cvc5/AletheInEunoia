@@ -188,7 +188,7 @@
 ; A boolean indicating if the operands from list_1 and list_2 are the 
 ; same, regardless of the order and possible repetitions.
 (program $f_list_equal_mod_commut_and_length ((A Type) (B Type) (f (-> A B B))
-                       (f_list_1 B) (f_list_2 B))
+                                              (f_list_1 B) (f_list_2 B))
   :signature ((-> A B B) B B) Bool
   (
    (
