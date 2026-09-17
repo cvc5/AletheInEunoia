@@ -4915,6 +4915,7 @@
    :conclusion-explicit (@cl conclusion)
 )
 
+
 ;-------------
 ; Table 10: Rules used by cvc5, but not by veriT
 ;-------------
