@@ -483,7 +483,7 @@
 ;   the user (through surface syntax, that is then desugared into nil-terminated
 ;   terms).
 (program $to_non_nil_terminated_f_list ((A Type) (f (-> A A A)) (op (-> A A A))
-                                    (hd_1 A) (tl_1 A) (tl_2 A) (elem A) (nil A))
+                                        (hd_1 A) (tl_1 A) (tl_2 A) (elem A) (nil A))
          :signature ((-> A A A) A A) A
          (
           (
