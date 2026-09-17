@@ -164,6 +164,14 @@
 (declare-parameterized-const @let ((B Type :implicit) (L @VarList))
                        (-> B ($get_lambda_type L B)) :binder @varlist)
 
+; ------
+; Pairs
+; ------
+(declare-const @Pair Type)
+(declare-parameterized-const @pair ((Var Type :implicit) 
+                                    (Value Type :implicit))
+                             (-> Var Value @Pair))
+
 ; ------------
 ;   Contexts
 ; ------------
