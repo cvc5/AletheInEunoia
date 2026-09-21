@@ -2354,7 +2354,8 @@
          :signature (Bool) Bool
 
          (
-          (; Trying some trick to avoid assoc-nil semantics.
+          (; Avoiding assoc-nil semantics by not mentioning actual logical
+           ; operators in patterns.
            ($small_step_conjunctive_normal_form (op_or disjunct (op_and conjunct 
                                                                         conjuncts)))
 
@@ -2374,7 +2375,8 @@
                     (op_or disjunct (op_and conjunct conjuncts)))
            )
 
-          (; Trying some trick to avoid assoc-nil semantics.
+          (; Avoiding assoc-nil semantics by not mentioning actual logical
+           ; operators in patterns.
            ($small_step_conjunctive_normal_form (op_or (op_and conjunct conjuncts)
                                                        disjuncts))
 
