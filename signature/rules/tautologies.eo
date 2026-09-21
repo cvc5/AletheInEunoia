@@ -4,9 +4,9 @@
 
 ; Rules that introduce tautologies.
 
-;-----------------------
-; Rule 26: eq_transitive
-;-----------------------
+;--------------------
+; Rule eq_transitive
+;--------------------
 
 ; program: $check_eq_transitive_remaining_equalities
 ; args:
@@ -111,9 +111,9 @@
   :conclusion-explicit (@cl hd tail)
 )
 
-;-----------------------
-; Rule 27: eq_congruent
-;-----------------------
+;-------------------
+; Rule eq_congruent
+;-------------------
 
 ; program: $check_n_ary_application_eq_congruent
 ; args:
@@ -188,9 +188,9 @@
   :conclusion-explicit (@cl hd tail)
 )
 
-;---------------------------
-; Rule 28: eq_congruent_pred
-;---------------------------
+;------------------------
+; Rule eq_congruent_pred
+;------------------------
 
 ; program: $check_n_ary_application_eq_congruent_pred
 ; args:
@@ -288,9 +288,9 @@
   :conclusion-explicit (@cl hd tail)
 )
 
-;------------------
-; Rule 52: xor_pos1
-;------------------
+;---------------
+; Rule xor_pos1
+;---------------
 
 ; rule: xor_pos1
 ; conclusion-explicit: Conclusion must be of the form ¬(xor 𝜑1 𝜑2), 𝜑1, 𝜑2.
@@ -298,9 +298,9 @@
   :conclusion-explicit (@cl (not (xor phi_1 phi_2)) phi_1 phi_2)
 )
 
-;------------------
-; Rule 53: xor_pos2
-;------------------
+;---------------
+; Rule xor_pos2
+;---------------
 
 ; rule: xor_pos2
 ; conclusion-explicit: Conclusion must be of the form ¬(xor 𝜑1 𝜑2), ¬𝜑1, ¬𝜑2.
@@ -308,9 +308,9 @@
   :conclusion-explicit (@cl (not (xor phi_1 phi_2)) (not phi_1) (not phi_2))
 )
 
-;------------------
-; Rule 54: xor_neg1
-;------------------
+;---------------
+; Rule xor_neg1
+;---------------
 
 ; rule: xor_neg1
 ; conclusion-explicit: Conclusion must be of the form (xor 𝜑1 𝜑2), 𝜑1, ¬𝜑2.
@@ -318,9 +318,9 @@
   :conclusion-explicit (@cl (xor phi_1 phi_2) phi_1 (not phi_2))
 )
 
-;------------------
-; Rule 55: xor_neg2
-;------------------
+;---------------
+; Rule xor_neg2
+;---------------
 
 ; rule: xor_neg2
 ; conclusion-explicit: Conclusion must be of the form (xor 𝜑1 𝜑2), ¬𝜑1, 𝜑2.
@@ -328,9 +328,9 @@
   :conclusion-explicit (@cl (xor phi_1 phi_2) (not phi_1) phi_2)
 )
 
-;--------------------
+;-----------------
 ; Rule equiv_neg1
-;--------------------
+;-----------------
 
 ; rule: equiv_neg1
 ; conclusion-explicit: Conclusion must be of the form 𝜑1 ≈ 𝜑2, ¬𝜑1, ¬𝜑2.
@@ -338,9 +338,9 @@
   :conclusion-explicit (@cl (= phi_1 phi_2) (not phi_1) (not phi_2))
 )
 
-;--------------------
+;-----------------
 ; Rule equiv_neg2
-;--------------------
+;-----------------
 
 ; rule: equiv_neg2
 ; conclusion-explicit: Conclusion must be of the form 𝜑1 ≈ 𝜑2, 𝜑1, 𝜑2.
@@ -348,9 +348,9 @@
   :conclusion-explicit (@cl (= phi_1 phi_2) phi_1 phi_2)
 )
 
-;------------------
+;---------------
 ; Rule ite_pos1
-;------------------
+;---------------
 
 ; rule: ite_pos1
 ; conclusion-explicit: Conclusion must be of the form ¬(ite 𝜑1 𝜑2 𝜑3), 𝜑1, 𝜑3.
@@ -358,9 +358,9 @@
   :conclusion-explicit (@cl (not (ite phi_1 phi_2 phi_3)) phi_1 phi_3)
 )
 
-;------------------
+;---------------
 ; Rule ite_pos2
-;------------------
+;---------------
 
 ; rule: ite_pos2
 ; conclusion-explicit: Conclusion must be of the form ¬(ite 𝜑1 𝜑2 𝜑3), ¬𝜑1, 𝜑2.
@@ -368,9 +368,9 @@
   :conclusion-explicit (@cl (not (ite phi_1 phi_2 phi_3)) (not phi_1) phi_2)
 )
 
-;------------------
-; Rule 67: ite_neg1
-;------------------
+;---------------
+; Rule ite_neg1
+;---------------
 
 ; rule: ite_neg1
 ; conclusion-explicit: Conclusion must be of the form (ite 𝜑1 𝜑2 𝜑3), 𝜑1, ¬𝜑3.
@@ -378,9 +378,9 @@
   :conclusion-explicit (@cl (ite phi_1 phi_2 phi_3) phi_1 (not phi_3))
 )
 
-;------------------
-; Rule 68: ite_neg2
-;------------------
+;---------------
+; Rule ite_neg2
+;---------------
 
 ; rule: ite_neg2
 ; conclusion-explicit: Conclusion must be of the form (ite 𝜑1 𝜑2 𝜑3), 𝜑1, ¬𝜑3.
@@ -388,9 +388,9 @@
   :conclusion-explicit (@cl (ite phi_1 phi_2 phi_3) (not phi_1) (not phi_2))
 )
 
-;------------------------
-; Rule 71: connective_def
-;------------------------
+;---------------------
+; Rule connective_def
+;---------------------
 
 
 ; program: $connective_def
@@ -472,9 +472,9 @@
 )
 
 
-;-----------------------
-; Rule 73: or_simplify
-;-----------------------
+;------------------
+; Rule or_simplify
+;------------------
 
 ; program: $remove_leading_negations
 ; args:
@@ -698,9 +698,9 @@
   :conclusion-explicit (@cl (= lhs rhs))
 )
 
-;-----------------------
-; Rule 74: not_simplify
-;-----------------------
+;-------------------
+; Rule not_simplify
+;-------------------
 
 ; program: $not_simplify_rec
 ; args:
@@ -772,9 +772,9 @@
   :conclusion-explicit (@cl (= (not phi) psi))
 )
 
-;-----------------------
-; Rule 74: bool_simplify
-;-----------------------
+;--------------------
+; Rule bool_simplify
+;--------------------
 
 ; program: $bool_simplify_small_step
 ; args:
@@ -979,9 +979,9 @@
   :conclusion-explicit (@cl (= lhs rhs))
 )
 
-;-----------------------
-; Rule 80: qnt_simplify
-;-----------------------
+;-------------------
+; Rule qnt_simplify
+;-------------------
 
 ; program: $check_qnt_simplify
 ; args:
@@ -1027,9 +1027,9 @@
 )
 
 
-;-----------------------
-; Rule 83: qnt_rm_unused
-;-----------------------
+;--------------------
+; Rule qnt_rm_unused
+;--------------------
 
 ; program: $check_free_variables
 ; args:
@@ -1117,9 +1117,9 @@
 )
 
 
-;-----------------------
-; Rule 86: prod_simplify
-;-----------------------
+;--------------------
+; Rule prod_simplify
+;--------------------
 
 ; program: $check_prod_simplify
 ; args:
@@ -1170,9 +1170,9 @@
 )
 
 
-;-----------------------
-; Rule 103: eq_symmetric
-;-----------------------
+;-------------------
+; Rule eq_symmetric
+;-------------------
 
 ; rule: eq_symmetric
 ; conclusion-explicit: >
