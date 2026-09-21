@@ -2061,14 +2061,14 @@
 ; program: $negative_normal_form
 ; args:
 ; - formula Bool: A formula to be converted to its NNF.
-; - flag Bool: >
-;   A boolean flag indicating if the formula should is currently under a single 
-;   negation (`flag` = false) or not (`flag` = true). This is useful for 
+; - polarity Bool: >
+;   A boolean flag indicating if the formula is currently under a single 
+;   negation (`polarity` = false) or not (`polarity` = true). This is useful for 
 ;   recursive definition purposes. The NNF of a formula 𝜑 would be the result of
 ;   (`$negative_normal_form` 𝜑 true).
 ; return: >
-;   The NNF-equivalent formula of `formula` (if `flag` = true) or its negated
-;   equivalent (if `flag` = false).
+;   The NNF-equivalent formula of `formula` (if `polarity` = true) or its negated
+;   equivalent (if `polarity` = false).
 (program $negative_normal_form ((phi_1 Bool) (phi_2 Bool) (phi_3 Bool)
                                 (disjunct Bool) (disjuncts Bool :list)
                                 (conjunct Bool) (conjuncts Bool :list)
