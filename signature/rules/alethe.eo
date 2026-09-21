@@ -3226,21 +3226,6 @@
 
 )
 
-;TODO
-(program $check_and_simplify ((l Bool) (r Bool))
-  :signature (Bool Bool) Bool
-  (
-   (($check_and_simplify l r) true)
-  )
-)
-
-;TRUST
-(declare-rule and_simplify ((l Bool) (r Bool))
-  :args ((@cl (= l r)))
-  :requires ((($check_and_simplify l r) true))
-  :conclusion (@cl (= l r))
-)
-
 ;-----------------------
 ; Rule implies_simplify
 ;-----------------------
@@ -3347,22 +3332,13 @@
   :signature (Bool) Bool
   (
    (($check_onepoint conclusion) true)
+   )
   )
-)
-; (program $check_onepoint ((ctx Bool) (T Type) (l T) (r T) (l1 T) (r1 T))
-;   (Bool T T T T) Bool
-;   (
-;    (($check_onepoint ctx l r l1 r1) true)
-;   )
-; )
-
+ 
 ;TRUST
 (declare-rule onepoint ((ctx Bool) (old_ctx Bool) (T Type) (l T) (r T) (l1 T) (r1 T)
                         (conclusion Bool))
   :assumption ctx
-  ; :premises (old_ctx (@cl (= l1 r1)))
-  ; :args ((@cl (= l r)))
-  ; :requires ((($context_is_extended ctx old_ctx) true) (($check_onepoint ctx l r l1 r1) true))
   :requires ((($check_onepoint conclusion) true))
   :conclusion-explicit conclusion
 )
@@ -3381,98 +3357,9 @@
   :conclusion-explicit conclusion
 )
 
-;TODO
-(program $check_eq_simplify ((conclusion Bool))
-  :signature (Bool) Bool
-  (
-   (($check_eq_simplify conclusion) true)
-  )
-)
-
-;TRUST
-(declare-rule eq_simplify ((conclusion Bool))
-  :requires ((($check_eq_simplify conclusion) true))
-  :conclusion-explicit conclusion
-)
-
-;TODO
-(program $check_div_simplify ((l Bool) (r Bool))
-  :signature (Bool Bool) Bool
-  (
-   (($check_div_simplify l r) true)
-  )
-)
-
-;TRUST
-(declare-rule div_simplify ((l Bool) (r Bool))
-  :args ((@cl (= l r)))
-  :requires ((($check_div_simplify l r) true))
-  :conclusion (@cl (= l r))
-)
-
-;TODO
-(program $check_unary_minus_simplify ((l Bool) (r Bool))
-  :signature (Bool Bool) Bool
-  (
-   (($check_unary_minus_simplify l r) true)
-  )
-)
-
-;TRUST
-(declare-rule unary_minus_simplify ((l Bool) (r Bool))
-  :args ((@cl (= l r)))
-  :requires ((($check_unary_minus_simplify l r) true))
-  :conclusion (@cl (= l r))
-)
-
-;TODO
-(program $check_minus_simplify ((l Bool) (r Bool))
-  :signature (Bool Bool) Bool
-  (
-   (($check_minus_simplify l r) true)
-  )
-)
-
-;TRUST
-(declare-rule minus_simplify ((l Bool) (r Bool))
-  :args ((@cl (= l r)))
-  :requires ((($check_minus_simplify l r) true))
-  :conclusion (@cl (= l r))
-)
-
-;TODO
-(program $check_sum_simplify ((l Bool) (r Bool))
-  :signature (Bool Bool) Bool
-  (
-   (($check_sum_simplify l r) true)
-  )
-)
-
-;TRUST
-(declare-rule sum_simplify ((l Bool) (r Bool))
-  :args ((@cl (= l r)))
-  :requires ((($check_sum_simplify l r) true))
-  :conclusion (@cl (= l r))
-)
-
-;TODO
-(program $check_comp_simplify ((l Bool) (r Bool))
-  :signature (Bool Bool) Bool
-  (
-   (($check_comp_simplify l r) true)
-  )
-)
-
-;TRUST
-(declare-rule comp_simplify ((l Bool) (r Bool))
-  :args ((@cl (= l r)))
-  :requires ((($check_comp_simplify l r) true))
-  :conclusion (@cl (= l r))
-)
-
-;----------
-; Rule let
-;----------
+;-------------
+; Rule 91: let
+;-------------
 
 (program $verify_let_premises ((context Bool) (premises Bool) 
                               (A Type) (var A)
