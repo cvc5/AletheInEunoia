@@ -3313,21 +3313,6 @@
 )
 
 ;TODO
-(program $check_ac_simp ((l Bool) (r Bool))
-  :signature (Bool Bool) Bool
-  (
-   (($check_ac_simp l r) true)
-  )
-)
-
-;TRUST
-(declare-rule ac_simp ((l Bool) (r Bool))
-  :args ((@cl (= l r)))
-  :requires ((($check_ac_simp l r) true))
-  :conclusion (@cl (= l r))
-)
-
-;TODO
 (program $check_ite_simplify ((l Bool) (r Bool))
   :signature (Bool Bool) Bool
   (

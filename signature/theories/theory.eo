@@ -200,3 +200,11 @@
 ; TODO: we don't want for the user to employ directly this constructor
 (declare-const @substitution (-> @Substitute @Substitution @Substitution)
                :right-assoc-nil @substitution.nil)
+
+;--------
+; Strings
+;--------
+
+; We declaring string literals as inhabitants of the String type.
+(declare-const String Type)
+(declare-consts <string> String)

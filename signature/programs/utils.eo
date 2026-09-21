@@ -1,0 +1,75 @@
+(include "../theories/theory.eo")
+
+; program: $less_or_equal_strings
+; args:
+; - string_1 String: An arbitrary string.
+; - len_string_1_sub Int: Length of `string_1`, minus 1.
+; - string_2 String: An arbitrary string.
+; - len_string_2_sub Int: Length of `string_2`, minus 1.
+; - from Int: Position into both strings, from where to start the comparison.
+; return: A boolean indicating if `string_1` is less or equal, lexicographically, than `string_2`.
+(program $less_or_equal_strings ((string_1 String) (string_1_len_sub Int)
+                                 (string_2 String) (string_2_len_sub Int)
+                                 (from Int))
+         :signature (String Int String Int Int) Bool 
+         (
+          (
+           ($less_or_equal_strings string_1 string_1_len_sub string_2 string_2_len_sub from)
+
+           (eo::ite (eo::and (eo::or (eo::gt string_1_len_sub from)
+                                     (eo::eq string_1_len_sub from))
+                             (eo::or (eo::gt string_2_len_sub from)
+                                     (eo::eq string_2_len_sub from)))
+
+                    (eo::define
+
+                     (
+                      (string_1_code_point (eo::to_z (eo::extract string_1 from from)))
+                      (string_2_code_point (eo::to_z (eo::extract string_2 from from)))
+                      )
+            
+                     (eo::ite (eo::gt string_2_code_point string_1_code_point)
+                              
+                              true
+                              
+                              ; { not (eo::gt string_2_code_point string_1_code_point) }
+                              (eo::and (eo::is_eq string_2_code_point string_1_code_point)
+                                       
+                                       ($less_or_equal_strings string_1 string_1_len_sub 
+                                                               string_2 string_2_len_sub 
+                                                               (eo::add from 1)))))
+
+                    ; { not (eo::and (eo::or (eo::gt string_1_len_sub from)
+                    ;                        (eo::eq string_1_len_sub from))
+                    ;                (eo::or (eo::gt string_2_len_sub from)
+                    ;                        (eo::eq string_2_len_sub from))) }
+                    true)
+           )
+          )
+         )
+
+; program: $less_or_equal_strings
+; args:
+; - atom_1 A: An arbitrary variable.
+; - atom_2 A: An arbitrary variable.
+; return: A boolean indicating if the name of `atom_1` is less or equal, lexicographically, than `atom_2`'s.
+(program $less_or_equal_atoms ((A Type) (atom_1 A) (atom_2 A))
+         :signature (A A) Bool 
+         (
+          (
+           ($less_or_equal_atoms atom_1 atom_2)
+
+           (eo::define
+
+            (
+             (atom_1_to_string (eo::nameof atom_1))
+             (atom_2_to_string (eo::nameof atom_2))
+             )
+
+           ($less_or_equal_strings atom_1_to_string (eo::add (eo::len atom_1_to_string) -1)
+                                   atom_2_to_string (eo::add (eo::len atom_2_to_string) -1)
+                                   0)
+           )
+           )
+          )
+         )

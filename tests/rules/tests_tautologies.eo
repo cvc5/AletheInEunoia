@@ -1404,3 +1404,1184 @@
       (@cl true)
       :rule tautology
       :premises (premise_tautology_7))
+
+;------------------
+; $idempotency_simp
+;------------------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+
+(step $test_$idempotency_simp_1 true
+      :rule $assert_eq 
+      :args (($idempotency_simp a)
+
+             a))
+
+(step $test_$idempotency_simp_2 true
+      :rule $assert_eq 
+      :args (($idempotency_simp (or a a))
+
+             a))
+
+(step $test_$idempotency_simp_2b true
+      :rule $assert_eq 
+      :args (($idempotency_simp ($f_list_cons or 
+                                              a 
+                                              ($f_list_cons or a false)))
+
+             a))
+
+(step $test_$idempotency_simp_3 true
+      :rule $assert_eq 
+      :args (($idempotency_simp ($f_list_cons or a a))
+
+             a))
+
+;--------------
+; $ac_simp_step
+;--------------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+
+(step $test_$ac_simp_step_1 true
+      :rule $assert_eq 
+      :args (($ac_simp_step or a)
+
+             a))
+
+(step $test_$ac_simp_step_1b true
+      :rule $assert_eq 
+      :args (($ac_simp_step or (or a a))
+
+             a))
+
+(step $test_$ac_simp_step_1c true
+      :rule $assert_eq 
+      :args (($ac_simp_step or (or a a b))
+
+             (or a b)))
+
+(step $test_$ac_simp_step_1d true
+      :rule $assert_eq 
+      :args (($ac_simp_step or ($f_list_cons or a a))
+
+             a))
+
+(step $test_$ac_simp_step_1e true
+      :rule $assert_eq 
+      :args (($ac_simp_step or (or a))
+
+             (or a)))
+
+(step $test$ac_simp_step_2 true
+      :rule $assert_eq
+      :args (($ac_simp_step or (or a a b b))
+             
+             (or a b)))
+
+(step $test_$ac_simp_step_3 true
+      :rule $assert_eq
+      :args (($ac_simp_step or (or a b a b)) 
+             
+             (or a b)))
+
+(step $test_$ac_simp_step_4 true
+      :rule $assert_eq
+      :args (($ac_simp_step or (or a b a b)) 
+             
+             (or a b)))
+
+(step $test_$ac_simp_step_5 true
+      :rule $assert_eq
+      :args (($ac_simp_step or (or a b a c b)) 
+             
+             (or a c b)))
+
+(step $test_$ac_simp_step_6 true
+      :rule $assert_eq
+      :args (($ac_simp_step or (or a b a c b c)) 
+             
+             (or a b c)))
+
+(step $test_$ac_simp_step_7 true
+      :rule $assert_eq
+      :args (($ac_simp_step and (and a a b)) 
+             
+             (and a b)))
+
+(step $test_$ac_simp_step_8 true
+      :rule $assert_eq
+      :args (($ac_simp_step and (and a a b b)) 
+             
+             (and a b)))
+
+(step $test_$ac_simp_step_9 true
+      :rule $assert_eq
+      :args (($ac_simp_step and (and a b a b)) 
+             
+             (and a b)))
+
+(step $test_$ac_simp_step_10 true
+      :rule $assert_eq
+      :args (($ac_simp_step or (or a a b b))
+             
+             (or a b)))
+
+(step $test_$ac_simp_step_11 true
+      :rule $assert_eq
+      :args (($ac_simp_step and (and a b a c b)) 
+             
+             (and a c b)))
+
+(step $test_$ac_simp_step_12 true
+      :rule $assert_eq
+      :args (($ac_simp_step and (and a b a c b c)) 
+             
+             (and a b c)))
+
+; Flattening
+(step $test_$ac_simp_step_13 true
+      :rule $assert_eq
+      :args (($ac_simp_step and (and (and a b) c))
+             
+             (and a b c)))
+
+(step $test_$ac_simp_step_14 true
+      :rule $assert_eq
+      :args (($ac_simp_step and (and (and a b) (and c d))) 
+             
+             (and a b c d)))
+
+(step $test_$ac_simp_step_14 true
+      :rule $assert_eq
+      :args (($ac_simp_step and (and (and a b) (and (and c d) true))) 
+             
+             (and a b c d)))
+
+(step $test_$ac_simp_step_15 true
+      :rule $assert_eq
+      :args (($ac_simp_step or (or (or a b) c)) 
+             
+             (or a b c)))
+
+(step $test_$ac_simp_step_16 true
+      :rule $assert_eq
+      :args (($ac_simp_step or (or (or a b) (or c d))) 
+             
+             (or a b c d)))
+
+(step $test_$ac_simp_step_17 true
+      :rule $assert_eq
+      :args (($ac_simp_step or (or (or a b) (or (or c d) false))) 
+             
+             (or a b c d)))
+
+; Mixed cases:
+(step $test_$ac_simp_step_18 true
+      :rule $assert_eq
+      :args (($ac_simp_step or (or (or a b a) (or (or c d d) false))) 
+             
+             (or b a c d)))
+
+(step $test_$ac_simp_step_19 true
+      :rule $assert_eq
+      :args (($ac_simp_step or (or (or a b a) (or a b a) (or (or c d d) false))) 
+             
+             (or b a c d)))
+
+(step $test_$ac_simp_step_20 true
+      :rule $assert_eq
+      :args (($ac_simp_step and (and (and a b a) (and (and c d d) true))) 
+             
+             (and b a c d)))
+
+(step $test_$ac_simp_step_21 true
+      :rule $assert_eq
+      :args (($ac_simp_step and (and (and a b a) 
+                                     (and a b a) 
+                                     (and (and c d d) true))) 
+             
+             (and b a c d)))
+
+; Nesting
+(step $test_$ac_simp_step_22 true
+      :rule $assert_eq
+      :args (($ac_simp_step or (or a a (and b b))) 
+             
+             (or a (and b b))))
+
+(step $test_$ac_simp_step_23 true
+      :rule $assert_eq
+      :args (($ac_simp_step and (and a a (or b b c c)))
+             
+             (and a (or b b c c))))
+
+; From VeriT certs.
+(declare-const U Type)
+(declare-const p10 (-> U U Bool))
+(declare-const p9 (-> U Bool))
+(declare-const f16 (-> U U U U))
+(declare-const p3 (-> U Bool))
+(declare-const f2 (-> U U U))
+(declare-const p4 (-> U Bool))
+(declare-const f7 (-> U U))
+(declare-const p1 (-> U U Bool))
+(declare-const f12 (-> U U))
+(declare-const c18 U)
+(declare-const p14 (-> U U U Bool))
+(declare-const f17 (-> U U U U))
+(declare-const f13 (-> U U U U))
+(declare-const f6 (-> U U))
+(declare-const f5 (-> U U))
+(declare-const f11 (-> U U))
+(declare-const p15 (-> U U Bool))
+(declare-const c8 U)
+(declare-const c_0 U)
+(declare-const c_1 U)
+
+(step $test_$ac_simp_step_24 true
+      :rule $assert_eq
+      :args (($ac_simp_step or
+                            (or (p15 c_0 c_0) 
+                                (not (p3 c_0)) 
+                                (not (p10 c_0 c_0))
+                                (not (p1 c_0 c_0)) 
+                                (not (p1 c_0 c_0)) 
+                                (not (p9 c_0)) 
+                                (= c_0 c_0) 
+                                (not (p3 c_0)) 
+                                (not (p10 c_0 c_0)) 
+                                (not (p4 c_0))
+                                ))
+
+             (or (p15 c_0 c_0) 
+                 (not (p1 c_0 c_0))
+                 (not (p9 c_0))
+                 (= c_0 c_0) 
+                 (not (p3 c_0))
+                 (not (p10 c_0 c_0))
+                 (not (p4 c_0))
+                 )))
+
+;-------------
+; $ac_simp_rec
+;-------------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+
+(step $test_$ac_simp_rec_1 true
+      :rule $assert_eq 
+      :args (($ac_simp_rec a)
+
+             a))
+
+(step $test_$ac_simp_rec_1b true
+      :rule $assert_eq 
+      :args (($ac_simp_rec (or a b b))
+
+             (or a b)))
+
+(step $test_$ac_simp_rec_1c true
+      :rule $assert_eq 
+      :args (($ac_simp_rec ($f_list_cons or a a))
+
+             a))
+
+(step $test_$ac_simp_rec_1d true
+      :rule $assert_eq 
+      :args (($ac_simp_rec (or a))
+
+             (or a)))
+
+(step $test_$ac_simp_rec_1e true
+      :rule $assert_eq 
+      :args (($ac_simp_rec (or a a))
+
+             a))
+
+(step $test$ac_simp_rec_2 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (or a a b b))
+             
+             (or a b)))
+
+(step $test_$ac_simp_rec_3 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (or a b a b)) 
+             
+             (or a b)))
+
+(step $test_$ac_simp_rec_4 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (or a b a b)) 
+             
+             (or a b)))
+
+(step $test_$ac_simp_rec_5 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (or a b a c b)) 
+             
+             (or a c b)))
+
+(step $test_$ac_simp_rec_6 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (or a b a c b c)) 
+             
+             (or a b c)))
+
+(step $test_$ac_simp_rec_7 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (and a a b)) 
+             
+             (and a b)))
+
+(step $test_$ac_simp_rec_8 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (and a a b b)) 
+             
+             (and a b)))
+
+(step $test_$ac_simp_rec_9 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (and a b a b)) 
+             
+             (and a b)))
+
+(step $test_$ac_simp_rec_10 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (and a b a b)) 
+             
+             (and a b)))
+
+(step $test_$ac_simp_rec_11 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (and a b a c b)) 
+             
+             (and a c b)))
+
+(step $test_$ac_simp_rec_12 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (and a b a c b c)) 
+             
+             (and a b c)))
+
+; Flattening
+(step $test_$ac_simp_rec_13 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (and (and a b) c))
+             
+             (and a b c)))
+
+(step $test_$ac_simp_rec_14 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (and (and a b) (and c d))) 
+             
+             (and a b c d)))
+
+(step $test_$ac_simp_rec_14 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (and (and a b) (and (and c d) true))) 
+             
+             (and a b c d)))
+
+(step $test_$ac_simp_rec_15 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (or (or a b) c)) 
+             
+             (or a b c)))
+
+(step $test_$ac_simp_rec_16 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (or (or a b) (or c d))) 
+             
+             (or a b c d)))
+
+(step $test_$ac_simp_rec_17 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (or (or a b) (or (or c d) false))) 
+             
+             (or a b c d)))
+
+; Mixed cases:rule $assert_eq
+(step $test_$ac_simp_rec_18 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (or (or a b a) (or (or c d d) false))) 
+             
+             (or b a c d)))
+
+(step $test_$ac_simp_rec_19 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (or (or a b a) (or a b a) (or (or c d d) false))) 
+             
+             (or b a c d)))
+
+(step $test_$ac_simp_rec_20 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (and (and a b a) (and (and c d d) true))) 
+             
+             (and b a c d)))
+
+(step $test_$ac_simp_rec_21 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (and (and a b a) (and a b a) (and (and c d d) true))) 
+             
+             (and b a c d)))
+
+; Nesting
+(step $test_$ac_simp_rec_22 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (or a a (and b b))) 
+             
+             (or a b)))
+
+; Taken from a VeriT certificate.
+(declare-const p00 Bool)
+(declare-const p01 Bool)
+(declare-const p10 Bool)
+(declare-const p11 Bool)
+
+(step $test_ac_simp_rec_23 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (or (or (and p00 (and (not p00) p00))
+                                   (and p01 (and (not p01) p01)))
+                               (or (and p10 (and (not p10) p10))
+                                   (and p11 (and (not p11) p11)))))
+
+             (or (and (not p00) p00)
+                 (and (not p01) p01)
+                 (and (not p10) p10)
+                 (and (not p11) p11))))
+
+; Another test from a VeriT cert
+(declare-const A0 Bool)   ; (= e0 (op e0 (op e0 e0)))
+(declare-const B0 Bool)   ; (= e0 (op (op e0 e0) e0))
+(declare-const A1 Bool)   ; (= e1 (op e1 (op e1 e1)))
+(declare-const B1 Bool)   ; (= e1 (op (op e1 e1) e1))
+(declare-const A2 Bool)   ; (= e2 (op e2 (op e2 e2)))
+(declare-const B2 Bool)   ; (= e2 (op (op e2 e2) e2))
+(declare-const A3 Bool)   ; (= e3 (op e3 (op e3 e3)))
+(declare-const B3 Bool)   ; (= e3 (op (op e3 e3) e3))
+(declare-const A4 Bool)   ; (= e4 (op e4 (op e4 e4)))
+(declare-const B4 Bool)   ; (= e4 (op (op e4 e4) e4))
+(declare-const q00 Bool)  ; (= e0 (op e0 e0))
+(declare-const q01 Bool)  ; (= e0 (op e0 e1))
+(declare-const q02 Bool)  ; (= e0 (op e0 e2))
+(declare-const q03 Bool)  ; (= e0 (op e0 e3))
+(declare-const q04 Bool)  ; (= e0 (op e0 e4))
+(declare-const q10 Bool)  ; (= e0 (op e1 e0))
+(declare-const q11 Bool)  ; (= e0 (op e1 e1))
+(declare-const q20 Bool)  ; (= e0 (op e2 e0))
+(declare-const q22 Bool)  ; (= e0 (op e2 e2))
+(declare-const q30 Bool)  ; (= e0 (op e3 e0))
+(declare-const q33 Bool)  ; (= e0 (op e3 e3))
+(declare-const q40 Bool)  ; (= e0 (op e4 e0))
+(declare-const q44 Bool)  ; (= e0 (op e4 e4))
+(declare-const r00 Bool)  ; (= e1 (op e0 e0))
+(declare-const r01 Bool)  ; (= e1 (op e0 e1))
+(declare-const r10 Bool)  ; (= e1 (op e1 e0))
+(declare-const r11 Bool)  ; (= e1 (op e1 e1))
+(declare-const r12 Bool)  ; (= e1 (op e1 e2))
+(declare-const r13 Bool)  ; (= e1 (op e1 e3))
+(declare-const r14 Bool)  ; (= e1 (op e1 e4))
+(declare-const r21 Bool)  ; (= e1 (op e2 e1))
+(declare-const r31 Bool)  ; (= e1 (op e3 e1))
+(declare-const r41 Bool)  ; (= e1 (op e4 e1))
+(declare-const r11b Bool) ; (= e1 (op e1 e1)) -- same as r11
+(declare-const s00 Bool)  ; (= e2 (op e0 e0))
+(declare-const s02 Bool)  ; (= e2 (op e0 e2))
+(declare-const s11 Bool)  ; (= e2 (op e1 e1))
+(declare-const s12 Bool)  ; (= e2 (op e1 e2))
+(declare-const s20 Bool)  ; (= e2 (op e2 e0))
+(declare-const s21 Bool)  ; (= e2 (op e2 e1))
+(declare-const s22 Bool)  ; (= e2 (op e2 e2))
+(declare-const s23 Bool)  ; (= e2 (op e2 e3))
+(declare-const s24 Bool)  ; (= e2 (op e2 e4))
+(declare-const s32 Bool)  ; (= e2 (op e3 e2))
+(declare-const s33 Bool)  ; (= e2 (op e3 e3))
+(declare-const s42 Bool)  ; (= e2 (op e4 e2))
+(declare-const s44 Bool)  ; (= e2 (op e4 e4))
+(declare-const t00 Bool)  ; (= e3 (op e0 e0))
+(declare-const t03 Bool)  ; (= e3 (op e0 e3))
+(declare-const t11 Bool)  ; (= e3 (op e1 e1))
+(declare-const t13 Bool)  ; (= e3 (op e1 e3))
+(declare-const t22 Bool)  ; (= e3 (op e2 e2))
+(declare-const t23 Bool)  ; (= e3 (op e2 e3))
+(declare-const t30 Bool)  ; (= e3 (op e3 e0))
+(declare-const t31 Bool)  ; (= e3 (op e3 e1))
+(declare-const t32 Bool)  ; (= e3 (op e3 e2))
+(declare-const t33 Bool)  ; (= e3 (op e3 e3))
+(declare-const t34 Bool)  ; (= e3 (op e3 e4))
+(declare-const t43 Bool)  ; (= e3 (op e4 e3))
+(declare-const t44 Bool)  ; (= e3 (op e4 e4))
+(declare-const u00 Bool)  ; (= e4 (op e0 e0))
+(declare-const u04 Bool)  ; (= e4 (op e0 e4))
+(declare-const u11 Bool)  ; (= e4 (op e1 e1))
+(declare-const u14 Bool)  ; (= e4 (op e1 e4))
+(declare-const u22 Bool)  ; (= e4 (op e2 e2))
+(declare-const u24 Bool)  ; (= e4 (op e2 e4))
+(declare-const u33 Bool)  ; (= e4 (op e3 e3))
+(declare-const u34 Bool)  ; (= e4 (op e3 e4))
+(declare-const u40 Bool)  ; (= e4 (op e4 e0))
+(declare-const u41 Bool)  ; (= e4 (op e4 e1))
+(declare-const u42 Bool)  ; (= e4 (op e4 e2))
+(declare-const u43 Bool)  ; (= e4 (op e4 e3))
+(declare-const u44 Bool)  ; (= e4 (op e4 e4))
+
+(step $test_ac_simp_rec_24 true
+      :rule $assert_eq
+      :args (($ac_simp_rec 
+              (and
+               (and
+                (and
+                 (and
+                  (and
+                   (or (not A0) B0)
+                   (or (not A1) B1))
+                  (or (not A2) B2))
+                 (or (not A3) B3))
+                (or (not A4) B4))
+               (and
+                (and
+                 (and
+                  (and
+                   (and
+                    (and
+                     (and
+                      (and
+                       (or (not q00) (or q00 (not q00)))
+                       (or (not q01) (or r00 (not q10))))
+                      (or (not q02) (or s00 (not q20))))
+                     (or (not q03) (or t00 (not q30))))
+                    (or (not q04) (or u00 (not q40))))
+                   (and
+                    (and
+                     (and
+                      (and
+                       (or (not r10) (or q11 (not r01)))
+                       (or (not r11) (or r11 (not r11))))
+                      (or (not r12) (or s11 (not r21))))
+                     (or (not r13) (or t11 (not r31))))
+                    (or (not r14) (or u11 (not r41)))))
+                  (and
+                   (and
+                    (and
+                     (and
+                      (or (not s20) (or q22 (not s02)))
+                      (or (not s21) (or r11 (not s12))))
+                     (or (not s22) (or s22 (not s22))))
+                    (or (not s23) (or t22 (not s32))))
+                   (or (not s24) (or u22 (not s42)))))
+                 (and
+                  (and
+                   (and
+                    (and
+                     (or (not t30) (or q33 (not t03)))
+                     (or (not t31) (or r11 (not t13))))    
+                    (or (not t32) (or s22 (not t23))))
+                   (or (not t33) (or t33 (not t33))))
+                  (or (not t34) (or u33 (not t43)))))
+                (and
+                 (and
+                  (and
+                   (and
+                    (or (not u40) (or q44 (not u04)))
+                    (or (not u41) (or r11 (not u14))))
+                   (or (not u42) (or s22 (not u24))))
+                  (or (not u43) (or t33 (not u34))))
+                 (or (not u44) (or u44 (not u44)))))))
+            (and
+             (or (not A0) B0)
+             (or (not A1) B1)
+             (or (not A2) B2)
+             (or (not A3) B3)
+             (or (not A4) B4)
+             (or q00 (not q00))
+             (or (not q01) r00 (not q10))
+             (or (not q02) s00 (not q20))
+             (or (not q03) t00 (not q30))
+             (or (not q04) u00 (not q40))
+             (or (not r10) q11 (not r01))
+             (or r11 (not r11))
+             (or (not r12) s11 (not r21))
+             (or (not r13) t11 (not r31))
+             (or (not r14) u11 (not r41))
+             (or (not s20) q22 (not s02))
+             (or (not s21) r11 (not s12))
+             (or s22 (not s22))
+             (or (not s23) t22 (not s32))
+             (or (not s24) u22 (not s42))
+             (or (not t30) q33 (not t03))
+             (or (not t31) r11 (not t13))
+             (or (not t32) s22 (not t23))
+             (or t33 (not t33))
+             (or (not t34) u33 (not t43))
+             (or (not u40) q44 (not u04))
+             (or (not u41) r11 (not u14))
+             (or (not u42) s22 (not u24))
+             (or (not u43) t33 (not u34))
+             (or u44 (not u44)))))
+
+; From VeriT certs.
+(declare-const U Type)
+(declare-const p10 (-> U U Bool))
+(declare-const p9 (-> U Bool))
+(declare-const f16 (-> U U U U))
+(declare-const p3 (-> U Bool))
+(declare-const f2 (-> U U U))
+(declare-const p4 (-> U Bool))
+(declare-const f7 (-> U U))
+(declare-const p1 (-> U U Bool))
+(declare-const f12 (-> U U))
+(declare-const c18 U)
+(declare-const p14 (-> U U U Bool))
+(declare-const f17 (-> U U U U))
+(declare-const f13 (-> U U U U))
+(declare-const f6 (-> U U))
+(declare-const f5 (-> U U))
+(declare-const f11 (-> U U))
+(declare-const p15 (-> U U Bool))
+(declare-const c8 U)
+(declare-const c_0 U)
+(declare-const c_1 U)
+
+(step $test_$ac_simp_rec_25 true
+      :rule $assert_eq
+      :args (($ac_simp_rec (or (p15 c_0 c_0) 
+                               (not (p3 c_0)) 
+                               (not (p10 c_0 c_0))
+                               (not (p1 c_0 c_0)) 
+                               (not (p1 c_0 c_0)) 
+                               (not (p9 c_0)) 
+                               (= c_0 c_0) 
+                               (not (p3 c_0)) 
+                               (not (p10 c_0 c_0)) 
+                               (not (p4 c_0))
+                               ))
+
+             (or (p15 c_0 c_0) 
+                 (not (p1 c_0 c_0))
+                 (not (p9 c_0))
+                 (= c_0 c_0) 
+                 (not (p3 c_0))
+                 (not (p10 c_0 c_0))
+                 (not (p4 c_0))
+                 )))
+
+;--------
+; ac_simp
+;--------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+
+; Repeated sub-terms
+(step $test_ac_simp_1
+      (@cl (= (or a a b) (or a b)))
+      :rule ac_simp)
+
+(step $test_ac_simp_2
+      (@cl (= (or a a b b) (or a b)))
+      :rule ac_simp)
+
+(step $test_ac_simp_3
+      (@cl (= (or a b a b) (or a b)))
+      :rule ac_simp)
+
+(step $test_ac_simp_4
+      (@cl (= (or a b a b) (or a b)))
+      :rule ac_simp)
+
+(step $test_ac_simp_5
+      (@cl (= (or a b a c b) (or a b c)))
+      :rule ac_simp)
+
+(step $test_ac_simp_6
+      (@cl (= (or a b a c b c) (or a b c)))
+      :rule ac_simp)
+
+(step $test_ac_simp_7
+      (@cl (= (and a a b) (and a b)))
+      :rule ac_simp)
+
+(step $test_ac_simp_8
+      (@cl (= (and a a b b) (and a b)))
+      :rule ac_simp)
+
+(step $test_ac_simp_9
+      (@cl (= (and a b a b) (and a b)))
+      :rule ac_simp)
+
+(step $test_ac_simp_10
+      (@cl (= (and a b a b) (and a b)))
+      :rule ac_simp)
+
+(step $test_ac_simp_11
+      (@cl (= (and a b a c b) (and a b c)))
+      :rule ac_simp)
+
+(step $test_ac_simp_12
+      (@cl (= (and a b a c b c) (and a b c)))
+      :rule ac_simp)
+
+; Flattening
+(step $test_ac_simp_13
+      (@cl (= (and (and a b) c) (and a b c)))
+      :rule ac_simp)
+
+(step $test_ac_simp_14
+      (@cl (= (and (and a b) (and c d)) (and a b c d)))
+      :rule ac_simp)
+
+(step $test_ac_simp_14
+      (@cl (= (and (and a b) (and (and c d) true)) (and a b c d)))
+      :rule ac_simp)
+
+(step $test_ac_simp_15
+      (@cl (= (or (or a b) c) (or a b c)))
+      :rule ac_simp)
+
+(step $test_ac_simp_16
+      (@cl (= (or (or a b) (or c d)) (or a b c d)))
+      :rule ac_simp)
+
+(step $test_ac_simp_17
+      (@cl (= (or (or a b) (or (or c d) false)) (or a b c d)))
+      :rule ac_simp)
+
+; Mixed cases
+(step $test_ac_simp_18
+      (@cl (= (or (or a b a) (or (or c d d) false)) (or a b c d)))
+      :rule ac_simp)
+
+(step $test_ac_simp_19
+      (@cl (= (or (or a b a) (or a b a) (or (or c d d) false)) (or a b c d)))
+      :rule ac_simp)
+
+(step $test_ac_simp_20
+      (@cl (= (and (and a b a) (and (and c d d) true)) (and a b c d)))
+      :rule ac_simp)
+
+(step $test_ac_simp_21
+      (@cl (= (and (and a b a) (and a b a) (and (and c d d) true)) (and a b c d)))
+      :rule ac_simp)
+
+; Nesting
+(step $test_ac_simp_22
+      (@cl (= (or a a (and b b)) (or a b)))
+      :rule ac_simp)
+
+(step $test_ac_simp_23
+      (@cl (= (or a a (and b (and b c))) (or a (and b c))))
+      :rule ac_simp)
+
+(step $test_ac_simp_24
+      (@cl (= (or (or a (or a a)) (and b (and b c))) (or a (and b c))))
+      :rule ac_simp)
+
+; Taken from a VeriT certificate
+(declare-const p00 Bool)
+(declare-const p01 Bool)
+(declare-const p10 Bool)
+(declare-const p11 Bool)
+
+(step $test_ac_simp_25
+      (@cl (= (or (or (and p00 (and (not p00) p00))
+                      (and p01 (and (not p01) p01)))
+                  (or (and p10 (and (not p10) p10))
+                      (and p11 (and (not p11) p11))))
+              (or (and (not p00) p00)
+                  (and (not p01) p01)
+                  (and (not p10) p10)
+                  (and (not p11) p11))))
+      :rule ac_simp)
+
+; Another test from a VeriT cert
+(declare-const A0 Bool)   ; (= e0 (op e0 (op e0 e0)))
+(declare-const B0 Bool)   ; (= e0 (op (op e0 e0) e0))
+(declare-const A1 Bool)   ; (= e1 (op e1 (op e1 e1)))
+(declare-const B1 Bool)   ; (= e1 (op (op e1 e1) e1))
+(declare-const A2 Bool)   ; (= e2 (op e2 (op e2 e2)))
+(declare-const B2 Bool)   ; (= e2 (op (op e2 e2) e2))
+(declare-const A3 Bool)   ; (= e3 (op e3 (op e3 e3)))
+(declare-const B3 Bool)   ; (= e3 (op (op e3 e3) e3))
+(declare-const A4 Bool)   ; (= e4 (op e4 (op e4 e4)))
+(declare-const B4 Bool)   ; (= e4 (op (op e4 e4) e4))
+(declare-const q00 Bool)  ; (= e0 (op e0 e0))
+(declare-const q01 Bool)  ; (= e0 (op e0 e1))
+(declare-const q02 Bool)  ; (= e0 (op e0 e2))
+(declare-const q03 Bool)  ; (= e0 (op e0 e3))
+(declare-const q04 Bool)  ; (= e0 (op e0 e4))
+(declare-const q10 Bool)  ; (= e0 (op e1 e0))
+(declare-const q11 Bool)  ; (= e0 (op e1 e1))
+(declare-const q20 Bool)  ; (= e0 (op e2 e0))
+(declare-const q22 Bool)  ; (= e0 (op e2 e2))
+(declare-const q30 Bool)  ; (= e0 (op e3 e0))
+(declare-const q33 Bool)  ; (= e0 (op e3 e3))
+(declare-const q40 Bool)  ; (= e0 (op e4 e0))
+(declare-const q44 Bool)  ; (= e0 (op e4 e4))
+(declare-const r00 Bool)  ; (= e1 (op e0 e0))
+(declare-const r01 Bool)  ; (= e1 (op e0 e1))
+(declare-const r10 Bool)  ; (= e1 (op e1 e0))
+(declare-const r11 Bool)  ; (= e1 (op e1 e1))
+(declare-const r12 Bool)  ; (= e1 (op e1 e2))
+(declare-const r13 Bool)  ; (= e1 (op e1 e3))
+(declare-const r14 Bool)  ; (= e1 (op e1 e4))
+(declare-const r21 Bool)  ; (= e1 (op e2 e1))
+(declare-const r31 Bool)  ; (= e1 (op e3 e1))
+(declare-const r41 Bool)  ; (= e1 (op e4 e1))
+(declare-const r11b Bool) ; (= e1 (op e1 e1)) -- same as r11
+(declare-const s00 Bool)  ; (= e2 (op e0 e0))
+(declare-const s02 Bool)  ; (= e2 (op e0 e2))
+(declare-const s11 Bool)  ; (= e2 (op e1 e1))
+(declare-const s12 Bool)  ; (= e2 (op e1 e2))
+(declare-const s20 Bool)  ; (= e2 (op e2 e0))
+(declare-const s21 Bool)  ; (= e2 (op e2 e1))
+(declare-const s22 Bool)  ; (= e2 (op e2 e2))
+(declare-const s23 Bool)  ; (= e2 (op e2 e3))
+(declare-const s24 Bool)  ; (= e2 (op e2 e4))
+(declare-const s32 Bool)  ; (= e2 (op e3 e2))
+(declare-const s33 Bool)  ; (= e2 (op e3 e3))
+(declare-const s42 Bool)  ; (= e2 (op e4 e2))
+(declare-const s44 Bool)  ; (= e2 (op e4 e4))
+(declare-const t00 Bool)  ; (= e3 (op e0 e0))
+(declare-const t03 Bool)  ; (= e3 (op e0 e3))
+(declare-const t11 Bool)  ; (= e3 (op e1 e1))
+(declare-const t13 Bool)  ; (= e3 (op e1 e3))
+(declare-const t22 Bool)  ; (= e3 (op e2 e2))
+(declare-const t23 Bool)  ; (= e3 (op e2 e3))
+(declare-const t30 Bool)  ; (= e3 (op e3 e0))
+(declare-const t31 Bool)  ; (= e3 (op e3 e1))
+(declare-const t32 Bool)  ; (= e3 (op e3 e2))
+(declare-const t33 Bool)  ; (= e3 (op e3 e3))
+(declare-const t34 Bool)  ; (= e3 (op e3 e4))
+(declare-const t43 Bool)  ; (= e3 (op e4 e3))
+(declare-const t44 Bool)  ; (= e3 (op e4 e4))
+(declare-const u00 Bool)  ; (= e4 (op e0 e0))
+(declare-const u04 Bool)  ; (= e4 (op e0 e4))
+(declare-const u11 Bool)  ; (= e4 (op e1 e1))
+(declare-const u14 Bool)  ; (= e4 (op e1 e4))
+(declare-const u22 Bool)  ; (= e4 (op e2 e2))
+(declare-const u24 Bool)  ; (= e4 (op e2 e4))
+(declare-const u33 Bool)  ; (= e4 (op e3 e3))
+(declare-const u34 Bool)  ; (= e4 (op e3 e4))
+(declare-const u40 Bool)  ; (= e4 (op e4 e0))
+(declare-const u41 Bool)  ; (= e4 (op e4 e1))
+(declare-const u42 Bool)  ; (= e4 (op e4 e2))
+(declare-const u43 Bool)  ; (= e4 (op e4 e3))
+(declare-const u44 Bool)  ; (= e4 (op e4 e4))
+
+(step $test_ac_simp_26
+      (@cl (=
+            (and
+             (and
+              (and
+               (and
+                (and
+                 (or (not A0) B0)
+                 (or (not A1) B1))
+                (or (not A2) B2))
+               (or (not A3) B3))
+              (or (not A4) B4))
+             (and
+              (and
+               (and
+                (and
+                 (and
+                  (and
+                   (and
+                    (and
+                     (or (not q00) (or q00 (not q00)))
+                     (or (not q01) (or r00 (not q10))))
+                    (or (not q02) (or s00 (not q20))))
+                   (or (not q03) (or t00 (not q30))))
+                  (or (not q04) (or u00 (not q40))))
+                 (and
+                  (and
+                   (and
+                    (and
+                     (or (not r10) (or q11 (not r01)))
+                     (or (not r11) (or r11 (not r11))))
+                    (or (not r12) (or s11 (not r21))))
+                   (or (not r13) (or t11 (not r31))))
+                  (or (not r14) (or u11 (not r41)))))
+                (and
+                 (and
+                  (and
+                   (and
+                    (or (not s20) (or q22 (not s02)))
+                    (or (not s21) (or r11 (not s12))))
+                   (or (not s22) (or s22 (not s22))))
+                  (or (not s23) (or t22 (not s32))))
+                 (or (not s24) (or u22 (not s42)))))
+               (and
+                (and
+                 (and
+                  (and
+                   (or (not t30) (or q33 (not t03)))
+                   (or (not t31) (or r11 (not t13))))    
+                  (or (not t32) (or s22 (not t23))))
+                 (or (not t33) (or t33 (not t33))))
+                (or (not t34) (or u33 (not t43)))))
+              (and
+               (and
+                (and
+                 (and
+                  (or (not u40) (or q44 (not u04)))
+                  (or (not u41) (or r11 (not u14))))
+                 (or (not u42) (or s22 (not u24))))
+                (or (not u43) (or t33 (not u34))))
+               (or (not u44) (or u44 (not u44))))))
+
+            (and
+             (or (not A0) B0)
+             (or (not A1) B1)
+             (or (not A2) B2)
+             (or (not A3) B3)
+             (or (not A4) B4)
+             (or q00 (not q00))
+             (or (not q01) r00 (not q10))
+             (or (not q02) s00 (not q20))
+             (or (not q03) t00 (not q30))
+             (or (not q04) u00 (not q40))
+             (or (not r10) q11 (not r01))
+             (or r11 (not r11))
+             (or (not r12) s11 (not r21))
+             (or (not r13) t11 (not r31))
+             (or (not r14) u11 (not r41))
+             (or (not s20) q22 (not s02))
+             (or (not s21) r11 (not s12))
+             (or s22 (not s22))
+             (or (not s23) t22 (not s32))
+             (or (not s24) u22 (not s42))
+             (or (not t30) q33 (not t03))
+             (or (not t31) r11 (not t13))
+             (or (not t32) s22 (not t23))
+             (or t33 (not t33))
+             (or (not t34) u33 (not t43))
+             (or (not u40) q44 (not u04))
+             (or (not u41) r11 (not u14))
+             (or (not u42) s22 (not u24))
+             (or (not u43) t33 (not u34))
+             (or u44 (not u44)))
+            ))
+      :rule ac_simp)
+
+(declare-const p00 Bool)  ; (= e0 (op e0 e0))
+(declare-const p11 Bool)  ; (= e0 (op e1 e1))
+(declare-const p22 Bool)  ; (= e0 (op e2 e2))
+(declare-const p33 Bool)  ; (= e0 (op e3 e3))
+(declare-const p44 Bool)  ; (= e0 (op e4 e4))
+(declare-const q01 Bool)  ; (= e1 (op e0 e1))
+(declare-const q02 Bool)  ; (= e2 (op e0 e2))
+(declare-const q03 Bool)  ; (= e3 (op e0 e3))
+(declare-const q04 Bool)  ; (= e4 (op e0 e4))
+(declare-const r00 Bool)  ; (= (op e0 e0) e1)  i.e. (= e1 (op e0 e0))
+(declare-const r11 Bool)  ; (= e1 (op e1 e1))
+(declare-const r22 Bool)  ; (= e1 (op e2 e2))
+(declare-const r33 Bool)  ; (= e1 (op e3 e3))
+(declare-const r44 Bool)  ; (= e1 (op e4 e4))
+(declare-const s10 Bool)  ; (= e0 (op e1 e0))
+(declare-const s12 Bool)  ; (= e2 (op e1 e2))
+(declare-const s13 Bool)  ; (= e3 (op e1 e3))
+(declare-const s14 Bool)  ; (= e4 (op e1 e4))
+(declare-const t00 Bool)  ; (= (op e0 e0) e2)  i.e. (= e2 (op e0 e0))
+(declare-const t11 Bool)  ; (= e2 (op e1 e1))
+(declare-const t22 Bool)  ; (= e2 (op e2 e2))
+(declare-const t33 Bool)  ; (= e2 (op e3 e3))
+(declare-const t44 Bool)  ; (= e2 (op e4 e4))
+(declare-const u20 Bool)  ; (= e0 (op e2 e0))
+(declare-const u21 Bool)  ; (= e1 (op e2 e1))
+(declare-const u23 Bool)  ; (= e3 (op e2 e3))
+(declare-const u24 Bool)  ; (= e4 (op e2 e4))
+(declare-const v00 Bool)  ; (= (op e0 e0) e3)  i.e. (= e3 (op e0 e0))
+(declare-const v11 Bool)  ; (= e3 (op e1 e1))
+(declare-const v22 Bool)  ; (= e3 (op e2 e2))
+(declare-const v33 Bool)  ; (= e3 (op e3 e3))
+(declare-const v44 Bool)  ; (= e3 (op e4 e4))
+(declare-const w30 Bool)  ; (= e0 (op e3 e0))
+(declare-const w31 Bool)  ; (= e1 (op e3 e1))
+(declare-const w32 Bool)  ; (= e2 (op e3 e2))
+(declare-const w34 Bool)  ; (= e4 (op e3 e4))
+(declare-const x00 Bool)  ; (= (op e0 e0) e4)  i.e. (= e4 (op e0 e0))
+(declare-const x11 Bool)  ; (= e4 (op e1 e1))
+(declare-const x22 Bool)  ; (= e4 (op e2 e2))
+(declare-const x33 Bool)  ; (= e4 (op e3 e3))
+(declare-const x44 Bool)  ; (= e4 (op e4 e4))
+(declare-const y40 Bool)  ; (= e0 (op e4 e0))
+(declare-const y41 Bool)  ; (= e1 (op e4 e1))
+(declare-const y42 Bool)  ; (= e2 (op e4 e2))
+(declare-const y43 Bool)  ; (= e3 (op e4 e3))
+
+(step $test_ac_simp_27 
+      (@cl (= (or
+               (or
+                (or
+                 (or
+                  (and
+                   (and
+                    (and
+                     (and
+                      (and
+                       (not p00) (not p11)) (not p22)) (not p33)) (not p44))
+                   (and
+                    (and
+                     (and
+                      (and
+                       (not p00) (not q01)) (not q02)) (not q03)) (not q04)))
+                  (and
+                   (and
+                    (and
+                     (and
+                      (and
+                       (not r00) (not r11)) (not r22)) (not r33)) (not r44))
+                   (and
+                    (and
+                     (and
+                      (and
+                       (not s10) (not r11)) (not s12)) (not s13)) (not s14))))
+                 (and
+                  (and
+                   (and
+                    (and
+                     (and
+                      (not t00) (not t11)) (not t22)) (not t33)) (not t44))
+                  (and
+                   (and
+                    (and
+                     (and
+                      (not u20) (not u21)) (not t22)) (not u23)) (not u24))))
+                (and
+                 (and
+                  (and
+                   (and
+                    (and
+                     (not v00) (not v11)) (not v22)) (not v33)) (not v44))
+                 (and
+                  (and
+                   (and
+                    (and
+                     (not w30) (not w31)) (not w32)) (not v33)) (not w34))))
+               (and
+                (and
+                 (and
+                  (and
+                   (and
+                    (not x00) (not x11)) (not x22)) (not x33)) (not x44))
+                (and
+                 (and
+                  (and
+                   (and
+                    (not y40) (not y41)) (not y42)) (not y43)) (not x44))))
+
+              (or
+               (and
+                (not p00) (not p11) (not p22) (not p33) (not p44)
+                (not q01) (not q02) (not q03) (not q04))
+               (and
+                (not r00) (not r11) (not r22) (not r33) (not r44)
+                (not s10) (not s12) (not s13) (not s14))
+               (and
+                (not t00) (not t11) (not t22) (not t33) (not t44)
+                (not u20) (not u21) (not u23) (not u24))
+               (and
+                (not v00) (not v11) (not v22) (not v33) (not v44)
+                (not w30) (not w31) (not w32) (not w34))
+               (and
+                (not x00) (not x11) (not x22) (not x33) (not x44)
+                (not y40) (not y41) (not y42) (not y43)))))
+      :rule ac_simp)
+
+; Another VeriT example.
+(declare-const U Type)
+(declare-const p10 (-> U U Bool))
+(declare-const p9 (-> U Bool))
+(declare-const f16 (-> U U U U))
+(declare-const p3 (-> U Bool))
+(declare-const f2 (-> U U U))
+(declare-const p4 (-> U Bool))
+(declare-const f7 (-> U U))
+(declare-const p1 (-> U U Bool))
+(declare-const f12 (-> U U))
+(declare-const c18 U)
+(declare-const p14 (-> U U U Bool))
+(declare-const f17 (-> U U U U))
+(declare-const f13 (-> U U U U))
+(declare-const f6 (-> U U))
+(declare-const f5 (-> U U))
+(declare-const f11 (-> U U))
+(declare-const p15 (-> U U Bool))
+(declare-const c8 U)
+(declare-const c_0 U)
+(declare-const c_1 U)
+
+(step $test_ac_simp_28
+      (@cl (= (or (not (p10 c_0 c_0)) 
+                  (not (p9 c_0)) 
+                  (not (= c_0 (f16 c_0 c_0 c_0))) 
+                  (= c_0 c_0) 
+                  (not (p3 c_0)) 
+                  (not (p10 c_0 c_0)) 
+                  (not (p9 c_0))) 
+              (or (not (p10 c_0 c_0)) 
+                  (not (p9 c_0)) 
+                  (not (= c_0 (f16 c_0 c_0 c_0))) 
+                  (= c_0 c_0) 
+                  (not (p3 c_0)))))
+      :rule ac_simp)
+
+
+; From VeriT certs.
+(declare-const U Type)
+(declare-const p10 (-> U U Bool))
+(declare-const p9 (-> U Bool))
+(declare-const f16 (-> U U U U))
+(declare-const p3 (-> U Bool))
+(declare-const f2 (-> U U U))
+(declare-const p4 (-> U Bool))
+(declare-const f7 (-> U U))
+(declare-const p1 (-> U U Bool))
+(declare-const f12 (-> U U))
+(declare-const c18 U)
+(declare-const p14 (-> U U U Bool))
+(declare-const f17 (-> U U U U))
+(declare-const f13 (-> U U U U))
+(declare-const f6 (-> U U))
+(declare-const f5 (-> U U))
+(declare-const f11 (-> U U))
+(declare-const p15 (-> U U Bool))
+(declare-const c8 U)
+(declare-const c_0 U)
+(declare-const c_1 U)
+
+(step $test_$ac_simp_rec_25
+      (@cl (= (or (p15 c_0 c_0) 
+                  (not (p3 c_0)) 
+                  (not (p10 c_0 c_0))
+                  (not (p1 c_0 c_0)) 
+                  (not (p1 c_0 c_0)) 
+                  (not (p9 c_0)) 
+                  (= c_0 c_0) 
+                  (not (p3 c_0)) 
+                  (not (p10 c_0 c_0)) 
+                  (not (p4 c_0))
+                  )
+              (or (p15 c_0 c_0) 
+                  (not (p3 c_0))
+                  (not (p10 c_0 c_0))
+                  (not (p1 c_0 c_0))
+                  (not (p9 c_0))
+                  (= c_0 c_0)
+                  (not (p4 c_0))
+                  )))
+      :rule ac_simp)

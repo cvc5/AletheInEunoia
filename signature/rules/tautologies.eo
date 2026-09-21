@@ -1,5 +1,6 @@
 (include "../theories/theory.eo")
 (include "../programs/arith.eo")
+(include "../programs/logic.eo")
 (include "../programs/programs.eo")
 
 ; Rules that introduce tautologies.
@@ -976,6 +977,197 @@
 ; conclusion-explicit: (@cl (= lhs rhs))
 (declare-rule bool_simplify ((lhs Bool) (rhs Bool))
   :requires ((($check_bool_simplify lhs rhs) true))
+  :conclusion-explicit (@cl (= lhs rhs))
+)
+
+;--------------
+; Rule ac_simp
+;--------------
+
+; program: $idempotency_simp
+; args:
+; - formula Bool: An arbitrary boolean formula.
+; return: >
+;   The result from applying a single simplification step by idempotency of
+;   conjunction or disjunctions. Required to properly implement the semantics
+;   of ac_simp over formulas like (or a a), since $f_list_remove_duplicates
+;   does not emulate that behavior.
+(program $idempotency_simp ((hd Bool) (tl Bool :list) (formula Bool))
+         :signature (Bool) Bool
+         (
+          (
+           ($idempotency_simp (or hd tl))
+
+           (eo::ite ($eo_is_eq ($f_list_length or tl) 2)
+
+                    ; Nil-terminated list?
+                    (eo::ite (eo::and ($eo_is_eq ($f_list_index or tl 0) hd)
+                                      ($eo_is_eq ($f_list_index or tl 1) false))
+
+                             hd
+
+                             ; { not (eo::and ($eo_is_eq ($f_list_index or tl 0) hd)
+                             ;                ($eo_is_eq ($f_list_index or tl 1) false)) }
+                             (or hd tl))
+
+                    ; { not ($eo_is_eq ($f_list_length or tl) 2) }
+                    (eo::ite ($eo_is_eq ($f_list_length or tl) 1)
+
+                             ; Non nil-terminated list?
+                             (eo::ite ($eo_is_eq tl hd)
+
+                                      hd
+
+                                        ; { not ($eo_is_eq ($f_list_index or tl 0) hd) }
+                                      (or hd tl))
+
+                             ; {not ($eo_is_eq ($f_list_length and tl) 1) }
+                             (or hd tl)))
+           )
+
+          (
+           ($idempotency_simp (and hd tl))
+
+           (eo::ite ($eo_is_eq ($f_list_length and tl) 2)
+
+                    ; Nil-terminated list?
+                    (eo::ite (eo::and ($eo_is_eq ($f_list_index and tl 0) hd)
+                                      ($eo_is_eq ($f_list_index and tl 1) true))
+
+                             hd
+
+                             ; { not (eo::and ($eo_is_eq ($f_list_index and tl 0) hd)
+                             ;                ($eo_is_eq ($f_list_index and tl 1) true)) }
+                             (and hd tl))
+
+                    ; { not ($eo_is_eq ($f_list_length and tl) 2) }
+                    (eo::ite ($eo_is_eq ($f_list_length and tl) 1)
+
+                             ; Non nil-terminated list?
+                             (eo::ite ($eo_is_eq tl hd)
+
+                                      hd
+
+                                        ; { not ($eo_is_eq ($f_list_index and tl 0) hd) }
+                                      (and hd tl))
+
+                             ; {not ($eo_is_eq ($f_list_length and tl) 1) }
+                             (and hd tl)))
+           )
+
+          (; { formula != or ..., and ... }
+           ($idempotency_simp formula)
+
+           formula)
+          )
+         )
+
+; define: $ac_simp_step
+; args:
+; - op (-> Bool Bool Bool): Logical connective to be considered for the ac step.
+; - nil Bool: Neutral element of `op`.
+; - formula Bool: Boolean formula upon which the ac step should be performed.
+; return: >
+;   A formula obtained from removing duplicates and flattening applications of
+;   `op`, within `formula`.
+(define $ac_simp_step ((op (-> Bool Bool Bool)) (formula Bool))
+        ($f_list_remove_duplicates op ($idempotency_simp ($flat_and_or op formula))))
+
+; program: $ac_simp_rec
+; args:
+; - lhs Bool: >
+;   left-hand side term present in the conclusion passed to `ac_simp`
+; return: >
+;   A flattened version of `lhs`, using `$ac_simp_step` at different nesting
+;   levels, and for every occurrence of `and` and `or`.
+(program $ac_simp_rec ((formula Bool) (tail Bool :list))
+
+  :signature (Bool) Bool
+
+  (
+   (
+    ($ac_simp_rec (and formula tail))
+
+    (eo::define
+     
+     (
+      (formula_ac_simp ($ac_simp_rec formula))
+
+      (tail_ac_simp ($ac_simp_rec tail))
+      )
+
+     ($ac_simp_step and 
+                    ($to_nil_terminated_f_list and true
+                                               ($f_list_cons and formula_ac_simp tail_ac_simp))))
+    )
+
+   (
+    ($ac_simp_rec (or formula tail))
+
+    (eo::define
+     
+     (
+      (formula_ac_simp ($ac_simp_rec formula))
+
+      (tail_ac_simp ($ac_simp_rec tail))
+      )
+
+     ($ac_simp_step or 
+                    ($to_nil_terminated_f_list or false
+                                               ($f_list_cons or formula_ac_simp tail_ac_simp))
+                    ))
+    )
+
+   (; { formula != or ..., and ... }
+    ($ac_simp_rec formula)
+
+    formula
+    )
+   )
+  )
+
+; program: $check_ac_simp
+; args:
+; - lhs Bool: >
+;   left-hand side term present in the conclusion passed to `ac_simp`
+; - rhs Bool: >
+;   right-hand side term present in the conclusion passed to `ac_simp`
+; return: >
+;   A boolean indicating if `lhs` can be reduced to `rhs`, using the rules
+;   in `$ac_simp_rec`.
+(program $check_ac_simp ((lhs_lhs Bool) (rhs_lhs Bool :list) (rhs Bool))
+
+  :signature (Bool Bool) Bool
+
+  (
+   (
+    ($check_ac_simp (or lhs_lhs rhs_lhs) rhs)
+
+     ($f_list_equal_mod_commut or 
+      ($normalize_formula_modulo_commutativity ($ac_simp_rec (or lhs_lhs rhs_lhs)))
+
+      ($normalize_formula_modulo_commutativity rhs))
+    )
+
+   (
+    ($check_ac_simp (and lhs_lhs rhs_lhs) rhs)
+
+     ($f_list_equal_mod_commut and 
+      ($normalize_formula_modulo_commutativity ($ac_simp_rec (and lhs_lhs rhs_lhs)))
+
+      ($normalize_formula_modulo_commutativity rhs))
+    )
+   )
+  )
+
+; rule: ac_simp
+; requires: >
+;  For `rhs` in conclusion to be the canonical form of `lhs`, according to
+;  associativity to the left, exploiting idempotency to remove duplicated
+;  elements and modulo commutativity.
+; conclusion-explicit: Conclusion of the form (@cl (= lhs rhs)),
+(declare-rule ac_simp ((lhs Bool) (rhs Bool))
+  :requires ((($check_ac_simp lhs rhs) true))
   :conclusion-explicit (@cl (= lhs rhs))
 )
 
