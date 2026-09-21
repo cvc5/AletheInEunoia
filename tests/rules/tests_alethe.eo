@@ -205,26 +205,26 @@
 (declare-const b Bool)
 
 ; Taken from VeriT certificates
-(assume premise_1 (@cl (not (= a b))))
+(assume premise_not_equiv1_1 (@cl (not (= a b))))
 
 (step $test_not_equiv1_1 
       (@cl a b)
       :rule not_equiv1
-      :premises (premise_1))
+      :premises (premise_not_equiv1_1))
 
-(assume premise_2 (@cl (not (= (or a true) b))))
+(assume premise_not_equiv1_2 (@cl (not (= (or a true) b))))
 
 (step $test_not_equiv1_2
       (@cl (or a true) b)
       :rule not_equiv1
-      :premises (premise_2))
+      :premises (premise_not_equiv1_2))
 
-(assume premise_3 (@cl (not (= (or a true) (and b false)))))
+(assume premise_not_equiv1_3 (@cl (not (= (or a true) (and b false)))))
 
 (step $test_not_equiv1_3
       (@cl (or a true) (and b false))
       :rule not_equiv1
-      :premises (premise_3))
+      :premises (premise_not_equiv1_3))
 
 ;-----------------
 ; not_equiv2
@@ -235,26 +235,26 @@
 (declare-const c Bool)
 
 ; Taken from VeriT certificates
-(assume premise_1 (@cl (not (= a b))))
+(assume premise_not_equiv2_1 (@cl (not (= a b))))
 
 (step $test_not_equiv2_1 
       (@cl (not a) (not b))
       :rule not_equiv2
-      :premises (premise_1))
+      :premises (premise_not_equiv2_1))
 
-(assume premise_2 (@cl (not (= (or a true) b))))
+(assume premise_not_equiv2_2 (@cl (not (= (or a true) b))))
 
 (step $test_not_equiv2_2
       (@cl (not (or a true)) (not b))
       :rule not_equiv2
-      :premises (premise_2))
+      :premises (premise_not_equiv2_2))
 
-(assume premise_3 (@cl (not (= (or a true) (and b false)))))
+(assume premise_not_equiv2_3 (@cl (not (= (or a true) (and b false)))))
 
 (step $test_not_equiv2_3
       (@cl (not (or a true)) (not (and b false)))
       :rule not_equiv2
-      :premises (premise_3))
+      :premises (premise_not_equiv2_3))
 
 ;-----------------
 ; not_symm
