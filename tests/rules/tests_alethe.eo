@@ -1976,3 +1976,1615 @@
       :rule resolution
       :premises ( premise_resolution_5_1 premise_resolution_5_2 ) 
       :args ( (@varlist (not (not (and (not (= a b)) (= a c)))) true) ))
+
+;-----------
+; bfun_elim
+;-----------
+
+;------------------------
+; $extract_bool_variables
+;------------------------
+
+(define x () (eo::var "x" Bool))
+(step $test_$extract_bool_variables_1 true 
+      :rule $assert_eq 
+      :args (($extract_bool_variables (@varlist x))
+
+             (@varlist x)))
+
+(define x1 () (eo::var "x1" Bool))
+(define x2 () (eo::var "x2" Int))
+(define x3 () (eo::var "x3" Bool))
+(step $test_$extract_bool_variables_2 true 
+      :rule $assert_eq 
+      :args (($extract_bool_variables (@varlist x1 x2 x3))
+
+             (@varlist x1 x3)))
+
+(step $test_$extract_bool_variables_2b true 
+      :rule $assert_eq 
+      :args (($extract_bool_variables (@varlist x1 x3 x2))
+
+             (@varlist x1 x3)))
+
+(step $test_$extract_bool_variables_2c true 
+      :rule $assert_eq 
+      :args (($extract_bool_variables (@varlist x2 x1 x3))
+
+             (@varlist x1 x3)))
+
+(define x1 () (eo::var "x1" Bool))
+(define x2 () (eo::var "x2" Int))
+(define x3 () (eo::var "x3" Bool))
+(define x4 () (eo::var "x4" Int))
+(step $test_$extract_bool_variables_3 true 
+      :rule $assert_eq 
+      :args (($extract_bool_variables (@varlist x1 x2 x3 x4))
+
+             (@varlist x1 x3)))
+
+(step $test_$extract_bool_variables_3b true 
+      :rule $assert_eq 
+      :args (($extract_bool_variables (@varlist x2 x1 x3 x4))
+
+             (@varlist x1 x3)))
+
+(step $test_$extract_bool_variables_3c true 
+      :rule $assert_eq 
+      :args (($extract_bool_variables (@varlist x2 x4 x1 x3))
+
+             (@varlist x1 x3)))
+
+;----------------
+; $bit_to_boolean
+;----------------
+
+(step $test_$bit_to_boolean_1 true 
+      :rule $assert_eq 
+      :args (($bit_to_boolean #b0 0)
+
+             false))
+
+(step $test_$bit_to_boolean_2 true 
+      :rule $assert_eq 
+      :args (($bit_to_boolean #b1 0)
+
+             true))
+
+(step $test_$bit_to_boolean_3 true 
+      :rule $assert_eq 
+      :args (($bit_to_boolean #b10 0)
+
+             false))
+
+(step $test_$bit_to_boolean_4 true 
+      :rule $assert_eq 
+      :args (($bit_to_boolean #b10 1)
+
+             true))
+
+(step $test_$bit_to_boolean_5 true 
+      :rule $assert_eq 
+      :args (($bit_to_boolean #b11 0)
+
+             true))
+
+(step $test_$bit_to_boolean_6 true 
+      :rule $assert_eq 
+      :args (($bit_to_boolean #b11 1)
+
+             true))
+
+(step $test_$bit_to_boolean_7 true 
+      :rule $assert_eq 
+      :args (($bit_to_boolean #b100 0)
+
+             false))
+
+(step $test_$bit_to_boolean_8 true 
+      :rule $assert_eq 
+      :args (($bit_to_boolean #b100 1)
+
+             false))
+
+(step $test_$bit_to_boolean_9 true 
+      :rule $assert_eq 
+      :args (($bit_to_boolean #b100 2)
+
+             true))
+
+;------------------------------------
+; $binary_interval_to_boolean_varlist
+;------------------------------------
+
+(step $test_$binary_interval_to_boolean_varlist_1 true 
+      :rule $assert_eq 
+      :args (($binary_interval_to_boolean_varlist #b0 0 0)
+
+             (@varlist false)))
+
+(step $test_$binary_interval_to_boolean_varlist_2 true 
+      :rule $assert_eq 
+      :args (($binary_interval_to_boolean_varlist #b1 0 0)
+
+             (@varlist true)))
+
+(step $test_$binary_interval_to_boolean_varlist_3 true 
+      :rule $assert_eq 
+      :args (($binary_interval_to_boolean_varlist #b10 1 0)
+
+             (@varlist false true)))
+
+(step $test_$binary_interval_to_boolean_varlist_4 true 
+      :rule $assert_eq 
+      :args (($binary_interval_to_boolean_varlist #b11 1 0)
+
+             (@varlist true true)))
+
+(step $test_$binary_interval_to_boolean_varlist_5 true 
+      :rule $assert_eq 
+      :args (($binary_interval_to_boolean_varlist #b100 2 0)
+
+             (@varlist false false true)))
+
+(step $test_$binary_interval_to_boolean_varlist_6 true 
+      :rule $assert_eq 
+      :args (($binary_interval_to_boolean_varlist #b101 2 0)
+
+             (@varlist true false true)))
+
+(step $test_$binary_interval_to_boolean_varlist_7 true 
+      :rule $assert_eq 
+      :args (($binary_interval_to_boolean_varlist #b101 1 0)
+
+             (@varlist true false)))
+
+(step $test_$binary_interval_to_boolean_varlist_8 true 
+      :rule $assert_eq 
+      :args (($binary_interval_to_boolean_varlist #b101 0 0)
+
+             (@varlist true)))
+
+
+;------------------------------------
+; $binary_to_boolean_varlist
+;------------------------------------
+(step $test_$binary_to_boolean_varlist_1 true 
+      :rule $assert_eq 
+      :args (($binary_to_boolean_varlist #b0 1)
+
+             (@varlist false)))
+
+(step $test_$binary_to_boolean_varlist_2 true 
+      :rule $assert_eq 
+      :args (($binary_to_boolean_varlist #b1 1)
+
+             (@varlist true)))
+
+(step $test_$binary_to_boolean_varlist_3 true 
+      :rule $assert_eq 
+      :args (($binary_to_boolean_varlist #b10 2)
+
+             (@varlist false true)))
+
+(step $test_$binary_to_boolean_varlist_4 true 
+      :rule $assert_eq 
+      :args (($binary_to_boolean_varlist #b11 2)
+
+             (@varlist true true)))
+
+(step $test_$binary_to_boolean_varlist_5 true 
+      :rule $assert_eq 
+      :args (($binary_to_boolean_varlist #b100 3)
+
+             (@varlist false false true)))
+
+(step $test_$binary_to_boolean_varlist_6 true 
+      :rule $assert_eq 
+      :args (($binary_to_boolean_varlist #b101 3)
+
+             (@varlist true false true)))
+
+(step $test_$binary_to_boolean_varlist_7 true 
+      :rule $assert_eq 
+      :args (($binary_to_boolean_varlist #b110 3)
+
+             (@varlist false true true)))
+
+(step $test_$binary_to_boolean_varlist_8 true 
+      :rule $assert_eq 
+      :args (($binary_to_boolean_varlist #b111 3)
+
+             (@varlist true true true)))
+
+;------------------------------------
+; $natural_to_binary_varlist_form
+;------------------------------------
+(step $test_$natural_to_binary_varlist_form_1 true 
+      :rule $assert_eq 
+      :args (($natural_to_binary_varlist_form 0 1)
+
+             (@varlist false)))
+
+(step $test_$natural_to_binary_varlist_form_1b true 
+      :rule $assert_eq 
+      :args (($natural_to_binary_varlist_form 0 2)
+
+             (@varlist false false)))
+
+(step $test_$natural_to_binary_varlist_form_2 true 
+      :rule $assert_eq 
+      :args (($natural_to_binary_varlist_form 1 1)
+
+             (@varlist true)))
+
+(step $test_$natural_to_binary_varlist_form_2b true 
+      :rule $assert_eq 
+      :args (($natural_to_binary_varlist_form 1 2)
+
+             (@varlist true false)))
+
+(step $test_$natural_to_binary_varlist_form_3 true 
+      :rule $assert_eq 
+      :args (($natural_to_binary_varlist_form 2 2)
+
+             (@varlist false true)))
+
+(step $test_$natural_to_binary_varlist_form_4 true 
+      :rule $assert_eq 
+      :args (($natural_to_binary_varlist_form 3 2)
+
+             (@varlist true true)))
+
+(step $test_$natural_to_binary_varlist_form_5 true 
+      :rule $assert_eq 
+      :args (($natural_to_binary_varlist_form 4 3)
+
+             (@varlist false false true)))
+
+(step $test_$natural_to_binary_varlist_form_6 true 
+      :rule $assert_eq 
+      :args (($natural_to_binary_varlist_form 5 3)
+
+             (@varlist true false true)))
+
+(step $test_$natural_to_binary_varlist_form_7 true 
+      :rule $assert_eq 
+      :args (($natural_to_binary_varlist_form 6 3)
+
+             (@varlist false true true)))
+
+(step $test_$natural_to_binary_varlist_form_8 true 
+      :rule $assert_eq 
+      :args (($natural_to_binary_varlist_form 7 3)
+
+             (@varlist true true true)))
+
+;--------------------------------------------
+; $build_boolean_interval_varlist_form
+;--------------------------------------------
+
+(step $test_$build_boolean_interval_varlist_form_1 true 
+      :rule $assert_eq 
+      :args (($build_boolean_interval_varlist_form 0 1 1)
+
+             (@varlist (@varlist false))))
+
+(step $test_$build_boolean_interval_varlist_form_2 true 
+      :rule $assert_eq 
+      :args (($build_boolean_interval_varlist_form 0 2 1)
+
+             (@varlist (@varlist false)
+                       (@varlist true))))
+
+(step $test_$build_boolean_interval_varlist_form_3 true 
+      :rule $assert_eq 
+      :args (($build_boolean_interval_varlist_form 0 3 2)
+
+             (@varlist (@varlist false false)
+                       (@varlist true false)
+                       (@varlist false true))))
+
+(step $test_$build_boolean_interval_varlist_form_4 true 
+      :rule $assert_eq 
+      :args (($build_boolean_interval_varlist_form 0 4 2)
+
+             (@varlist (@varlist false false)
+                       (@varlist true false)
+                       (@varlist false true)
+                       (@varlist true true))))
+
+(step $test_$build_boolean_interval_varlist_form_5 true 
+      :rule $assert_eq 
+      :args (($build_boolean_interval_varlist_form 0 5 3)
+
+             (@varlist (@varlist false false false)
+                       (@varlist true false false)
+                       (@varlist false true false)
+                       (@varlist true true false)
+                       (@varlist false false true))))
+
+(step $test_$build_boolean_interval_varlist_form_6 true 
+      :rule $assert_eq 
+      :args (($build_boolean_interval_varlist_form 1 5 3)
+
+             (@varlist (@varlist true false false)
+                       (@varlist false true false)
+                       (@varlist true true false)
+                       (@varlist false false true))))
+
+(step $test_$build_boolean_interval_varlist_form_7 true 
+      :rule $assert_eq 
+      :args (($build_boolean_interval_varlist_form 2 5 3)
+
+             (@varlist (@varlist false true false)
+                       (@varlist true true false)
+                       (@varlist false false true))))
+
+(step $test_$build_boolean_interval_varlist_form_8 true 
+      :rule $assert_eq 
+      :args (($build_boolean_interval_varlist_form 3 5 3)
+
+             (@varlist (@varlist true true false)
+                       (@varlist false false true))))
+
+(step $test_$build_boolean_interval_varlist_form_9 true 
+      :rule $assert_eq 
+      :args (($build_boolean_interval_varlist_form 4 5 3)
+
+             (@varlist (@varlist false false true))))
+
+(step $test_$build_boolean_interval_varlist_form_10 true 
+      :rule $assert_eq 
+      :args (($build_boolean_interval_varlist_form 5 5 3)
+
+             @varlist.nil))
+
+
+;-------------------------------------
+; $instantiate_specific_bool_variables
+;-------------------------------------
+
+(define x1 () (eo::var "x1" Bool))
+(define x2 () (eo::var "x2" Int))
+(define x3 () (eo::var "x3" Bool))
+
+(step $test_$instantiate_specific_bool_variables_1 true 
+      :rule $assert_eq 
+      :args (($instantiate_specific_bool_variables x1 
+                                          (@varlist 
+                                           (@varlist ($f_list_cons @varlist x1 false)))
+                                          forall)
+
+             (and false)))
+
+(step $test_$instantiate_specific_bool_variables_2 true 
+      :rule $assert_eq 
+      :args (($instantiate_specific_bool_variables (or x1 x2)
+                                          (@varlist 
+                                           (@varlist ($f_list_cons @varlist x1 false)
+                                                     ($f_list_cons @varlist x2 false))
+                                           (@varlist ($f_list_cons @varlist x1 true)
+                                                     ($f_list_cons @varlist x2 false)))
+                                          forall)
+
+             ($f_list_cons and 
+                           (or false false)
+                           ($f_list_cons and (or true false) true))))
+
+(step $test_$instantiate_specific_bool_variables_3 true 
+      :rule $assert_eq 
+      :args (($instantiate_specific_bool_variables (or x1 x2)
+                                          (@varlist 
+                                           (@varlist ($f_list_cons @varlist x1 false)
+                                                     ($f_list_cons @varlist x2 false))
+                                           (@varlist ($f_list_cons @varlist x1 true)
+                                                     ($f_list_cons @varlist x2 false))
+                                           (@varlist ($f_list_cons @varlist x1 false)
+                                                     ($f_list_cons @varlist x2 true))
+                                           (@varlist ($f_list_cons @varlist x1 true)
+                                                     ($f_list_cons @varlist x2 true)))
+                                          forall)
+
+             ($f_list_cons and 
+                           (or false false)
+                           ($f_list_cons and 
+                                         (or true false)
+                                         ($f_list_cons and 
+                                                       (or false true)
+                                                       ($f_list_cons and 
+                                                                     (or true true)
+                                                                     true))))))
+
+(step $test_$instantiate_specific_bool_variables_4 true 
+      :rule $assert_eq 
+      :args (($instantiate_specific_bool_variables (or x1 x2)
+                                          (@varlist 
+                                           (@varlist ($f_list_cons @varlist x1 false)
+                                                     ($f_list_cons @varlist x2 false))
+                                           (@varlist ($f_list_cons @varlist x1 true)
+                                                     ($f_list_cons @varlist x2 false))
+                                           (@varlist ($f_list_cons @varlist x1 false)
+                                                     ($f_list_cons @varlist x2 true))
+                                           (@varlist ($f_list_cons @varlist x1 true)
+                                                     ($f_list_cons @varlist x2 true)))
+                                          exists)
+
+             ($f_list_cons or 
+                           (or false false)
+                           ($f_list_cons or 
+                                         (or true false)
+                                         ($f_list_cons or 
+                                                       (or false true)
+                                                       ($f_list_cons or 
+                                                                     (or true true)
+                                                                     false))))))
+
+
+;-------------------------------------
+; $instantiate_bool_variables
+;-------------------------------------
+
+(define x1 () (eo::var "x1" Bool))
+(define x2 () (eo::var "x2" Int))
+(define x3 () (eo::var "x3" Bool))
+(define y1 () (eo::var "y1" Int))
+
+(step $test_$instantiate_bool_variables_1 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_variables (forall ((x1 Bool)) x1))
+
+             (and false true)))
+
+(step $test_$instantiate_bool_variables_2 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_variables (forall ((x1 Bool) (x2 Bool)) (or x1 x2)))
+
+             (and (or false false)
+                  (or true false)
+                  (or false true)
+                  (or true true))))
+
+(step $test_$instantiate_bool_variables_3 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_variables (forall ((x1 Bool) (y1 Int) (x2 Bool)) 
+                                                  (or x1 x2)))
+
+             (forall ((y1 Int)) 
+                     (and (or false false)
+                          (or true false)
+                          (or false true)
+                          (or true true)))))
+
+(step $test_$instantiate_bool_variables_4 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_variables (forall ((x1 Bool) (x2 Bool) (y1 Int)) 
+                                                  (or x1 x2)))
+
+             (forall ((y1 Int)) 
+                     (and (or false false)
+                          (or true false)
+                          (or false true)
+                          (or true true)))))
+
+(step $test_$instantiate_bool_variables_5 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_variables (forall ((x1 Bool) (x2 Bool) (y1 Int)
+                                                   (x3 Bool))
+                                                  (or x1 x2 x3)))
+
+             (forall ((y1 Int)) 
+                     (and (or false false false)
+                          (or true false false)
+                          (or false true false)
+                          (or true true false)
+                          (or false false true)
+                          (or true false true)
+                          (or false true true)
+                          (or true true true)))))
+
+(step $test_$instantiate_bool_variables_6 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_variables (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                                              (x3 Bool))
+                                             (or x1 x2 x3)))
+
+             (exists ((y1 Int)) 
+                (or (or false false false)
+                    (or true false false)
+                    (or false true false)
+                    (or true true false)
+                    (or false false true)
+                    (or true false true)
+                    (or false true true)
+                    (or true true true)))))
+
+(step $test_$instantiate_bool_variables_6 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_variables (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                                              (x3 Bool))
+                                             (and x1 x2 x3)))
+             
+             (exists ((y1 Int)) 
+                (or (and false false false)
+                    (and true false false)
+                    (and false true false)
+                    (and true true false)
+                    (and false false true)
+                    (and true false true)
+                    (and false true true)
+                    (and true true true)))))
+
+(step $test_$instantiate_bool_variables_7 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_variables (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                                              (y2 Int) (x3 Bool))
+                                             (or (= y1 y2) (and x1 x2 x3))))
+             
+             (exists ((y1 Int) (y2 Int)) 
+                (or (or (= y1 y2) (and false false false))
+                    (or (= y1 y2) (and true false false))
+                    (or (= y1 y2) (and false true false))
+                    (or (= y1 y2) (and true true false))
+                    (or (= y1 y2) (and false false true))
+                    (or (= y1 y2) (and true false true))
+                    (or (= y1 y2) (and false true true))
+                    (or (= y1 y2) (and true true true))))))
+
+;-----------------------------
+; $extract_function_applied
+;-----------------------------
+
+(declare-const f (-> Bool Int))
+(declare-const g (-> Int Bool Int))
+(declare-const h (-> Bool Int Bool))
+(declare-const j (-> Bool Int Bool Int))
+(define x () (eo::var "x" Bool))
+(define y () (eo::var "y" Int))
+(define z () (eo::var "z" Bool))
+
+(step $test_$extract_function_applied_1 true 
+      :rule $assert_eq 
+      :args (($extract_function_applied (f x))
+             
+             f))
+
+(step $test_$extract_function_applied_2 true 
+      :rule $assert_eq 
+      :args (($extract_function_applied (g y x))
+             
+             g))
+
+(step $test_$extract_function_applied_3 true 
+      :rule $assert_eq 
+      :args (($extract_function_applied (h x (g y x)))
+             
+             h))
+
+(step $test_$extract_function_applied_4 true 
+      :rule $assert_eq 
+      :args (($extract_function_applied (j x (g y x) z))
+             
+             j))
+
+(step $test_$extract_function_applied_5 true 
+      :rule $assert_eq 
+      :args (($extract_function_applied (j (h x (g y x)) (g y x) z))
+             
+             j))
+
+(step $test_$extract_function_applied_6 true 
+      :rule $assert_eq 
+      :args (($extract_function_applied (j (h x (g y x)) (g y x) (h x (g y x))))
+             
+             j))
+
+(step $test_$extract_function_applied_6 true 
+      :rule $assert_eq 
+      :args (($extract_function_applied (j (h x (g y x)) (g y x) (h x (g y x))))
+             
+             j))
+
+;--------------------------
+; $next_parameter
+;--------------------------
+
+(declare-const f (-> Bool Int))
+(declare-const g (-> Int Bool Int))
+(declare-const h (-> Bool Int Bool))
+(declare-const j (-> Bool Int Bool Int))
+(define x () (eo::var "x" Bool))
+(define y () (eo::var "y" Int))
+(define z () (eo::var "z" Bool))
+
+(step $test_$next_parameter_1 true 
+      :rule $assert_eq 
+      :args (($next_parameter f (f x))
+             
+             x))
+
+(step $test_$next_parameter_2 true 
+      :rule $assert_eq 
+      :args (($next_parameter g (g y))
+             
+             y))
+
+(step $test_$next_parameter_3 true 
+      :rule $assert_eq 
+      :args (($next_parameter (g y) (g y x))
+             
+             x))
+
+(step $test_$next_parameter_4 true 
+      :rule $assert_eq 
+      :args (($next_parameter g (g y x))
+
+             y))
+
+(step $test_$next_parameter_5 true 
+      :rule $assert_eq 
+      :args (($next_parameter j (j x y z))
+             
+             x))
+
+(step $test_$next_parameter_6 true 
+      :rule $assert_eq 
+      :args (($next_parameter (j x) (j x y z))
+             
+             y))
+
+(step $test_$next_parameter_7 true 
+      :rule $assert_eq 
+      :args (($next_parameter (j x y) (j x y z))
+             
+             z))
+
+;------------------------------------
+; $substitute_in_function_application_rec
+;------------------------------------
+
+(declare-const f (-> Bool Int))
+(declare-const g (-> Int Bool Int))
+(declare-const h (-> Bool Int Bool))
+(declare-const j (-> Bool Int Bool Int))
+(define x () (eo::var "x" Bool))
+(define y () (eo::var "y" Int))
+(define z () (eo::var "z" Bool))
+
+(step $test_$substitute_in_function_application_rec_1 true 
+      :rule $assert_eq 
+      :args (($substitute_in_function_application_rec (f x) f x true (f x) (f x))
+             
+             (f true)))
+
+(step $test_$substitute_in_function_application_rec_2 true 
+      :rule $assert_eq 
+      :args (($substitute_in_function_application_rec (g y) g y 10 (g y x) (g y))
+             
+             (g 10 x)))
+
+(step $test_$substitute_in_function_application_rec_3 true 
+      :rule $assert_eq 
+      :args (($substitute_in_function_application_rec (g 10 x) (g 10) x false (g y x) 
+                                                  (g y x))
+             
+             (g 10 false)))
+
+(step $test_$substitute_in_function_application_rec_4 true 
+      :rule $assert_eq 
+      :args (($substitute_in_function_application_rec (h x) h x false (h x y) (h x))
+             
+             (h false y)))
+
+(step $test_$substitute_in_function_application_rec_5 true 
+      :rule $assert_eq 
+      :args (($substitute_in_function_application_rec (h false y) (h false) y 3 
+                                                  (h x y) (h x y))
+             
+             (h false 3)))
+
+(step $test_$substitute_in_function_application_rec_6 true 
+      :rule $assert_eq 
+      :args (($substitute_in_function_application_rec (j x) j x true (j x y z) (j x))
+             
+             (j true y z)))
+
+(step $test_$substitute_in_function_application_rec_7 true 
+      :rule $assert_eq 
+      :args (($substitute_in_function_application_rec (j true y) (j true) y 5 
+                                                  (j x y z) (j x y))
+             
+             (j true 5 z)))
+
+(step $test_$substitute_in_function_application_rec_8 true 
+      :rule $assert_eq 
+      :args (($substitute_in_function_application_rec (j true 5 z) (j true 5) z false 
+                                                  (j x y z) (j x y z))
+             
+             (j true 5 false)))
+
+;-------------------------------
+; $traverse_function_application
+;-------------------------------
+
+(declare-const f (-> Bool Int))
+(declare-const g (-> Int Bool Int))
+(declare-const h (-> Bool Int Bool))
+(declare-const j (-> Bool Int Bool Int))
+(define x () (eo::var "x" Bool))
+(define y () (eo::var "y" Int))
+(define z () (eo::var "z" Bool))
+
+(step $test_$traverse_function_application_1 true 
+      :rule $assert_eq 
+      :args (($traverse_function_application f (f x) (f x))
+             
+             (ite x (f true) (f false))))
+
+(step $test_$traverse_function_application_2 true 
+      :rule $assert_eq 
+      :args (($traverse_function_application g (g y) (g y z))
+             
+             (ite z (g y true) (g y false))))
+
+(step $test_$traverse_function_application_2b true 
+      :rule $assert_eq 
+      :args (($traverse_function_application (g y) (g y z) (g y z))
+             
+             (ite z (g y true) (g y false))))
+
+(step $test_$traverse_function_application_3 true 
+      :rule $assert_eq 
+      :args (($traverse_function_application h (h x) (h x y))
+             
+             (ite x (h true y) (h false y))))
+
+(step $test_$traverse_function_application_4 true 
+      :rule $assert_eq 
+      :args (($traverse_function_application j (j x) (j x y z))
+             
+             (ite x 
+                  (ite z (j true y true) (j true y false)) 
+                  (ite z (j false y true) (j false y false)))))
+
+(step $test_$traverse_function_application_5 true 
+      :rule $assert_eq 
+      :args (($traverse_function_application j (j (h x y)) (j (h x y) y z))
+             
+             (ite (h x y)
+                  (ite z (j true y true) (j true y false)) 
+                  (ite z (j false y true) (j false y false)))))
+
+;-----------------------------
+; $instantiate_bool_parameters
+;-----------------------------
+
+(declare-const f (-> Bool Int))
+(declare-const g (-> Int Bool Int))
+(declare-const h (-> Bool Int Int))
+(declare-const j (-> Bool Int Bool Int))
+(define x () (eo::var "x" Bool))
+(define y () (eo::var "y" Int))
+(define z () (eo::var "z" Bool))
+
+(step $test_$instantiate_bool_parameters_1 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_parameters (f x))
+             
+             (ite x (f true) (f false))))
+
+(step $test_$instantiate_bool_parameters_2 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_parameters (g y x))
+             
+             (ite x (g y true) (g y false))))
+
+(step $test_$instantiate_bool_parameters_3 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_parameters (h x y))
+             
+             (ite x (h true y) (h false y))))
+
+(step $test_$instantiate_bool_parameters_4 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_parameters (j x y z))
+             
+             (ite x 
+                  (ite z (j true y true) (j true y false))
+                  (ite z (j false y true) (j false y false)))))
+
+;-------------------------------------
+; $instantiate_bool_terms_rec
+;-------------------------------------
+
+(define x1 () (eo::var "x1" Bool))
+(define x2 () (eo::var "x2" Int))
+(define x3 () (eo::var "x3" Bool))
+(define y1 () (eo::var "y1" Int))
+
+; Quantifications
+(step $test_$instantiate_bool_terms_rec_1 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec (forall ((x1 Bool)) x1))
+
+             (and false true)))
+
+(step $test_$instantiate_bool_terms_rec_1b true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec x1)
+
+             x1))
+
+(step $test_$instantiate_bool_terms_rec_1c true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec (or x1 x3))
+
+             (or x1 x3)))
+
+(step $test_$instantiate_bool_terms_rec_2 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec (forall ((x1 Bool) (x2 Bool)) (or x1 x2)))
+
+             (and (or false false)
+                  (or true false)
+                  (or false true)
+                  (or true true))))
+
+(step $test_$instantiate_bool_terms_rec_3 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec (forall ((x1 Bool) (y1 Int) (x2 Bool)) 
+                                                      (or x1 x2)))
+             
+             (forall ((y1 Int)) 
+                     (and (or false false)
+                          (or true false)
+                          (or false true)
+                          (or true true)))))
+
+(step $test_$instantiate_bool_terms_rec_4 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec (forall ((x1 Bool) (x2 Bool) (y1 Int)) 
+                                                      (or x1 x2)))
+
+             (forall ((y1 Int)) 
+                     (and (or false false)
+                          (or true false)
+                          (or false true)
+                          (or true true)))))
+
+(step $test_$instantiate_bool_terms_rec_5 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec (forall ((x1 Bool) (x2 Bool) (y1 Int)
+                                                       (x3 Bool))
+                                                      (or x1 x2 x3)))
+
+             (forall ((y1 Int)) 
+                     (and (or false false false)
+                          (or true false false)
+                          (or false true false)
+                          (or true true false)
+                          (or false false true)
+                          (or true false true)
+                          (or false true true)
+                          (or true true true)))))
+
+(step $test_$instantiate_bool_terms_rec_6 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                                                  (x3 Bool))
+                                                 (or x1 x2 x3)))
+
+             (exists ((y1 Int)) 
+                (or (or false false false)
+                    (or true false false)
+                    (or false true false)
+                    (or true true false)
+                    (or false false true)
+                    (or true false true)
+                    (or false true true)
+                    (or true true true)))))
+
+(step $test_$instantiate_bool_terms_rec_6 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                                              (x3 Bool))
+                                             (and x1 x2 x3)))
+             
+             (exists ((y1 Int)) 
+                (or (and false false false)
+                    (and true false false)
+                    (and false true false)
+                    (and true true false)
+                    (and false false true)
+                    (and true false true)
+                    (and false true true)
+                    (and true true true)))))
+
+(step $test_$instantiate_bool_terms_rec_7 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                                              (y2 Int) (x3 Bool))
+                                             (or (= y1 y2) (and x1 x2 x3))))
+             
+             (exists ((y1 Int) (y2 Int)) 
+                (or (or (= y1 y2) (and false false false))
+                    (or (= y1 y2) (and true false false))
+                    (or (= y1 y2) (and false true false))
+                    (or (= y1 y2) (and true true false))
+                    (or (= y1 y2) (and false false true))
+                    (or (= y1 y2) (and true false true))
+                    (or (= y1 y2) (and false true true))
+                    (or (= y1 y2) (and true true true))))))
+
+(step $test_$instantiate_bool_terms_rec_8 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec (and true
+                                                   (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                                                       (y2 Int) (x3 Bool))
+                                                      (or (= y1 y2) (and x1 x2 x3)))))
+             
+             (and true
+                  (exists ((y1 Int) (y2 Int)) 
+                     (or (or (= y1 y2) (and false false false))
+                         (or (= y1 y2) (and true false false))
+                         (or (= y1 y2) (and false true false))
+                         (or (= y1 y2) (and true true false))
+                         (or (= y1 y2) (and false false true))
+                         (or (= y1 y2) (and true false true))
+                         (or (= y1 y2) (and false true true))
+                         (or (= y1 y2) (and true true true)))))))
+
+(step $test_$instantiate_bool_terms_rec_9 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec (and x1
+                                                   (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                                                       (y2 Int) (x3 Bool))
+                                                      (or (= y1 y2) (and x1 x2 x3)))))
+             
+             (and x1
+                  (exists ((y1 Int) (y2 Int)) 
+                     (or (or (= y1 y2) (and false false false))
+                         (or (= y1 y2) (and true false false))
+                         (or (= y1 y2) (and false true false))
+                         (or (= y1 y2) (and true true false))
+                         (or (= y1 y2) (and false false true))
+                         (or (= y1 y2) (and true false true))
+                         (or (= y1 y2) (and false true true))
+                         (or (= y1 y2) (and true true true)))))))
+
+(step $test_$instantiate_bool_terms_rec_10 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec (and (forall ((x1 Bool) (x2 Bool) (y1 Int)
+                                                            (x3 Bool))
+                                                           (or x1 x2 x3))
+                                                   (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                                                       (y2 Int) (x3 Bool))
+                                                      (or (= y1 y2) (and x1 x2 x3)))))
+             
+             (and (forall ((y1 Int)) 
+                     (and (or false false false)
+                          (or true false false)
+                          (or false true false)
+                          (or true true false)
+                          (or false false true)
+                          (or true false true)
+                          (or false true true)
+                          (or true true true)))
+                  (exists ((y1 Int) (y2 Int)) 
+                     (or (or (= y1 y2) (and false false false))
+                         (or (= y1 y2) (and true false false))
+                         (or (= y1 y2) (and false true false))
+                         (or (= y1 y2) (and true true false))
+                         (or (= y1 y2) (and false false true))
+                         (or (= y1 y2) (and true false true))
+                         (or (= y1 y2) (and false true true))
+                         (or (= y1 y2) (and true true true)))))))
+
+(step $test_$instantiate_bool_terms_rec_11 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec (and
+                                               x1
+                                               (forall ((x1 Bool) (x2 Bool) (y1 Int)
+                                                        (x3 Bool))
+                                                       (or x1 x2 x3))
+                                               (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                                                   (y2 Int) (x3 Bool))
+                                                  (or (= y1 y2) (and x1 x2 x3)))))
+             
+             (and 
+              x1
+              (forall ((y1 Int)) 
+                      (and (or false false false)
+                           (or true false false)
+                           (or false true false)
+                           (or true true false)
+                           (or false false true)
+                           (or true false true)
+                           (or false true true)
+                           (or true true true)))
+              (exists ((y1 Int) (y2 Int)) 
+                 (or (or (= y1 y2) (and false false false))
+                     (or (= y1 y2) (and true false false))
+                     (or (= y1 y2) (and false true false))
+                     (or (= y1 y2) (and true true false))
+                     (or (= y1 y2) (and false false true))
+                     (or (= y1 y2) (and true false true))
+                     (or (= y1 y2) (and false true true))
+                     (or (= y1 y2) (and true true true)))))))
+
+; Functions
+(declare-const f (-> Bool Int))
+(declare-const g (-> Int Bool Int))
+(declare-const h (-> Bool Int Int))
+(declare-const j (-> Bool Int Bool Int))
+(define x () (eo::var "x" Bool))
+(define y () (eo::var "y" Int))
+(define z () (eo::var "z" Bool))
+
+(step $test_$instantiate_bool_terms_rec_12 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec (f x))
+
+             (ite x (f true) (f false))))
+
+(step $test_$instantiate_bool_terms_rec_13 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec (g y x))
+             
+             (ite x (g y true) (g y false))))
+
+(step $test_$instantiate_bool_terms_rec_14 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec (h x y))
+             
+             (ite x (h true y) (h false y))))
+
+(step $test_$instantiate_bool_terms_rec_15 true 
+      :rule $assert_eq 
+      :args (($instantiate_bool_terms_rec (j x y z))
+             
+             (ite x 
+                  (ite z (j true y true) (j true y false))
+                  (ite z (j false y true) (j false y false)))))
+
+;-----------------
+; $check_bfun_elim
+;-----------------
+
+(define x1 () (eo::var "x1" Bool))
+(define x2 () (eo::var "x2" Int))
+(define x3 () (eo::var "x3" Bool))
+(define y1 () (eo::var "y1" Int))
+
+; Quantifications
+(step $test_$check_bfun_elim_1 true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl (forall ((x1 Bool)) x1)) 
+                               (@cl (and false true)))
+
+             true))
+
+; Quantifications
+(step $test_$check_bfun_elim_1b true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl x1) (@cl x1))
+
+             true))
+
+(step $test_$check_bfun_elim_1c true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl (or x1 x3)) (@cl (or x1 x3)))
+
+             true))
+
+(step $test_$check_bfun_elim_2 true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl (forall ((x1 Bool) (x2 Bool)) (or x1 x2)))
+                               (@cl (and (or false false)
+                                         (or true false)
+                                         (or false true)
+                                         (or true true))))
+
+             true))
+
+(step $test_$check_bfun_elim_3 true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl (forall ((x1 Bool) (y1 Int) (x2 Bool)) 
+                                            (or x1 x2)))
+                               (@cl (forall ((y1 Int)) 
+                                            (and (or false false)
+                                                 (or true false)
+                                                 (or false true)
+                                                 (or true true)))))
+
+             true))
+
+(step $test_$check_bfun_elim_4 true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl (forall ((x1 Bool) (x2 Bool) (y1 Int)) 
+                                            (or x1 x2)))
+                               (@cl (forall ((y1 Int)) 
+                                            (and (or false false)
+                                                 (or true false)
+                                                 (or false true)
+                                                 (or true true)))))
+
+             true))
+
+(step $test_$check_bfun_elim_5 true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl (forall ((x1 Bool) (x2 Bool) (y1 Int)
+                                             (x3 Bool))
+                                            (or x1 x2 x3)))
+                               (@cl (forall ((y1 Int)) 
+                                            (and (or false false false)
+                                                 (or true false false)
+                                                 (or false true false)
+                                                 (or true true false)
+                                                 (or false false true)
+                                                 (or true false true)
+                                                 (or false true true)
+                                                 (or true true true)))))
+
+             true))
+
+(step $test_$check_bfun_elim_6 true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                                                  (x3 Bool))
+                                                 (or x1 x2 x3)))
+                               (@cl (exists ((y1 Int)) 
+                                       (or (or false false false)
+                                           (or true false false)
+                                           (or false true false)
+                                           (or true true false)
+                                           (or false false true)
+                                           (or true false true)
+                                           (or false true true)
+                                           (or true true true)))))
+
+             true))
+
+(step $test_$check_bfun_elim_6 true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                                              (x3 Bool))
+                                             (and x1 x2 x3)))
+                                            (@cl (exists ((y1 Int)) 
+                                       (or (and false false false)
+                                           (and true false false)
+                                           (and false true false)
+                                           (and true true false)
+                                           (and false false true)
+                                           (and true false true)
+                                           (and false true true)
+                                           (and true true true)))))
+
+             true))
+
+(step $test_$check_bfun_elim_7 true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                                              (y2 Int) (x3 Bool))
+                                             (or (= y1 y2) (and x1 x2 x3))))
+                                            (@cl (exists ((y1 Int) (y2 Int)) 
+                                       (or (or (= y1 y2) (and false false false))
+                                           (or (= y1 y2) (and true false false))
+                                           (or (= y1 y2) (and false true false))
+                                           (or (= y1 y2) (and true true false))
+                                           (or (= y1 y2) (and false false true))
+                                           (or (= y1 y2) (and true false true))
+                                           (or (= y1 y2) (and false true true))
+                                           (or (= y1 y2) (and true true true))))))
+
+             true))
+
+(step $test_$check_bfun_elim_8 true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl (and true
+                                                   (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                                                       (y2 Int) (x3 Bool))
+                                                      (or (= y1 y2) (and x1 x2 x3)))))
+                                            (@cl (and true
+                                         (exists ((y1 Int) (y2 Int)) 
+                                            (or (or (= y1 y2) (and false false false))
+                                                (or (= y1 y2) (and true false false))
+                                                (or (= y1 y2) (and false true false))
+                                                (or (= y1 y2) (and true true false))
+                                                (or (= y1 y2) (and false false true))
+                                                (or (= y1 y2) (and true false true))
+                                                (or (= y1 y2) (and false true true))
+                                                (or (= y1 y2) (and true true true)))))))
+
+             true))
+
+(step $test_$check_bfun_elim_9 true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl (and x1
+                                                   (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                                                       (y2 Int) (x3 Bool))
+                                                      (or (= y1 y2) (and x1 x2 x3)))))
+                                            (@cl (and x1
+                                         (exists ((y1 Int) (y2 Int)) 
+                                            (or (or (= y1 y2) (and false false false))
+                                                (or (= y1 y2) (and true false false))
+                                                (or (= y1 y2) (and false true false))
+                                                (or (= y1 y2) (and true true false))
+                                                (or (= y1 y2) (and false false true))
+                                                (or (= y1 y2) (and true false true))
+                                                (or (= y1 y2) (and false true true))
+                                                (or (= y1 y2) (and true true true)))))))
+
+             true))
+
+(step $test_$check_bfun_elim_10 true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl (and (forall ((x1 Bool) (x2 Bool) (y1 Int)
+                                                  (x3 Bool))
+                                                 (or x1 x2 x3))
+                                         (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                                             (y2 Int) (x3 Bool))
+                                            (or (= y1 y2) (and x1 x2 x3)))))
+                               (@cl (and (forall ((y1 Int)) 
+                                                 (and (or false false false)
+                                                      (or true false false)
+                                                      (or false true false)
+                                                      (or true true false)
+                                                      (or false false true)
+                                                      (or true false true)
+                                                      (or false true true)
+                                                      (or true true true)))
+                                         (exists ((y1 Int) (y2 Int)) 
+                                            (or (or (= y1 y2) (and false false false))
+                                                (or (= y1 y2) (and true false false))
+                                                (or (= y1 y2) (and false true false))
+                                                (or (= y1 y2) (and true true false))
+                                                (or (= y1 y2) (and false false true))
+                                                (or (= y1 y2) (and true false true))
+                                                (or (= y1 y2) (and false true true))
+                                                (or (= y1 y2) (and true true true)))))))
+
+             true))
+
+(step $test_$check_bfun_elim_11 true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl (and
+                                     x1
+                                     (forall ((x1 Bool) (x2 Bool) (y1 Int)
+                                              (x3 Bool))
+                                             (or x1 x2 x3))
+                                     (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                                         (y2 Int) (x3 Bool))
+                                        (or (= y1 y2) (and x1 x2 x3)))))
+                               (@cl (and 
+                                     x1
+                                     (forall ((y1 Int)) 
+                                             (and (or false false false)
+                                                  (or true false false)
+                                                  (or false true false)
+                                                  (or true true false)
+                                                  (or false false true)
+                                                  (or true false true)
+                                                  (or false true true)
+                                                  (or true true true)))
+                                     (exists ((y1 Int) (y2 Int)) 
+                                        (or (or (= y1 y2) (and false false false))
+                                            (or (= y1 y2) (and true false false))
+                                            (or (= y1 y2) (and false true false))
+                                            (or (= y1 y2) (and true true false))
+                                            (or (= y1 y2) (and false false true))
+                                            (or (= y1 y2) (and true false true))
+                                            (or (= y1 y2) (and false true true))
+                                            (or (= y1 y2) (and true true true)))))))
+
+             true))
+
+; Functions
+(declare-const f (-> Bool Int))
+(declare-const g (-> Int Bool Int))
+(declare-const h (-> Bool Int Int))
+(declare-const j (-> Bool Int Bool Int))
+(define x () (eo::var "x" Bool))
+(define y () (eo::var "y" Int))
+(define z () (eo::var "z" Bool))
+
+(step $test_$check_bfun_elim_12 true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl (f x))
+                               (@cl (ite x (f true) (f false))))
+
+             true))
+
+(step $test_$check_bfun_elim_13 true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl (g y x))
+                               (@cl (ite x (g y true) (g y false))))
+
+             true))
+
+(step $test_$check_bfun_elim_14 true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl (h x y))
+                               (@cl (ite x (h true y) (h false y))))
+
+             true))
+
+(step $test_$check_bfun_elim_15 true 
+      :rule $assert_eq 
+      :args (($check_bfun_elim (@cl (j x y z))
+                               (@cl (ite x 
+                                         (ite z (j true y true) (j true y false))
+                                         (ite z (j false y true) (j false y false)))))
+
+             true))
+
+;-----------------
+; bfun_elim
+;-----------------
+
+(define x1 () (eo::var "x1" Bool))
+(define x2 () (eo::var "x2" Int))
+(define x3 () (eo::var "x3" Bool))
+(define y1 () (eo::var "y1" Int))
+
+; Quantifications
+
+(assume premise_1 (@cl (forall ((x1 Bool)) x1)))
+(step $test_bfun_elim_1
+      (@cl (and false true))
+      :rule bfun_elim
+      :premises (premise_1))
+
+(assume premise_2 (@cl x1))
+(step $test_bfun_elim_2
+      (@cl x1)
+      :rule bfun_elim
+      :premises (premise_2))
+
+(assume premise_3 (@cl (or x1 x3)))
+(step $test_bfun_elim_3
+      (@cl (or x1 x3))
+      :rule bfun_elim
+      :premises (premise_3))
+
+(assume premise_4 (@cl (forall ((x1 Bool) (x2 Bool)) (or x1 x2))))
+(step $test_bfun_elim_4
+      (@cl (and
+            (or false false)
+            (or true false)
+            (or false true)
+            (or true true)))
+      :rule bfun_elim
+      :premises (premise_4))
+
+(assume premise_5 (@cl (forall ((x1 Bool) (y1 Int) (x2 Bool)) 
+                             (or x1 x2))))
+(step $test_bfun_elim_5
+      (@cl (forall ((y1 Int)) 
+                   (and (or false false)
+                        (or true false)
+                        (or false true)
+                        (or true true))))
+      :rule bfun_elim
+      :premises (premise_5))
+
+(assume premise_6 (@cl (forall ((x1 Bool) (x2 Bool) (y1 Int)) 
+                             (or x1 x2))))
+(step $test_bfun_elim_6
+      (@cl (forall ((y1 Int)) 
+                   (and (or false false)
+                        (or true false)
+                        (or false true)
+                        (or true true))))
+      :rule bfun_elim
+      :premises (premise_6))
+
+(assume premise_7 (@cl (forall ((x1 Bool) (x2 Bool) (y1 Int)
+                              (x3 Bool))
+                             (or x1 x2 x3))))
+(step $test_bfun_elim_7
+      (@cl (forall ((y1 Int))
+                   (and (or false false false)
+                        (or true false false)
+                        (or false true false)
+                        (or true true false)
+                        (or false false true)
+                        (or true false true)
+                        (or false true true)
+                        (or true true true))))
+      :rule bfun_elim
+      :premises (premise_7))
+
+(assume premise_8 (@cl (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                         (x3 Bool))
+                        (or x1 x2 x3))))
+(step $test_bfun_elim_8
+      (@cl (exists ((y1 Int)) 
+              (or (or false false false)
+                  (or true false false)
+                  (or false true false)
+                  (or true true false)
+                  (or false false true)
+                  (or true false true)
+                  (or false true true)
+                  (or true true true))))
+      :rule bfun_elim
+      :premises (premise_8))
+
+(assume premise_9 (@cl (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                         (x3 Bool))
+                        (and x1 x2 x3))))
+(step $test_bfun_elim_9
+      (@cl (exists ((y1 Int)) 
+              (or (and false false false)
+                  (and true false false)
+                  (and false true false)
+                  (and true true false)
+                  (and false false true)
+                  (and true false true)
+                  (and false true true)
+                  (and true true true))))
+      :rule bfun_elim
+      :premises (premise_9))
+
+(assume premise_10 (@cl (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                         (y2 Int) (x3 Bool))
+                        (or (= y1 y2) (and x1 x2 x3)))))
+(step $test_bfun_elim_10
+      (@cl (exists ((y1 Int) (y2 Int)) 
+              (or (or (= y1 y2) (and false false false))
+                  (or (= y1 y2) (and true false false))
+                  (or (= y1 y2) (and false true false))
+                  (or (= y1 y2) (and true true false))
+                  (or (= y1 y2) (and false false true))
+                  (or (= y1 y2) (and true false true))
+                  (or (= y1 y2) (and false true true))
+                  (or (= y1 y2) (and true true true)))))
+      :rule bfun_elim
+      :premises (premise_10))
+
+(assume premise_11 (@cl (and true
+                          (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                              (y2 Int) (x3 Bool))
+                             (or (= y1 y2) (and x1 x2 x3))))))
+(step $test_bfun_elim_11
+      (@cl (and true
+                (exists ((y1 Int) (y2 Int)) 
+                   (or (or (= y1 y2) (and false false false))
+                       (or (= y1 y2) (and true false false))
+                       (or (= y1 y2) (and false true false))
+                       (or (= y1 y2) (and true true false))
+                       (or (= y1 y2) (and false false true))
+                       (or (= y1 y2) (and true false true))
+                       (or (= y1 y2) (and false true true))
+                       (or (= y1 y2) (and true true true))))))
+      :rule bfun_elim
+      :premises (premise_11))
+
+(assume premise_12 (@cl (and x1
+                          (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                              (y2 Int) (x3 Bool))
+                             (or (= y1 y2) (and x1 x2 x3))))))
+(step $test_bfun_elim_12
+      (@cl (and x1
+                (exists ((y1 Int) (y2 Int)) 
+                   (or (or (= y1 y2) (and false false false))
+                       (or (= y1 y2) (and true false false))
+                       (or (= y1 y2) (and false true false))
+                       (or (= y1 y2) (and true true false))
+                       (or (= y1 y2) (and false false true))
+                       (or (= y1 y2) (and true false true))
+                       (or (= y1 y2) (and false true true))
+                       (or (= y1 y2) (and true true true))))))
+      :rule bfun_elim
+      :premises (premise_12))
+
+(assume premise_13 (@cl (and (forall ((x1 Bool) (x2 Bool) (y1 Int)
+                                   (x3 Bool))
+                                  (or x1 x2 x3))
+                          (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                              (y2 Int) (x3 Bool))
+                             (or (= y1 y2) (and x1 x2 x3))))))
+(step $test_bfun_elim_13
+      (@cl (and (forall ((y1 Int)) 
+                        (and (or false false false)
+                             (or true false false)
+                             (or false true false)
+                             (or true true false)
+                             (or false false true)
+                             (or true false true)
+                             (or false true true)
+                             (or true true true)))
+                (exists ((y1 Int) (y2 Int)) 
+                   (or (or (= y1 y2) (and false false false))
+                       (or (= y1 y2) (and true false false))
+                       (or (= y1 y2) (and false true false))
+                       (or (= y1 y2) (and true true false))
+                       (or (= y1 y2) (and false false true))
+                       (or (= y1 y2) (and true false true))
+                       (or (= y1 y2) (and false true true))
+                       (or (= y1 y2) (and true true true))))))
+      :rule bfun_elim
+      :premises (premise_13))
+
+(assume premise_14 (@cl (and
+                         x1
+                         (forall ((x1 Bool) (x2 Bool) (y1 Int)
+                                  (x3 Bool))
+                                 (or x1 x2 x3))
+                         (exists ((x1 Bool) (x2 Bool) (y1 Int)
+                             (y2 Int) (x3 Bool))
+                            (or (= y1 y2) (and x1 x2 x3))))))
+(step $test_bfun_elim_14
+      (@cl (and 
+            x1
+            (forall ((y1 Int)) 
+                    (and (or false false false)
+                         (or true false false)
+                         (or false true false)
+                         (or true true false)
+                         (or false false true)
+                         (or true false true)
+                         (or false true true)
+                         (or true true true)))
+            (exists ((y1 Int) (y2 Int)) 
+               (or (or (= y1 y2) (and false false false))
+                   (or (= y1 y2) (and true false false))
+                   (or (= y1 y2) (and false true false))
+                   (or (= y1 y2) (and true true false))
+                   (or (= y1 y2) (and false false true))
+                   (or (= y1 y2) (and true false true))
+                   (or (= y1 y2) (and false true true))
+                   (or (= y1 y2) (and true true true))))))
+      :rule bfun_elim
+      :premises (premise_14))
+
+; Functions
+(declare-const f (-> Bool Bool))
+(declare-const g (-> Int Bool Bool))
+(declare-const h (-> Bool Int Bool))
+(declare-const j (-> Bool Int Bool Bool))
+(define x () (eo::var "x" Bool))
+(define y () (eo::var "y" Int))
+(define z () (eo::var "z" Bool))
+
+(assume premise_15 (@cl (f x)))
+(step $test_bfun_elim_15
+      (@cl (ite x (f true) (f false)))
+      :rule bfun_elim
+      :premises (premise_15))
+
+(assume premise_16 (@cl (g y x)))
+(step $test_bfun_elim_16
+      (@cl (ite x (g y true) (g y false)))
+      :rule bfun_elim
+      :premises (premise_16))
+
+(assume premise_17 (@cl (h x y)))
+(step $test_bfun_elim_17
+      (@cl (ite x (h true y) (h false y)))
+      :rule bfun_elim
+      :premises (premise_17))
+
+(assume premise_18 (@cl (j x y z)))
+(step $test_bfun_elim_18
+      (@cl (ite x 
+                (ite z (j true y true) (j true y false))
+                (ite z (j false y true) (j false y false))))
+      :rule bfun_elim
+      :premises (premise_18))
+
+; Misc.
+(declare-const utt$31 Type)
+(declare-const utt$32 Type)
+(declare-const Concat_32_1_31 (-> Bool utt$31 utt$32))
+(declare-const y$n0s31 utt$31)
+(declare-const y$w$4_op utt$32)
+(declare-const y$379 Bool)
+(assume h13 (@cl (= y$w$4_op (Concat_32_1_31 y$379 y$n0s31))))
+(step $test_bfun_elim_19
+      (@cl (= y$w$4_op (ite y$379 
+                            (Concat_32_1_31 true y$n0s31) 
+                            (Concat_32_1_31 false y$n0s31))))
+      :rule bfun_elim
+      :premises ( h13 ))

@@ -3868,20 +3868,761 @@
   :conclusion-explicit conclusion
 )
 
-;TODO
-(program $check_bfun_elim ((psi Bool) (phi Bool))
+;----------------
+; Rule bfun_elim
+;----------------
+
+; program: $extract_bool_variables
+; args:
+; - vars @VarList: A list of binding occurrences of variables.
+; return: >
+;   Returns a @VarList containing only those variables of type Bool,
+;   in the same order as that of their binding occurrences. 
+(program $extract_bool_variables ((A Type) (var A) (vars @VarList :list))
+         :signature (@VarList) @VarList
+         (
+          (
+           ($extract_bool_variables (@varlist var vars))
+
+           (eo::ite ($eo_is_eq (eo::typeof var) Bool)
+
+                    ($f_list_cons @varlist 
+                                  var 
+                                  ($extract_bool_variables vars))
+
+                    ($extract_bool_variables vars))
+           )
+
+          (
+           ($extract_bool_variables @varlist.nil)
+
+           @varlist.nil
+           )
+          )
+         )
+
+; program: bit_to_boolean
+; args:
+; - b A: An arbitrary natural number in binary (natural codification)
+; - pos Int: The digit of `b` that we want to convert.
+; return: Boolean representation of digit `pos` from b.
+(program $bit_to_boolean ((A Type) (b A) (pos Int))
+         :signature (A Int) @VarList
+         (
+          (
+           ($bit_to_boolean b pos)
+
+           (eo::ite ($eo_is_eq (eo::extract b pos pos) #b0)
+
+                    false
+
+                    ; { not ($eo_is_eq (eo::extract b pos pos) #b0) }
+                    true)
+           )
+          )
+         )
+
+; program: $binary_interval_to_boolean_varlist
+; args:
+; - b Int: An arbitrary natural number in binary (natural codification)
+; - limit Int: The last position from `b` that we want to convert.
+; - pos Int: Initial position from where to convert.
+; return: >
+;   A @VarList containing the representation of `b`[limit:pos], using boolean 
+;   values for each binary digit in `b`, but in inverse order: 
+;   least-significant bit first, most-significant bit last. 
+(program $binary_interval_to_boolean_varlist ((A Type) (b A) (limit Int) (pos Int))
+         :signature (A Int Int) @VarList
+         (
+          (
+           ($binary_interval_to_boolean_varlist b limit limit)
+           
+           (@varlist ($bit_to_boolean b limit))
+           )
+
+          (
+           ($binary_interval_to_boolean_varlist b limit pos)
+
+           ($f_list_cons @varlist 
+                         ($bit_to_boolean b pos)
+                         ($binary_interval_to_boolean_varlist b limit (eo::add pos 1)))
+           )
+          )
+         )
+
+; program: $binary_to_boolean_varlist
+; args:
+; - b Int: An arbitrary natural number in binary (natural codification)
+; - width Int: Width of binary `b`.
+; return: >
+;   A @VarList containing the representation of `b`, using boolean 
+;   values for each binary digit in `b`, but in inverse order: 
+;   least-significant bit first, most-significant bit last. 
+(program $binary_to_boolean_varlist ((A Type) (b A) (width Int))
+         :signature (A Int) @VarList
+         (
+          (
+           ($binary_to_boolean_varlist b width)
+
+           ($binary_interval_to_boolean_varlist b (eo::add width (eo::neg 1)) 0)
+           )
+          )
+         )
+
+; program: $natural_to_binary_varlist_form
+; args:
+; - n Int: An arbitrary natural number.
+; - width Int: >
+;   A natural number representing the width to be used for the binary representation.
+; return: >
+;   A @VarList containing the binary representation of `n`, in natural codification,
+;   but in inverse order: least-significant bit first, and so on.
+(program $natural_to_binary_varlist_form ((n Int) (width Int))
+         :signature (Int Int) @VarList
+
+         (
+          (
+           ($natural_to_binary_varlist_form n width)
+
+           ($binary_to_boolean_varlist (eo::to_bin width n) width)
+           )
+          )
+         )
+
+; program: $build_boolean_interval_varlist_form
+; args:
+; - n Int: Natural number from which begin the interval.
+; - limit Int: Open upper limit of the interval.
+; - width Int: Width of the binary representation.
+; return: >
+;   A @VarList containing the binary representation, with width `width` of 
+;   each natural number from `n` up to `limit`-1 (inclusive), in natural 
+;   codification, but in inverse order: least-significant bit first, and so on.
+; note: PRE : { `n` < `limit` && log limit <= width }
+(program $build_boolean_interval_varlist_form ((limit Int) (n Int) (width Int))
+         :signature (Int Int Int) @VarList
+         (
+          (
+           ($build_boolean_interval_varlist_form limit limit width)
+
+           @varlist.nil
+           )
+
+          (; { limit != n }
+           ; { n < limit, by pre }
+           ($build_boolean_interval_varlist_form n limit width)
+
+           ($f_list_cons @varlist 
+                         ($natural_to_binary_varlist_form n width)
+                         ($build_boolean_interval_varlist_form (eo::add n 1) 
+                                                                      limit 
+                                                                      width))
+           )
+          )
+         )
+
+; program: $instantiate_specific_bool_variables
+; args:
+; - formula Bool: An arbitrary formula
+; - substitutes @VarList: >
+;   A @VarList of @VarLists of pairs of the form (variable, boolean).
+; - quantifier (-> @VarList Bool Bool): >
+;   Quantifier to be considered for the instantiation.
+; return: >
+;   A conjunction or disjunction (depending on `quantifier`) of instantiations 
+;   of `formula`, each instantiation being the result of the simultaneous 
+;   substitution of the variables by their corresponding boolean values, as 
+;   indicated by `substitutes`.
+(program $instantiate_specific_bool_variables ((substitutes @VarList) (tail @VarList :list)
+                                      (body Bool))
+         :signature (Bool @VarList (-> @VarList Bool Bool)) Bool         
+         (
+          (
+           ($instantiate_specific_bool_variables body (@varlist substitutes tail) forall)
+
+           ($f_list_cons and 
+                         ($substitution_apply body ($substitution_build_from_pairs substitutes))
+                         ($instantiate_specific_bool_variables body tail forall))
+           )
+
+          (
+           ($instantiate_specific_bool_variables body @varlist.nil forall)
+
+           true
+           )
+
+          (
+           ($instantiate_specific_bool_variables body (@varlist substitutes tail) exists)
+
+           ($f_list_cons or 
+                         ($substitution_apply body ($substitution_build_from_pairs substitutes))
+                         ($instantiate_specific_bool_variables body tail exists))
+           )
+
+          (
+           ($instantiate_specific_bool_variables body @varlist.nil exists)
+
+           false
+           )
+          )
+         )
+
+; program: $instantiate_bool_variables
+; args:
+; - formula Bool: A quantified formula.
+; - boolean_vars @VarList: >
+;   A list of variables of type Bool that are going to be instantiated.
+; return: >
+;   A formula identical to `formula`, but whose body is a conjunction or
+;   disjunction of instantiated versions of the original body of `formula`,
+;   each instantiation being that of a boolean variable from `boolean_vars`.
+;   Binding occurrences of instantiated variables are removed.
+(program $instantiate_bool_variables ((quantifier (-> @VarList Bool Bool))
+                                      (varlist @VarList) (body Bool))
+         :signature (Bool) @VarList
+         (
+          (
+           ($instantiate_bool_variables (quantifier varlist body))
+
+           (eo::define
+
+            (
+             (bool_vars ($extract_bool_variables varlist))
+             )
+
+            (eo::define
+
+             (
+              (varlist_without_bool_vars ($f_list_filter @varlist 
+                                                         @varlist.nil 
+                                                         varlist 
+                                                         ($varlist_flag_members varlist 
+                                                                                bool_vars)))
+
+              (quantity_bool_vars (eo::add ($f_list_length @varlist bool_vars)
+                                           (eo::neg 1)))
+              )
+
+             (eo::define
+
+             (
+              (exp ($int_exp 2 quantity_bool_vars))
+              )
+
+             (eo::define
+              (
+               (boolean_sequence
+                ($build_boolean_interval_varlist_form 0 exp quantity_bool_vars))
+
+               (bool_vars_repeated
+                ($f_list_repeat_elem @varlist bool_vars @varlist.nil exp))
+               )
+
+              (eo::define
+               (
+                (subst_pairs 
+                 ($f_list_map_zip @varlist 
+                                  @varlist.nil 
+                                  bool_vars_repeated 
+                                  boolean_sequence 
+                                  @varlist))
+                )
+
+               (eo::define
+
+                (
+                 (instantiated_body ($instantiate_specific_bool_variables body 
+                                                                          subst_pairs 
+                                                                          quantifier))
+                 )
+
+                
+                (eo::ite ($eo_is_eq @varlist.nil varlist_without_bool_vars)
+
+                         instantiated_body
+
+                         ; { not ($eo_is_eq @varlist.nil varlist_without_bool_vars) }
+                         (quantifier varlist_without_bool_vars instantiated_body))))))))
+           )
+          )
+         )
+
+; program: $extract_function_applied
+; args:
+; - term A: Term representing the evaluation of some function over parameters.
+; return: The function that is being applied in `term`.
+(program $extract_function_applied ((A Type) (B Type) (f (-> B A)) (param B)
+                                    (atom A))
+         :signature (A) A
+         (
+          (
+           ($extract_function_applied (f param))
+
+           ($extract_function_applied f)
+           )
+
+          (
+           ($extract_function_applied atom)
+
+           atom
+           )
+          )
+         )
+
+; program: $next_parameter
+; args: 
+; - current_app (-> A B): A term representing the partial application of some function.
+; - fully_app B: >
+;   A term that represents the application of `current_app`, over one or more
+;   parameters.
+; return: >
+;   A term "param", where param is the next parameter
+;   over which `current_app` is applied to, within `fully_app`.
+; note: PRE : { `current_app` is a proper subterm of `fully_app` }
+(program $next_parameter ((A Type) (B Type) (C Type) (D Type)
+                                    (f (-> A B)) (a A)
+                                    (g (-> C B)) (b C))
+         :signature ((-> A B) B) B
+         (
+          (
+           ($next_parameter f (f a))
+
+           a
+           )
+
+          (; TODO: problems typing this...
+           ($next_parameter f (g b))
+
+           ($next_parameter f g)
+           )
+          )
+         )
+
+; program: $substitute_in_function_application_rec
+; args:
+; - partial_app (-> A A): >
+;   Term containing the already traversed prefix of `f_totally_applied`, where
+;   the desired substitutions are already applied.
+; - f (-> A A A): >
+;   Prefix of the function application over which we want to apply the 
+;   substitution (that is, we want to substitute `a` by `substitute`, in (`f` `a`)).
+; - a A: Term representing the parameter of `f` that we want to substitute.
+; - substitute A: Term to substitute `a`.
+; - f_totally_applied A: >
+;   Original term representing the total evaluation of a function, within which
+;   we want to substitute `a` by `substitute`.
+; - prefix_f_totally_applied A: > 
+;   A prefix of `f_totally_applied`, used to determine when we finished 
+;   traversing the whole `f_totally_applied` term.
+; return: >
+;   A term like `f_totally_applied`, but where parameter `a` has been substituted
+;   by `substitute`.
+; note: >
+;   PRE : { `prefix_f_totally_applied` is a prefix of `f_totally_applied` &
+;           `prefix_f_totally_applied` is a function application over the
+;           same quantity of parameters as in `partial_app`}
+(program $substitute_in_function_application_rec ((A Type)
+                                                  (f (-> A A A))
+                                                  (g (-> A A))
+                                                  (h (-> A A))
+                                                  (a A) (b A) (i A) (substitute A)
+                                                  (f_totally_applied A))
+         ; TODO: assign a proper type to this...
+         :signature ((-> A A) (-> A A A) A A (-> A A) A) A
+         (
+          (
+           ($substitute_in_function_application_rec (f a) f a substitute
+                                                    f_totally_applied
+                                                    f_totally_applied)
+
+           ; Either, application of a function over a single parameter,
+           ; or the substitution needed to be performed over the last
+           ; parameter, among 2 or more parameters.
+           (f substitute)
+           )
+
+          (; { f != (g b) }
+           ($substitute_in_function_application_rec f g b substitute
+                                                    f_totally_applied
+                                                    f_totally_applied)
+
+           ; We finished traversing `f_totally_applied`. `f` contains
+           ; the desired substitution.
+           f
+           )
+
+          (
+           ($substitute_in_function_application_rec (f a) f a substitute
+                                                    f_totally_applied (g a))
+
+           (eo::define
+
+            (
+             (next_param ($next_parameter (g a) f_totally_applied))
+             )
+
+            ($substitute_in_function_application_rec 
+
+             (f substitute next_param)
+
+             f
+
+             a 
+
+             substitute
+
+             f_totally_applied
+             
+             (g a next_param))
+            )
+           )
+
+          (; { f != g }
+           ($substitute_in_function_application_rec (f i) g b substitute 
+                                                    f_totally_applied (h i))
+
+           (eo::define
+
+            (
+             (next_param ($next_parameter (h i) f_totally_applied))
+             )
+
+            ($substitute_in_function_application_rec 
+
+             (f i next_param)
+
+             g
+
+             b 
+
+             substitute
+
+             f_totally_applied
+
+             (h i next_param))
+            )
+           )
+          )
+         )
+
+; program: $substitute_in_function_application
+; args:
+; - f (-> A A A): >
+;   Prefix of the function application over which we want to apply the 
+;   substitution (that is, we want to substitute `a` by `substitute`, in (`f` `a`)).
+; - a A: Term representing the parameter of `f` that we want to substitute.
+; - substitute A: Term to substitute `a`.
+; - f_totally_applied A: >
+;   Original term representing the total evaluation of a function, within which
+;   we want to substitute parameter `a` by `substitute`.
+; return: >
+;   A term like `f_totally_applied`, but where parameter `a` has been substituted
+;   by `substitute`.
+(program $substitute_in_function_application ((A Type)
+                                              (f (-> A A A))
+                                              (a A) (substitute A)
+                                              (f_totally_applied A))
+
+                                        ; TODO: assign a proper type to this...
+         :signature ((-> A A) A A A) A
+         (
+          (
+           ($substitute_in_function_application f a substitute
+                                                f_totally_applied)
+
+           ($substitute_in_function_application_rec (f a) f a substitute
+                                                    f_totally_applied (f a))
+           )
+          )
+         )
+
+; program: $traverse_function_application
+; args:
+; - current_app (-> A B): 
+; - next_app B:
+; - total_app C: The original function application totally evaluated.
+; return:
+; note : >
+;   PRE : { `current_app` is a proper subterm of `next_app` & 
+;           `next_app` is a subterm of `total_app`}
+(program $traverse_function_application ((A Type) (B Type) (C Type)
+                                         (f (-> A B)) (a A) (f_totally_applied C))
+         :signature ((-> A B) B C) C
+         (
+          (
+           ($traverse_function_application f (f a) f_totally_applied)
+
+           ; "If the argument is already the constant ⊤or ⊥, it is ignored".
+           (eo::ite (eo::and ($eo_is_eq (eo::typeof a) Bool)
+                             (eo::not ($eo_is_eq a true))
+                             (eo::not ($eo_is_eq a false)))
+
+                    (eo::define
+
+                     (
+                      (if_branch
+                       ($substitute_in_function_application f a true f_totally_applied))
+
+                      (else_branch
+                       ($substitute_in_function_application f a false f_totally_applied))
+                      )
+
+                     (eo::ite ($eo_is_eq (f a) f_totally_applied)
+                              
+                              ; We finish the traversing.
+                              (ite a if_branch else_branch)
+                              
+                              ; { not ($eo_is_eq (f a) f_totally_applied) }
+                              ; There are more parameters to consider.
+                              (eo::define
+
+                               (
+                                (next_parameter
+                                 ($next_parameter (f a) f_totally_applied))
+                                )
+
+                               (ite a
+
+                                    ($traverse_function_application (f true) 
+                                                                    (f true next_parameter)
+                                                                    if_branch)
+
+                                    ($traverse_function_application (f false)
+                                                                    (f false next_parameter)
+                                                                    else_branch)))))
+
+                    ; { not ($eo_is_eq (eo::typeof a) Bool) or `a` is a boolean
+                    ;   constant }
+                    (eo::ite ($eo_is_eq (f a) f_totally_applied)
+                             
+                             ; We finish the traversing.
+                             f_totally_applied
+                             
+                             ; { not ($eo_is_eq (f a) f_totally_applied) }
+                             ; There are more parameters to consider
+                             ($traverse_function_application (f a) 
+
+                                                             (f a 
+                                                             ($next_parameter 
+                                                              (f a)
+                                                              f_totally_applied))
+
+                                                             f_totally_applied)))
+           )
+          )
+         )
+
+; program: $instantiate_bool_parameters
+; args:
+; - formula Bool: A quantified formula.
+; - boolean_vars @VarList: >
+;   A list of variables of type Bool that are going to be instantiated.
+; return: >
+;   A formula identical to `formula`, but whose body is a conjunction or
+;   disjunction of instantiated versions of the original body of `formula`,
+;   each instantiation being that of a boolean variable from `boolean_vars`.
+;   Binding occurrences of instantiated variables are removed.
+(program $instantiate_bool_parameters ((A Type) (f_totally_applied A))
+         :signature (A) A
+         (
+          (
+           ($instantiate_bool_parameters f_totally_applied)
+
+           (eo::define
+
+            (
+             (function_applied ($extract_function_applied f_totally_applied))
+             )
+            
+            (eo::define
+             (
+              (first_parameter ($next_parameter function_applied f_totally_applied))
+              )
+
+             ($traverse_function_application function_applied
+                                             (function_applied first_parameter)
+                                             f_totally_applied)))
+           )
+          )
+         )
+
+; program: $instantiate_bool_terms_rec
+; args:
+; - formula Bool: An arbitrary formula.
+; return: >
+;   A formula built from `formula`, where: 
+;   - If `formula` is a quantification, its body is a conjunction or
+;   disjunction of instantiated versions of the original body of `formula`,
+;   each instantiation being that of a boolean variable from `boolean_vars`.
+;   Binding occurrences of instantiated variables are removed.
+;   - Besides the previous, if some term is the application of some arbitrary
+;   function with boolean parameter, each boolean parameter is function expanded 
+;   by introducing appropriate if-then-else terms (using `ite`).
+(program $instantiate_bool_terms_rec ((A Type)
+                                      (varlist @VarList) 
+                                      (body Bool)
+                                      (f (-> A A)) (param A)
+                                      (lhs Bool) (rhs Bool :list)
+                                      (formula Bool))
+         :signature (Bool) Bool
+         (
+          (
+           ($instantiate_bool_terms_rec (forall varlist body))
+
+           (eo::define
+
+            (
+             (instantiated_body ($instantiate_bool_terms_rec body))
+             )
+
+            ($instantiate_bool_variables (forall varlist body)))
+            )
+
+          (
+           ($instantiate_bool_terms_rec (exists varlist body))
+
+           (eo::define
+
+            (
+             (instantiated_body ($instantiate_bool_terms_rec body))
+             )
+
+            ($instantiate_bool_variables (exists varlist body)))
+            )
+
+          (
+           ($instantiate_bool_terms_rec (and lhs rhs))
+
+           (eo::define
+
+            (
+             (instantiated_lhs ($instantiate_bool_terms_rec lhs))
+
+             (instantiated_rhs ($instantiate_bool_terms_rec rhs))
+             )
+
+            ($f_list_cons and instantiated_lhs instantiated_rhs))
+            )
+
+          (
+           ($instantiate_bool_terms_rec (or lhs rhs))
+
+           (eo::define
+
+            (
+             (instantiated_lhs ($instantiate_bool_terms_rec lhs))
+
+             (instantiated_rhs ($instantiate_bool_terms_rec rhs))
+             )
+
+            ($f_list_cons or instantiated_lhs instantiated_rhs))
+            )
+
+          (
+           ($instantiate_bool_terms_rec (xor lhs rhs))
+
+           (eo::define
+
+            (
+             (instantiated_lhs ($instantiate_bool_terms_rec lhs))
+
+             (instantiated_rhs ($instantiate_bool_terms_rec rhs))
+             )
+
+            (xor instantiated_lhs instantiated_rhs))
+            )
+
+          (
+           ($instantiate_bool_terms_rec (=> lhs rhs))
+
+           (eo::define
+
+            (
+             (instantiated_lhs ($instantiate_bool_terms_rec lhs))
+
+             (instantiated_rhs ($instantiate_bool_terms_rec rhs))
+             )
+
+            (=> instantiated_lhs instantiated_rhs))
+            )
+
+          (
+           ($instantiate_bool_terms_rec (not formula))
+
+           (eo::define
+
+            (
+             (instantiated_formula ($instantiate_bool_terms_rec formula))
+             )
+
+            (not instantiated_formula))
+            )
+
+          (
+           ($instantiate_bool_terms_rec (= lhs rhs))
+
+           (eo::define
+
+            (
+             (instantiated_lhs ($instantiate_bool_terms_rec lhs))
+
+             (instantiated_rhs ($instantiate_bool_terms_rec rhs))
+             )
+
+            (= instantiated_lhs instantiated_rhs))
+            )
+
+          (
+           ($instantiate_bool_terms_rec (f param))
+
+           ($instantiate_bool_parameters (f param))
+           )
+          
+          (; { `formula` is just an atom }
+           ($instantiate_bool_terms_rec formula)
+
+           formula
+           )
+          )
+         )
+
+; program: $check_bfun_elim
+; args:
+; - premise Bool: Premise passed to `bfun_elim`.
+; - conclusion Bool: Conclusion passed to `bfun_elim`.
+; return: >
+;   A boolean indicating if `conclusion` results from 
+;   applying the following operations, over `premise`:
+;   - Expansion of quantified variables of type Bool.
+;   - Expansion of function arguments of boolean types, 
+;     by introducing appropriate if-then-else terms.
+(program $check_bfun_elim ((premise Bool) (conclusion Bool))
   :signature (Bool Bool) Bool
   (
-   (($check_bfun_elim (@cl psi) phi) true)
-  )
-)
+   (
+    ($check_bfun_elim (@cl premise) (@cl conclusion)) 
 
-;TRUST
+    ($eo_is_eq ($instantiate_bool_terms_rec premise) conclusion)
+    )
+   )
+  )
+
+; rule: bfun_elim
+; premises:
+; - premise Bool: A premise of the form (@cl psi), for some formula psi.
+; requires: >
+;   The conclusion should result from applying the following operations over 
+;   the premise:
+;   - Expansion of quantified variables of type Bool.
+;   - Expansion of function arguments of boolean types, by introducing 
+;     appropriate if-then-else terms.
+; conclusion-explicit: >
+;   A conclusion of the form (@cl phi), for some formula phi that satisfies
+;   the previous side-condition.
 (declare-rule bfun_elim ((psi Bool) (phi Bool))
   :premises (psi)
-  :args ((@cl phi))
-  :requires ((($check_bfun_elim ($to_cl psi) phi) true))
-  :conclusion (@cl phi)
+  :requires ((($check_bfun_elim psi (@cl phi)) true))
+  :conclusion-explicit (@cl phi)
 )
 
 ;----------------

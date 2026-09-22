@@ -4,6 +4,39 @@
 ; Unit tests for arith.eo programs
 
 ;---------------------------------
+; $int_exp
+;---------------------------------
+
+(step $test_$int_exp_1 true 
+      :rule $assert_eq 
+      :args (($int_exp 2 0) 1))
+
+(step $test_$int_exp_1b true 
+      :rule $assert_eq 
+      :args (($int_exp 1 0) 1))
+
+(step $test_$int_exp_2 true 
+      :rule $assert_eq 
+      :args (($int_exp 2 1) 2))
+
+(step $test_$int_exp_3 true 
+      :rule $assert_eq 
+      :args (($int_exp 2 2) 4))
+
+(step $test_$int_exp_4 true 
+      :rule $assert_eq 
+      :args (($int_exp 2 2) 4))
+
+(step $test_$int_exp_5 true 
+      :rule $assert_eq 
+      :args (($int_exp 3 2) 9))
+
+(step $test_$int_exp_6 true 
+      :rule $assert_eq 
+      :args (($int_exp 3 3) 27))
+
+
+;---------------------------------
 ; $is_numeric_literal
 ;---------------------------------
 
