@@ -390,6 +390,31 @@
           )
          )
 
+; program: $f_list_concat
+; args:
+; - f (-> A A A): Constructor of f-lists.
+; - nil A: Nil element of f-lists.
+; - list1 A: An f-list.
+; - list2 A: An f-list.
+; return: The list resulting from concatenating `list1` and `list2`.
+(program $f_list_concat ((A Type) (hd A) (tl A) (f (-> A A A)) (nil A)
+                          (list_2 A))
+  :signature ((-> A A A) A A A) A
+  (
+   (
+    ($f_list_concat f nil (f hd tl) list_2)
+    
+    ($f_list_cons f hd ($f_list_concat f nil tl list_2))
+    )
+
+   (
+    ($f_list_concat f nil nil list_2)
+    
+    list_2
+    )
+   )
+  )
+
 ; program: $to_nil_terminated_f_list
 ; args:
 ; - f (-> A A A): Constructor of f-lists, that is righ-assoc-nil.
