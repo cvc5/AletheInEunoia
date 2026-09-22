@@ -109,6 +109,11 @@
           )
          )
 
+; program: $binary_tree_get_left_most_leaf
+; args:
+; - tree_constructor (-> A A A): A binary tree constructor
+; - tree A: A binary tree, built with `tree_constructor`.
+; return: The left-most leave of `tree`
 (program $binary_tree_get_left_most_leaf ((A Type) (lhs A) (rhs A) (op (-> A A A)))
          :signature ((-> A A A) A) A
          (
@@ -119,7 +124,7 @@
 
                     ($binary_tree_get_left_most_leaf op lhs)
 
-                                        ; { $list_len op lhs = 1 }
+                    ; { $list_len op lhs = 1 }
                     lhs)
            )
 

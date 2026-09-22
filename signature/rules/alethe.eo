@@ -20,9 +20,9 @@
   :conclusion-explicit (@cl true)
 )
 
-;-------------
-; Rule 4: false
-;-------------
+;------------
+; Rule false
+;------------
 
 ; rule: false
 ; conclusion: Conclusion must be of the form (@cl (not false)).
@@ -30,9 +30,9 @@
   :conclusion-explicit (@cl (not false))
 )
 
-;-------------
-; Rule 5: not_not
-;-------------
+;--------------
+; Rule not_not
+;--------------
 
 ; rule: not_not
 ; conclusion: >
@@ -41,9 +41,9 @@
   :conclusion-explicit (@cl (not (not (not phi))) phi)
 )
 
-;-------------
-; Rule 6: th_resolution
-;-------------
+;--------------------
+; Rule th_resolution
+;--------------------
 
 ; program: $remove_double_negation
 ; args:
@@ -372,9 +372,9 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 7: resolution
-;-------------
+;-----------------
+; Rule resolution
+;-----------------
 
 ; rule: resolution
 ; premises:
@@ -413,9 +413,9 @@
   :conclusion (@cl true)
 )
 
-;-------------
-; Rule 9: contraction
-;-------------
+;------------------
+; Rule contraction
+;------------------
 
 ; program: check_contraction
 ; args:
@@ -449,9 +449,9 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 10: subproof
-;-------------
+;---------------
+; Rule subproof
+;---------------
 
 ; program: $check_subproof
 ; args:
@@ -503,9 +503,9 @@
   :conclusion-explicit conclusion
 )
 
-;--------------------
-; Rule 11: la_generic
-;--------------------
+;-----------------
+; Rule la_generic
+;-----------------
 
 ; From "The Alethe Proof Format":
 ; "Checking the validity of this clause amounts to checking the unsatisfiability 
@@ -1147,9 +1147,9 @@
   :conclusion CL
 )
 
-;---------------------
-; Rule 17: la_mult_neg
-;---------------------
+;------------------
+; Rule la_mult_neg
+;------------------
 
 ; program: $check_inverse_relations
 ; args:
@@ -1253,9 +1253,10 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 18: bind
-;-------------
+;-----------
+; Rule bind
+;-----------
+
 ; TODO: remove this once we have higher-order programs
 ; program: $embed_within_vars
 ; args:
@@ -1436,7 +1437,7 @@
 )
 
 ;-------------
-; Rule 19: sko_ex
+; Rule sko_ex
 ;-------------
 
 ; program: $check_sko_build_skolem_vars
@@ -1575,9 +1576,9 @@
   :conclusion (@cl (= l r))
 )
 
-;--------------------
-; Rule 21: forall_inst
-;--------------------
+;------------------
+; Rule forall_inst
+;------------------
 
 ; program: $check_forall_inst
 ; args:
@@ -1622,9 +1623,9 @@
                                 forall_body_instantiated))
 )
 
-;--------------------
-; Rule 22: refl
-;--------------------
+;-----------
+; Rule refl
+;-----------
 
 ; program: $check_refl
 ; args:
@@ -1666,9 +1667,9 @@
   :conclusion-explicit (@cl (= t1 t2))
 )
 
-;-------------
-; Rule 23: trans
-;-------------
+;------------
+; Rule trans
+;------------
 
 ; program: $last_eq_right
 ; args:
@@ -1847,9 +1848,9 @@
   :conclusion-explicit (@cl (= t1 tn))
 )
 
-;---------------
-; Rule 24: cong
-;---------------
+;-----------
+; Rule cong
+;-----------
 
 ; program: $check_n_ary_application
 ; args:
@@ -2043,9 +2044,10 @@
   :conclusion-explicit conclusion
 )
 
-;----------------------
-; Rule 25: eq_reflexive
-;----------------------
+;-------------------
+; Rule eq_reflexive
+;-------------------
+
 ; rule: eq_reflexive
 ; conclusion: >
 ; Conclusion should be of the form (@cl (= t t)), for some arbitrary
@@ -2088,9 +2090,9 @@
 ; Table 7: Clausification rules
 ;-------------
 
-;-------------
-; Rule 30: and
-;-------------
+;----------
+; Rule and
+;----------
 
 ; program: check_and
 ; args:
@@ -2135,7 +2137,7 @@
 )
 
 ;-------------
-; Rule 31: not_or
+; Rule not_or
 ;-------------
 
 ; program: check_not_or
@@ -2184,9 +2186,9 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 32: or
-;-------------
+;---------
+; Rule or
+;---------
 
 ; program: check_or
 ; args:
@@ -2226,9 +2228,9 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 37: not_and
-;-------------
+;--------------
+; Rule not_and
+;--------------
 
 ; program: check_not_and
 ; args:
@@ -2265,9 +2267,9 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 37: xor1
-;-------------
+;-----------
+; Rule xor1
+;-----------
 
 ; rule: xor1
 ; premises:
@@ -2278,9 +2280,9 @@
   :conclusion-explicit (@cl phi1 phi2)
 )
 
-;-------------
-; Rule 38: xor2
-;-------------
+;-----------
+; Rule xor2
+;-----------
 
 ; rule: xor2
 ; premises:
@@ -2291,9 +2293,9 @@
   :conclusion-explicit (@cl (not phi1) (not phi2))
 )
 
-;-------------
-; Rule 39: not_xor1
-;-------------
+;---------------
+; Rule not_xor1
+;---------------
 
 ; rule: not_xor1
 ; premises:
@@ -2305,9 +2307,9 @@
 )
 
 
-;-------------
-; Rule 40: not_xor2
-;-------------
+;---------------
+; Rule not_xor2
+;---------------
 
 ; rule: not_xor2
 ; premises:
@@ -2318,9 +2320,10 @@
   :conclusion-explicit (@cl (not phi1) phi2)
 )
 
-;-------------
-; Rule 41: implies
-;-------------
+;--------------
+; Rule implies
+;--------------
+
 ; rule: implies
 ; premises:
 ; - premise Bool: >
@@ -2334,9 +2337,9 @@
   :conclusion-explicit (@cl (not phi1) phi2)
 )
 
-;----------------------
-; Rule 42: not_implies1
-;----------------------
+;-------------------
+; Rule not_implies1
+;-------------------
 
 ; rule: not_implies1
 ; premises:
@@ -2349,9 +2352,10 @@
   :conclusion-explicit (@cl phi1)
 )
 
-;----------------------
-; Rule 43: not_implies2
-;----------------------
+;-------------------
+; Rule not_implies2
+;-------------------
+
 ; rule: not_implies2
 ; premises:
 ; - premise Bool: A premise of the form ((@cl (not (=> phi1 phi2)))).
@@ -2364,8 +2368,9 @@
 )
 
 ;-------------
-; Rule 44: equiv1
+; Rule equiv1
 ;-------------
+
 ; rule: equiv1
 ; premises:
 ; - premise Bool: >
@@ -2379,7 +2384,7 @@
 )
 
 ;-------------
-; Rule 45: equiv2
+; Rule equiv2
 ;-------------
 
 ; rule: equiv2
@@ -2395,9 +2400,10 @@
 )
 
 
-;-------------
-; Rule 46: not_equiv1
-;-------------
+;-----------------
+; Rule not_equiv1
+;-----------------
+
 ; rule: not_equiv1
 ; premises:
 ; - premise Bool: >
@@ -2410,9 +2416,25 @@
   :conclusion-explicit (@cl phi1 phi2)
 )
 
-;-------------
-; Rule 48: and_pos
-;-------------
+;-----------------
+; Rule not_equiv2
+;-----------------
+
+; rule: not_equiv2
+; premises:
+; - premise Bool: >
+;   A negated equivalence between some propositions phi1 and phi2, in clause form:
+;   (@cl (not (phi1 = phi2))).
+; conclusion-explicit: >
+;   The conclusion should be of the form (@cl (not phi1) (not phi2)).
+(declare-rule not_equiv2 ((phi1 Bool) (phi2 Bool))
+  :premises ((@cl (not (= phi1 phi2))))
+  :conclusion-explicit (@cl (not phi1) (not phi2))
+)
+
+;--------------
+; Rule and_pos
+;--------------
 
 ; program: check_and_pos
 ; args:
@@ -2460,9 +2482,9 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 49: and_neg
-;-------------
+;--------------
+; Rule and_neg
+;--------------
 
 ; program: check_and_neg
 ; args:
@@ -2495,7 +2517,7 @@
 )
 
 ;-------------
-; Rule 50: or_pos
+; Rule or_pos
 ;-------------
 
 ; program: check_or_pos
@@ -2529,7 +2551,7 @@
 )
 
 ;-------------
-; Rule 51: or_neg
+; Rule or_neg
 ;-------------
 
 ; program: check_or_neg
@@ -2574,69 +2596,10 @@
   :conclusion-explicit conclusion
 )
 
-;TODO
-(program $check_xor_pos1 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_xor_pos1 CL) true)
-  )
-)
+;------------------
+; Rule implies_pos
+;------------------
 
-;TRUST
-(declare-rule xor_pos1 ((CL Bool))
-  :args (CL)
-  :requires ((($check_xor_pos1 CL) true))
-  :conclusion CL
-)
-
-;TODO
-(program $check_xor_pos2 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_xor_pos2 CL) true)
-  )
-)
-
-;TRUST
-(declare-rule xor_pos2 ((CL Bool))
-  :args (CL)
-  :requires ((($check_xor_pos2 CL) true))
-  :conclusion CL
-)
-
-;TODO
-(program $check_xor_neg1 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_xor_neg1 CL) true)
-  )
-)
-
-;TRUST
-(declare-rule xor_neg1 ((CL Bool))
-  :args (CL)
-  :requires ((($check_xor_neg1 CL) true))
-  :conclusion CL
-)
-
-;TODO
-(program $check_xor_neg2 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_xor_neg2 CL) true)
-  )
-)
-
-;TRUST
-(declare-rule xor_neg2 ((CL Bool))
-  :args (CL)
-  :requires ((($check_xor_neg2 CL) true))
-  :conclusion CL
-)
-
-;-------------
-; Rule 56: implies_pos
-;-------------
 ; rule: implies_pos
 ; conclusion-explicit: >
 ;   The conclusion should be an instance of excluded middle,
@@ -2645,9 +2608,9 @@
   :conclusion-explicit (@cl (not (=> phi1 phi2)) (not phi1) phi2)
 )
 
-;-------------
-; Rule 57: implies_neg1
-;-------------
+;-------------------
+; Rule implies_neg1
+;-------------------
 
 ; rule: implies_neg1
 ; conclusion-explicit: >
@@ -2657,9 +2620,10 @@
   :conclusion-explicit (@cl (=> phi1 phi2) phi1)
 )
 
-;-------------
-; Rule 58: implies_neg2
-;-------------
+;-------------------
+; Rule implies_neg2
+;-------------------
+
 ; rule: implies_neg2
 ; conclusion-explicit: >
 ;   The conclusion should be of the form (@cl (=>phi1 phi2) (not phi2)),
@@ -2668,9 +2632,10 @@
   :conclusion-explicit (@cl (=> phi1 phi2) (not phi2))
 )
 
-;-------------
-; Rule 59: equiv_pos1
-;-------------
+;-----------------
+; Rule equiv_pos1
+;-----------------
+
 ; rule: equiv_pos1
 ; conclusion-explicit: >
 ;   Conclusion should be equal to the clause 
@@ -2679,9 +2644,10 @@
   :conclusion-explicit (@cl (not (= phi1 phi2)) phi1 (not phi2))
 )
 
-;-------------
-; Rule 60: equiv_pos2
-;-------------
+;-----------------
+; Rule equiv_pos2
+;-----------------
+
 ; rule: equiv_pos2
 ; conclusion-explicit: >
 ;   Conclusion should be equal to the clause 
@@ -2690,39 +2656,10 @@
   :conclusion-explicit (@cl (not (= phi1 phi2)) (not phi1) phi2)
 )
 
-;TODO
-(program $check_equiv_neg1 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_equiv_neg1 CL) true)
-  )
-)
+;-----------
+; Rule ite1
+;-----------
 
-;TRUST
-(declare-rule equiv_neg1 ((CL Bool))
-  :args (CL)
-  :requires ((($check_equiv_neg1 CL) true))
-  :conclusion CL
-)
-
-;TODO
-(program $check_equiv_neg2 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_equiv_neg2 CL) true)
-  )
-)
-
-;TRUST
-(declare-rule equiv_neg2 ((CL Bool))
-  :args (CL)
-  :requires ((($check_equiv_neg2 CL) true))
-  :conclusion CL
-)
-
-;-------------
-; Rule 63: ite1
-;-------------
 ; rule: ite1
 ; premises: >
 ;   A premise of the form (@cl (ite phi1 phi2 phi3)). Note that phi2 and phi3 must be
@@ -2745,69 +2682,10 @@
   :conclusion-explicit (@cl (not phi1) phi2)
 )
 
-;TODO
-(program $check_ite_pos1 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_ite_pos1 CL) true)
-  )
-)
+;---------------
+; Rule not_ite1
+;---------------
 
-;TRUST
-(declare-rule ite_pos1 ((CL Bool))
-  :args (CL)
-  :requires ((($check_ite_pos1 CL) true))
-  :conclusion CL
-)
-
-;TODO
-(program $check_ite_pos2 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_ite_pos2 CL) true)
-  )
-)
-
-;TRUST
-(declare-rule ite_pos2 ((CL Bool))
-  :args (CL)
-  :requires ((($check_ite_pos2 CL) true))
-  :conclusion CL
-)
-
-;TODO
-(program $check_ite_neg1 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_ite_neg1 CL) true)
-  )
-)
-
-;TRUST
-(declare-rule ite_neg1 ((CL Bool))
-  :args (CL)
-  :requires ((($check_ite_neg1 CL) true))
-  :conclusion CL
-)
-
-;TODO
-(program $check_ite_neg2 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_ite_neg2 CL) true)
-  )
-)
-
-;TRUST
-(declare-rule ite_neg2 ((CL Bool))
-  :args (CL)
-  :requires ((($check_ite_neg2 CL) true))
-  :conclusion CL
-)
-
-;-------------
-; Rule 69: not_ite1
-;-------------
 ; rule: not_ite1
 ; premises: >
 ;   A premise of the form (@cl (not (ite phi1 phi2 phi3))). Note that phi2 and phi3 must be
@@ -2819,9 +2697,10 @@
   :conclusion-explicit (@cl phi1 (not phi3))
 )
 
-;-------------
-; Rule 70: not_ite2
-;-------------
+;---------------
+; Rule not_ite2
+;---------------
+
 ; rule: not_ite2
 ; premises: >
 ;   A premise of the form (@cl (not (ite phi1 phi2 phi3))). Note that phi2 and phi3 must be
@@ -2849,9 +2728,9 @@
   :conclusion (@cl (= l r))
 )
 
-;-------------
-; Rule 75: implies_simplify
-;-------------
+;-----------------------
+; Rule implies_simplify
+;-----------------------
 
 ; program: check_implies_simplify
 ; args:
@@ -2885,9 +2764,10 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 76: equiv_simplify
-;-------------
+;---------------------
+; Rule equiv_simplify
+;---------------------
+
 ; program: check_equiv_simplify
 ; args:
 ; - conclusion Bool: Conclusion provided to rule equiv_simplify.
@@ -2946,21 +2826,6 @@
 (declare-rule ite_simplify ((l Bool) (r Bool))
   :args ((@cl (= l r)))
   :requires ((($check_ite_simplify l r) true))
-  :conclusion (@cl (= l r))
-)
-
-;TODO
-(program $check_qnt_simplify ((l Bool) (r Bool))
-  :signature (Bool Bool) Bool
-  (
-   (($check_qnt_simplify l r) true)
-  )
-)
-
-;TRUST
-(declare-rule qnt_simplify ((l Bool) (r Bool))
-  :args ((@cl (= l r)))
-  :requires ((($check_qnt_simplify l r) true))
   :conclusion (@cl (= l r))
 )
 
@@ -3092,9 +2957,9 @@
   :conclusion (@cl (= l r))
 )
 
-;-------------
-; Rule 91: let
-;-------------
+;----------
+; Rule let
+;----------
 
 (program $verify_let_premises ((context Bool) (premises Bool) 
                               (A Type) (var A)
@@ -3179,9 +3044,9 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 93: distinct_elim
-;-------------
+;--------------------
+; Rule distinct_elim
+;--------------------
 
 ; program: build_distinct_list
 ; args:
@@ -3367,9 +3232,9 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 94: la_rw_eq
-;-------------
+;---------------
+; Rule la_rw_eq
+;---------------
 
 ; TODO: other number types. Can the equality be flipped?
 ; rule: la_rw_eq
@@ -3380,9 +3245,9 @@
   :conclusion-explicit (@cl (= (= t u) (and (<= t u) (<= u t))))
 )
 
-;-------------
-; Rule 95: nary_elim
-;-------------
+;----------------
+; Rule nary_elim
+;----------------
 
 ; program: check_nary_elim
 ; args:
@@ -3438,9 +3303,9 @@
   :conclusion (@cl phi)
 )
 
-;-------------------
+;----------------
 ; Rule ite_intro
-;-------------------
+;----------------
 
 ; program: $ite_intro_check_conjuncts
 ; args:
@@ -3575,9 +3440,9 @@
 ; Table 10: Rules used by cvc5, but not by veriT
 ;-------------
 
-;-------------
-; Rule 101: symm
-;-------------
+;-----------
+; Rule symm
+;-----------
 
 ; rule: symm
 ; premises: >
@@ -3589,9 +3454,9 @@
   :conclusion-explicit (@cl (= psy phi))
 )
 
-;-------------
-; Rule 34: reordering
-;-------------
+;-----------------
+; Rule reordering
+;-----------------
 
 ; program: check_reordering
 ; args:
@@ -3639,6 +3504,21 @@
   :requires ((($check_reordering premise conclusion) 
               true))
   :conclusion-explicit conclusion
+)
+
+;---------------
+; Rule not_symm
+;---------------
+
+; rule: not_symm
+; premises: >
+;   An equality of the form (@cl (not (= phi psy))), for arbitrary formulas phi 
+;   and psy.
+; conclusion-explicit: >
+;   The conclusion should have the form (@cl (not (= psy phi))).
+(declare-rule not_symm ((phi Bool) (psy Bool))
+  :premises ((@cl (not (= phi psy))))
+  :conclusion-explicit (@cl (not (= psy phi)))
 )
 
 ;-------------
