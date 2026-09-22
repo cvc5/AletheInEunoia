@@ -204,6 +204,72 @@
              (and a a b b c)))
 
 ;--------------------------
+; $f_list_remove_duplicates
+;--------------------------
+
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Int)
+(declare-const e Int)
+(declare-const f Int)
+
+(step $test_$f_list_remove_duplicates_1 true 
+      :rule $assert_eq 
+      :args (($f_list_remove_duplicates and (and a a))
+             
+             (and a)))
+
+(step $test_$f_list_remove_duplicates_1b true 
+      :rule $assert_eq 
+      :args (($f_list_remove_duplicates and ($f_list_cons and a a))
+             
+             a))
+
+(step $test_$f_list_remove_duplicates_1c true 
+      :rule $assert_eq 
+      :args (($f_list_remove_duplicates or ($f_list_cons or a a))
+             
+             a))
+
+(step $test_$f_list_remove_duplicates_1d true 
+      :rule $assert_eq 
+      :args (($f_list_remove_duplicates and a)
+             
+             a))
+
+(step $test_$f_list_remove_duplicates_2 true 
+      :rule $assert_eq 
+      :args (($f_list_remove_duplicates and (and a ))
+             
+             (and a)))
+
+(step $test_$f_list_remove_duplicates_3 true 
+      :rule $assert_eq 
+      :args (($f_list_remove_duplicates and (and a b true c))
+             
+             (and a b c)))
+
+(step $test_$f_list_remove_duplicates_4 true 
+      :rule $assert_eq 
+      :args (($f_list_remove_duplicates and (and true a true b true c))
+             
+             (and a b c)))
+
+(step $test_$f_list_remove_duplicates_5 true 
+      :rule $assert_eq 
+      :args (($f_list_remove_duplicates and (and b true a a true b true c))
+             
+             (and a b c)))
+
+(step $test_$f_list_remove_duplicates_6 true 
+      :rule $assert_eq 
+      :args (($f_list_remove_duplicates and (and c b true a a true b true c))
+             
+             (and a b c)))
+
+;--------------------------
 ; $to_nil_terminated_f_list
 ;--------------------------
 
