@@ -514,21 +514,21 @@
 ; args:
 ; - conjunction Bool: A boolean conjunction.
 ; return: >
-;   Applies De Morgan's law over the conjuncts of `conjunction`, returning the 
-;   equivalent disjunction of terms as a `@cl` clause.
-(program $de_morgan_not_and ((prop Bool) (conjunct Bool) (conjuncts Bool :list))
+;   Applies De Morgan's law over the conjuncts of "ls", returning a new clause
+;   built with @cl.
+(program $de_morgan_not_and ((l Bool) (ls Bool :list))
   :signature (Bool) Bool
   (
    (
-    ($de_morgan_not_and (and conjunct))
+    ($de_morgan_not_and (and l ls))
     
-    (@cl (not conjunct))
+    ($f_list_cons @cl (not l) ($de_morgan_not_and ls))
     )
 
-   (; { conjuncts != true }
-    ($de_morgan_not_and (and conjunct conjuncts))
-    
-    ($f_list_cons @cl (not conjunct) ($de_morgan_not_and conjuncts))
+   (; { l is an atom }
+    ($de_morgan_not_and l) 
+
+    (not l)
     )
   )
 )
@@ -1498,7 +1498,7 @@
 ;    should be substituted by "value".
 ; return: The corresponding @Substitution.
 (program $substitution_build_from_pairs ((Vars Type) (Values Type) (var Vars) 
-                                         (value Values) (pairs_tail @VarList :list))
+                                         (value Values :list) (pairs_tail @VarList :list))
          :signature (@VarList) @Substitution
          (
           (
@@ -1513,7 +1513,7 @@
            ($substitution_extend ($substitution_build_from_pairs pairs_tail) var value)
            )
           )
-)
+         )
 
 ; program: $substitution_build_from_context
 ; args:
