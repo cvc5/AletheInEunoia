@@ -1181,3 +1181,70 @@
 (declare-rule eq_symmetric ((A Type) (B Type) (t1 A) (t2 B))
   :conclusion-explicit (@cl (= (= t1 t2) (= t2 t1)))
 )
+
+
+;----------------
+; Rule tautology
+;----------------
+
+(program $remove_leading_negations_in_clause ((hd Bool) (tl Bool :list))
+  :signature (Bool) Bool
+  (
+   (
+    ($remove_leading_negations_in_clause (@cl hd tl))
+
+    ($f_list_cons @cl 
+                  ($remove_leading_negations hd)
+                  ($remove_leading_negations_in_clause tl))
+    )
+
+   (
+    ($remove_leading_negations_in_clause hd)
+
+    ($remove_leading_negations hd)
+    )
+  )
+)
+
+(program $check_tautology_in_normalized_clause ((hd Bool) (tl Bool :list))
+         :signature (Bool) Bool
+         (
+          (
+           ($check_tautology_in_normalized_clause (@cl (not hd) tl))
+
+           (eo::or ($f_list_contains_elem @cl hd tl)
+                   ($check_tautology_in_normalized_clause tl))
+           )
+
+          (; { hd != not ... }
+           ($check_tautology_in_normalized_clause (@cl hd tl))
+
+           (eo::or ($f_list_contains_elem @cl (not hd) tl)
+                   ($check_tautology_in_normalized_clause tl))
+           )
+
+          (
+           ($check_tautology_in_normalized_clause false)
+
+           false
+           )
+          )
+         )
+
+(program $check_tautology ((premise Bool))
+         :signature (Bool Bool) Bool
+         (
+          (
+           ($check_tautology premise (@cl true))
+
+           ($check_tautology_in_normalized_clause
+            ($remove_leading_negations_in_clause premise))
+           )
+          )
+         )
+
+(declare-rule tautology ((premise Bool))
+  :premises (premise)
+  :requires ((($check_tautology premise (@cl true)) true))
+  :conclusion (@cl true)
+)

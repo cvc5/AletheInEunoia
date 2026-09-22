@@ -397,22 +397,6 @@
   :conclusion-explicit conclusion
 )
 
-;TODO
-(program $check_tautology ((CL1 Bool))
-  :signature (Bool) Bool
-  (
-   (($check_tautology CL1) true)
-  )
-)
-
-;TRUST
-(declare-rule tautology ((CL1 Bool))
-  :premises (CL1)
-  :args ((@cl true))
-  :requires ((($check_tautology CL1) true))
-  :conclusion (@cl true)
-)
-
 ;------------------
 ; Rule contraction
 ;------------------

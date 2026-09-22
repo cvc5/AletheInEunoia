@@ -1352,3 +1352,55 @@
 (step $test_qnt_simplify_2
       (@cl (= (forall @varlist.nil false) false))
       :rule qnt_simplify)
+
+;----------
+; tautology
+;----------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+
+(assume premise_tautology_1 (@cl a (not a)))
+(step $test_tautology_1
+      (@cl true)
+      :rule tautology
+      :premises (premise_tautology_1))
+
+(assume premise_tautology_2 (@cl a b (not a)))
+(step $test_tautology_2
+      (@cl true)
+      :rule tautology
+      :premises (premise_tautology_2))
+
+(assume premise_tautology_3 (@cl a b c (not a)))
+(step $test_tautology_tautology_3
+      (@cl true)
+      :rule tautology
+      :premises (premise_tautology_3))
+
+(assume premise_tautology_4 (@cl a (not b) c (not a)))
+(step $test_tautology_tautology_4
+      (@cl true)
+      :rule tautology
+      :premises (premise_tautology_4))
+
+(assume premise_tautology_5 (@cl d (not (not a)) c (not a)))
+(step $test_tautology_5
+      (@cl true)
+      :rule tautology
+      :premises (premise_tautology_5))
+
+(assume premise_tautology_6 (@cl d (not (not a)) c (not (not (not a)))))
+(step $test_tautology_tautology_6
+      (@cl true)
+      :rule tautology
+      :premises (premise_tautology_6))
+
+(assume premise_tautology_7 (@cl d d (not (not (not a))) (not (not (not (not a)))) c 
+                       (not (not (not a)))))
+(step $test_tautology_7
+      (@cl true)
+      :rule tautology
+      :premises (premise_tautology_7))
