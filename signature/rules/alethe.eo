@@ -3571,6 +3571,27 @@
   :conclusion-explicit (@cl (= t1 (and t2 conjuncts)))
 )
 
+;----------------
+; Rule and_intro
+;----------------
+
+(program $check_and_intro ((lhs Bool) (rhs Bool))
+         :signature (Bool Bool Bool) Bool
+         (
+          (
+           ($check_and_intro (@cl lhs) (@cl rhs) (@cl (and lhs rhs)))
+
+           true
+           )
+          )
+         )
+
+(declare-rule and_intro ((lhs Bool) (rhs Bool) (conclusion Bool))
+   :premises ( lhs rhs )
+   :requires ((($check_and_intro lhs rhs conclusion) true))
+   :conclusion-explicit conclusion
+)
+
 ;-------------
 ; Table 10: Rules used by cvc5, but not by veriT
 ;-------------

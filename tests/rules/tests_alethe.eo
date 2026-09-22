@@ -197,3 +197,47 @@
               (and (= a (ite b c d)) 
                    (ite b (= c (ite b c d)) (= d (ite b c d)))))) :rule ite_intro)
 
+
+;----------
+; and_intro
+;----------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+
+(assume premise_and_intro_1_lhs (@cl a))
+(assume premise_and_intro_1_rhs (@cl b))
+(step $test_and_intro_1
+      (@cl (and a b))
+      :rule and_intro
+      :premises (premise_and_intro_1_lhs premise_and_intro_1_rhs))
+
+(assume premise_and_intro_2_lhs (@cl (or a b)))
+(assume premise_and_intro_2_rhs (@cl c))
+(step $test_and_intro_2
+      (@cl (and (or a b) c))
+      :rule and_intro
+      :premises (premise_and_intro_2_lhs premise_and_intro_2_rhs))
+
+(assume premise_and_intro_3_lhs (@cl (or a b)))
+(assume premise_and_intro_3_rhs (@cl (=> c d)))
+(step $test_and_intro_3
+      (@cl (and (or a b) (=> c d)))
+      :rule and_intro
+      :premises (premise_and_intro_3_lhs premise_and_intro_3_rhs))
+
+(assume premise_and_intro_4_lhs (@cl (xor true (or a b))))
+(assume premise_and_intro_4_rhs (@cl (=> c d)))
+(step $test_and_intro_4
+      (@cl (and (xor true (or a b)) (=> c d)))
+      :rule and_intro
+      :premises (premise_and_intro_4_lhs premise_and_intro_4_rhs))
+
+(assume premise_and_intro_5_lhs (@cl (and true (or a b))))
+(assume premise_and_intro_5_rhs (@cl (=> c d)))
+(step $test_and_intro_5
+      (@cl (and (and true (or a b)) (=> c d)))
+      :rule and_intro
+      :premises (premise_and_intro_5_lhs premise_and_intro_5_rhs))
