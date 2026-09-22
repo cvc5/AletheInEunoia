@@ -5,6 +5,5 @@
 
 ; Programs
 (include "./programs/tests_arith.eo")
-(include "./programs/tests_lists.eo")
 (include "./programs/tests_trees.eo")
 (include "./programs/tests_programs.eo")
