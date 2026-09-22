@@ -70,6 +70,48 @@
           )
          )
 
+; program: $is_rel_op
+; args:
+; - rel (-> T T Bool): A binary relation.
+; return: A boolean indicating if `rel` is equal to, either, <, <=, >, >= or =.
+(program $is_rel_op ((T Type) (op (-> T T Bool)))
+
+         :signature ((-> T T Bool)) Bool
+
+         (
+          (
+           ($is_rel_op <)
+           
+           true
+           )
+
+          (
+           ($is_rel_op <=)
+           
+           true
+           )
+
+          (
+           ($is_rel_op >)
+           
+           true
+           )
+
+          (
+           ($is_rel_op >=)
+           
+           true
+           )
+
+          (
+           ($is_rel_op =)
+           
+           true
+           )
+          )
+         )
+
+
 ; program: $is_theory_binary_arith_op
 ; args:
 ; - op (-> T T T): An arbitrary operator.

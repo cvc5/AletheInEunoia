@@ -36,3 +36,142 @@
       :args (($add_processed_inequalities (and (> 1 2)
                                                (> 1 2)))
              (> 2/1 4/1)))
+
+;-----------------
+; la_mult_pos
+;-----------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Int)
+(declare-const b Int)
+(declare-const c Int)
+(declare-const d Real)
+(declare-const e Real)
+(declare-const f Real)
+
+
+(step $test_la_mul_pos_1
+      (@cl (=> (and (> a 0) (< b c))
+              (< (* a b) (* a c))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_2
+      (@cl (=> (and (> d 0/1) (< e f))
+              (< (* d e) (* d f))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_3
+      (@cl (=> (and (> d 0.0) (< e f))
+              (< (* d e) (* d f))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_4
+      (@cl (=> (and (> (+ a a) 0) (< b c))
+              (< (* (+ a a) b) (* (+ a a) c))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_5
+      (@cl (=> (and (> (+ d e) 0) (< e f))
+              (< (* (+ d e) e) (* (+ d e) f))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_6
+      (@cl (=> (and (> a 0) (= b c))
+              (= (* a b) (* a c))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_7
+      (@cl (=> (and (> d 0/1) (= e f))
+              (= (* d e) (* d f))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_8
+      (@cl (=> (and (> d 0.0) (= e f))
+              (= (* d e) (* d f))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_9
+      (@cl (=> (and (> (+ a a) 0) (= b c))
+              (= (* (+ a a) b) (* (+ a a) c))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_10
+      (@cl (=> (and (> (+ d e) 0) (= e f))
+              (= (* (+ d e) e) (* (+ d e) f))))
+      :rule la_mult_pos)
+
+
+(step $test_la_mul_pos_11
+      (@cl (=> (and (> a 0) (not (= b c)))
+              (not (= (* a b) (* a c)))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_12
+      (@cl (=> (and (> d 0/1) (not (= e f)))
+              (not (= (* d e) (* d f)))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_13
+      (@cl (=> (and (> d 0.0) (not (= e f)))
+              (not (= (* d e) (* d f)))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_14
+      (@cl (=> (and (> (+ a a) 0) (not (= b c)))
+              (not (= (* (+ a a) b) (* (+ a a) c)))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_15
+      (@cl (=> (and (> (+ d e) 0) (not (= e f)))
+              (not (= (* (+ d e) e) (* (+ d e) f)))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_16
+      (@cl (=> (and (> a 0) (not (= b c)))
+              (not (= (* a b) (* a c)))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_17
+      (@cl (=> (and (> d 0/1) (not (= e f)))
+              (not (= (* d e) (* d f)))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_18
+      (@cl (=> (and (> d 0.0) (not (= e f)))
+              (not (= (* d e) (* d f)))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_19
+      (@cl (=> (and (> (+ a a) 0) (not (= b c)))
+              (not (= (* (+ a a) b) (* (+ a a) c)))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_20
+      (@cl (=> (and (> (+ d e) 0) (not (= e f)))
+              (not (= (* (+ d e) e) (* (+ d e) f)))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_21
+      (@cl (=> (and (> a 0) (not (= b c)))
+              (not (= (* a b) (* a c)))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_22
+      (@cl (=> (and (> d 0/1) (not (= e f)))
+              (not (= (* d e) (* d f)))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_23
+      (@cl (=> (and (> d 0.0) (not (= e f)))
+              (not (= (* d e) (* d f)))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_24
+      (@cl (=> (and (> (+ a a) 0) (not (= b c)))
+              (not (= (* (+ a a) b) (* (+ a a) c)))))
+      :rule la_mult_pos)
+
+(step $test_la_mul_pos_25
+      (@cl (=> (and (> (+ d e) 0) (not (= e f)))
+              (not (= (* (+ d e) e) (* (+ d e) f)))))
+      :rule la_mult_pos)
+

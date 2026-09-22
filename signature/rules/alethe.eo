@@ -1148,6 +1148,76 @@
 )
 
 ;------------------
+; Rule la_mult_pos
+;------------------
+
+; args:
+; - conclusion Bool: Conclusion given to rule "la_mult_pos".
+; return: >
+;   A boolean indicating if `conclusion` is an implication of the form, either:
+;   - (𝑡1 > 0 ∧ 𝑡2 ⋈ 𝑡3) → 𝑡1 ∗ 𝑡2 ⋈ 𝑡1 ∗ 𝑡3, with ⋈ ∈ {<, >, ≤, ≥, ≈}.
+;   - (𝑡1 > 0 ∧ ¬(𝑡2 ≈ 𝑡3 )) → ¬(𝑡1 ∗ 𝑡2 ≈ 𝑡1 ∗ 𝑡3 )
+(program $check_la_mult_pos ((A Type) (rel (-> A A Bool))
+                             (t1 A) (t2 A) (t3 A)
+                             (conclusion Bool))
+  :signature (Bool) Bool
+  (
+   (
+    ($check_la_mult_pos (@cl (=> (and (> t1 0/1) (rel t2 t3))
+                                (rel (* t1 t2) (* t1 t3)))))
+
+    ($is_rel_op rel)
+    )
+
+   (
+    ($check_la_mult_pos (@cl (=> (and (> t1 0) (rel t2 t3))
+                                (rel (* t1 t2) (* t1 t3)))))
+
+    ($is_rel_op rel)
+    )
+
+   (
+    ($check_la_mult_pos (@cl (=> (and (> t1 0.0) (rel t2 t3))
+                                (rel (* t1 t2) (* t1 t3)))))
+
+    ($is_rel_op rel)
+    )
+
+   (
+    ($check_la_mult_pos (@cl (=> (and (> t1 0) (not (= t2 t3)))
+                                (not (= (* t1 t2) (* t1 t3))))))
+
+    true
+    )
+
+   (
+    ($check_la_mult_pos (@cl (=> (and (> t1 0/1) (not (= t2 t3)))
+                                (not (= (* t1 t2) (* t1 t3))))))
+
+    true
+    )
+
+   (
+    ($check_la_mult_pos (@cl (=> (and (> t1 0.0) (not (= t2 t3)))
+                                (not (= (* t1 t2) (* t1 t3))))))
+
+    true
+    )
+   )
+)
+
+; rule: la_mult_pos
+; requires: >
+;   For conclusion to be an implication of the form, either:
+;   - (𝑡1 > 0 ∧ 𝑡2 ⋈ 𝑡3) → 𝑡1 ∗ 𝑡2 ⋈ 𝑡1 ∗ 𝑡3, with ⋈ ∈ {<, >, ≤, ≥, ≈}.
+;   - (𝑡1 > 0 ∧ ¬(𝑡2 ≈ 𝑡3 )) → ¬(𝑡1 ∗ 𝑡2 ≈ 𝑡1 ∗ 𝑡3 )
+; conclusion-explicit: A conclusion satisfying the previous side-condition.
+(declare-rule la_mult_pos ((conclusion Bool))
+  :requires ((($check_la_mult_pos conclusion) true))
+  :conclusion-explicit conclusion
+)
+
+;------------------
 ; Rule la_mult_neg
 ;------------------
 
