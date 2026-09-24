@@ -179,27 +179,6 @@
   )
 )
 
-; program: $f_list_equal_mod_commut_and_length
-; args:
-; - f (-> A B B): Operator used to build the f-list.
-; - list_1 B: An f-list.
-; - list_2 B: An f-list.
-; return: >
-; A boolean indicating if the operands from list_1 and list_2 are the 
-; same, regardless of the order and possible repetitions.
-(program $f_list_equal_mod_commut_and_length ((A Type) (B Type) (f (-> A B B))
-                       (f_list_1 B) (f_list_2 B))
-  :signature ((-> A B B) B B) Bool
-  (
-   (
-    ($f_list_equal_mod_commut_and_length f f_list_1 f_list_2)
-
-    (eo::and ($f_list_contains_f_list f f_list_1 f_list_2)
-             ($f_list_contains_f_list f f_list_2 f_list_1))
-    )
-  )
-)
-
 ; program: $f_list_cons
 ; args:
 ; - f (-> A B B): Operator used to build the f-list.
@@ -337,33 +316,31 @@
 ; program: $f_list_remove_duplicates
 ; args:
 ; - f (-> A B B): An Eunoia's "variadic" function.
+; - f_nil B: Nil element of "f".
 ; - f_list B: An f-list from which we want to remove repeated elements.
 ; return: >
 ;   A f-list obtained from removing repeated elements from "f_list".
 ;   Removes the first repeated occurrence of an element, traversing 
-;   "f_list" from left to right. It preserves the nil-terminator.
+;   "f_list" from left to right.
 (program $f_list_remove_duplicates ((A Type) (B Type) (f (-> A B B)) (hd A) 
-                                    (tl B))
-         :signature ((-> A B B) B) B
+                                    (f_nil B) (tl B :list))
+         :signature ((-> A B B) B B) B
          (
           (
-           ($f_list_remove_duplicates f (f hd tl))
+           ($f_list_remove_duplicates f f_nil (f hd tl))
            
-           (eo::ite ($f_list_contains_elem f hd tl)
-
-                    ($f_list_remove_duplicates f tl)
-
-                    ; { not ($f_list_contains_elem f hd tl) }
-                    ($f_list_cons f hd ($f_list_remove_duplicates f tl)))
+           ($f_list_cons f hd 
+                         ($f_list_remove_every_elem f  ($f_list_remove_duplicates f f_nil tl)
+                                                    hd f_nil))
            )
 
           (; { hd <> f some_element tail }
-           ($f_list_remove_duplicates f hd)
+           ($f_list_remove_duplicates f f_nil hd)
            
            hd
            )
           )
-         )
+)
 
 ; program: $f_list_last_element
 ; args:
