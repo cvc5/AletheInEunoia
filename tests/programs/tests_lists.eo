@@ -5,7 +5,7 @@
 ; Unit tests for lists.eo.
 
 ;---------------------------------
-; $f_list_length
+; $f_list_count_up_to_nil
 ;---------------------------------
 
 ; Some constants to build terms, for testing purposes.
@@ -16,81 +16,81 @@
 (declare-const e Int)
 (declare-const f Int)
 
-(step $test_$f_list_length_1 true 
+(step $test_$f_list_count_up_to_nil_1 true 
       :rule $assert_eq 
-      :args (($f_list_length and (and a))
+      :args (($f_list_count_up_to_nil and (and a))
              
              2))
 
-(step $test_$f_list_length_2 true 
+(step $test_$f_list_count_up_to_nil_2 true 
       :rule $assert_eq 
-      :args (($f_list_length and (and a b))
+      :args (($f_list_count_up_to_nil and (and a b))
              
              3))
 
-(step $test_$f_list_length_3 true 
+(step $test_$f_list_count_up_to_nil_3 true 
       :rule $assert_eq 
-      :args (($f_list_length and (and a b c))
+      :args (($f_list_count_up_to_nil and (and a b c))
              
              4))
 
-(step $test_$f_list_length_4 true 
+(step $test_$f_list_count_up_to_nil_4 true 
       :rule $assert_eq 
-      :args (($f_list_length and (and a b (and a b c)))
+      :args (($f_list_count_up_to_nil and (and a b (and a b c)))
              
              4))
 
-(step $test_$f_list_length_5 true 
+(step $test_$f_list_count_up_to_nil_5 true 
       :rule $assert_eq 
-      :args (($f_list_length or (or a))
+      :args (($f_list_count_up_to_nil or (or a))
              
              2))
 
-(step $test_$f_list_length_6 true 
+(step $test_$f_list_count_up_to_nil_6 true 
       :rule $assert_eq 
-      :args (($f_list_length or (or a b))
+      :args (($f_list_count_up_to_nil or (or a b))
              
              3))
 
-(step $test_$f_list_length_7 true 
+(step $test_$f_list_count_up_to_nil_7 true 
       :rule $assert_eq 
-      :args (($f_list_length or (or a b c))
+      :args (($f_list_count_up_to_nil or (or a b c))
              
              4))
 
-(step $test_$f_list_length_8 true 
+(step $test_$f_list_count_up_to_nil_8 true 
       :rule $assert_eq 
-      :args (($f_list_length or (or a b (or a b c)))
+      :args (($f_list_count_up_to_nil or (or a b (or a b c)))
              
              4))
 
-(step $test_$f_list_length_9 true 
+(step $test_$f_list_count_up_to_nil_9 true 
       :rule $assert_eq 
-      :args (($f_list_length or (or a (or a b c) b))
+      :args (($f_list_count_up_to_nil or (or a (or a b c) b))
              
              4))
 
-(step $test_$f_list_length_10 true 
+(step $test_$f_list_count_up_to_nil_10 true 
       :rule $assert_eq 
-      :args (($f_list_length + (+ d e))
+      :args (($f_list_count_up_to_nil + (+ d e))
              
              3))
 
-(step $test_$f_list_length_11 true 
+(step $test_$f_list_count_up_to_nil_11 true 
       :rule $assert_eq 
-      :args (($f_list_length + (+ d d e))
+      :args (($f_list_count_up_to_nil + (+ d d e))
              
              4))
 
-(step $test_$f_list_length_12 true 
+(step $test_$f_list_count_up_to_nil_12 true 
       :rule $assert_eq 
-      :args (($f_list_length + (+ d d (* d d e)))
+      :args (($f_list_count_up_to_nil + (+ d d (* d d e)))
              
              4))
 
-(step $test_$f_list_length_13 true 
+(step $test_$f_list_count_up_to_nil_13 true 
       :rule $assert_eq 
-      :args (($f_list_length + (+ d (* d d e) b))
+      :args (($f_list_count_up_to_nil + (+ d (* d d e) b))
              
              4))
 

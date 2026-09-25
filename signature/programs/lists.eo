@@ -110,24 +110,24 @@
   )
 )
 
-; program: $f_list_length
+; program: $f_list_count_up_to_nil
 ; args:
 ; - f (-> A B B): Operator used to build the f-list.
 ; - list B: An f-list.
 ; return: Quantity of elements of `list`, including the nil terminator.
-(program $f_list_length ((B Type) (f (-> B B B)) (hd B) (tl B :list))
+(program $f_list_count_up_to_nil ((B Type) (f (-> B B B)) (hd B) (tl B :list))
 
   :signature ((-> B B B) B) Int
 
   (
    (
-    ($f_list_length f (f hd tl))
+    ($f_list_count_up_to_nil f (f hd tl))
 
-    (eo::add 1 ($f_list_length f tl))
+    (eo::add 1 ($f_list_count_up_to_nil f tl))
     )
 
    (; { hd != f ...}
-    ($f_list_length f hd)
+    ($f_list_count_up_to_nil f hd)
 
     1
     )
@@ -150,8 +150,8 @@
     ($f_list_equal_mod_commut f f_list_1 f_list_2)
 
     (eo::and 
-     (eo::is_eq ($f_list_length f f_list_1)
-                ($f_list_length f f_list_2))
+     (eo::is_eq ($f_list_count_up_to_nil f f_list_1)
+                ($f_list_count_up_to_nil f f_list_2))
      ($f_list_contains_f_list f f_list_1 f_list_2)
      ($f_list_contains_f_list f f_list_2 f_list_1))
     )
