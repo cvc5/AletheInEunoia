@@ -6,15 +6,19 @@
 ; Note: The hole here does not allow for args or premises.
 
 ; rule: hole
+; premises:
+; - premises Bool: Arbitrary list of premises. There could be no premises at all.
 ; conclusion: Just the arbitrary conclusion passed to the rule.
 ; sorry: >
 ;   This models the following (taken from the standard spec.):
 ;   "A proof checker must not accept as valid a proof that contains this
 ;     rule even if the checker can somehow check this rule."
-(declare-rule hole ((hd Bool) (tail Bool :list))
-  :conclusion-explicit (@cl hd tail)
+(declare-rule hole ((conclusion Bool) (premises Bool))
+  :premise-list premises and
+  :conclusion-explicit conclusion
   :sorry
 )
+
 
 (declare-rule true ()
   :conclusion-explicit (@cl true)
@@ -395,22 +399,6 @@
   :args (pivots)
   :requires ((($check_resolution premises pivots conclusion) true))
   :conclusion-explicit conclusion
-)
-
-;TODO
-(program $check_tautology ((CL1 Bool))
-  :signature (Bool) Bool
-  (
-   (($check_tautology CL1) true)
-  )
-)
-
-;TRUST
-(declare-rule tautology ((CL1 Bool))
-  :premises (CL1)
-  :args ((@cl true))
-  :requires ((($check_tautology CL1) true))
-  :conclusion (@cl true)
 )
 
 ;------------------
