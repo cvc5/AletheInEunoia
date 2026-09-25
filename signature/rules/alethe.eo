@@ -2853,12 +2853,6 @@
   :requires ((($check_onepoint conclusion) true))
   :conclusion-explicit conclusion
 )
-; (program $check_onepoint ((ctx Bool) (T Type) (l T) (r T) (l1 T) (r1 T))
-;   (Bool T T T T) Bool
-;   (
-;    (($check_onepoint ctx l r l1 r1) true)
-;   )
-; )
 
 ;TODO
 (program $check_qnt_join ((conclusion Bool))
