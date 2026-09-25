@@ -920,14 +920,14 @@
           (
            ($context_get_variables (@ctx varlist subst))
            
-           ($f_list_remove_duplicates @varlist
+           ($f_list_remove_duplicates @varlist @varlist.nil
                                       ($varlist_concat varlist ($context_get_variables subst)))
            )
 
           (
            ($context_get_variables (and (@ctx varlist subst)))
            
-           ($f_list_remove_duplicates @varlist
+           ($f_list_remove_duplicates @varlist @varlist.nil
                                       ($varlist_concat varlist ($context_get_variables subst)))
            )
 
