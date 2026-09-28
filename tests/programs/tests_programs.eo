@@ -17,3 +17,51 @@
       :rule $assert_eq 
       :args (($varlist_concat ($f_list_cons @varlist 1 @varlist.nil) @varlist.nil)
              ($f_list_cons @varlist 1 @varlist.nil)))
+
+;-------------
+; $flat_and_or
+;-------------
+
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+; Atomic props.
+(step $test_$flat_and_or_1 true 
+      :rule $assert_eq 
+      :args (($flat_and_or and ($f_list_cons and a b))
+
+             ($f_list_cons and a b)))
+
+(step $test_$flat_and_or_1b true 
+      :rule $assert_eq 
+      :args (($flat_and_or and ($f_list_cons and a a))
+
+             ($f_list_cons and a a)))
+
+(step $test_$flat_and_or_1c true 
+      :rule $assert_eq 
+      :args (($flat_and_or and ($f_list_cons and ($f_list_cons and a b) c))
+
+             ($f_list_cons and a ($f_list_cons and b c))))
+
+(step $test_$flat_and_or_1d true 
+      :rule $assert_eq 
+      :args (($flat_and_or and a)
+
+             a))
+
+(step $test_$flat_and_or_1e true 
+      :rule $assert_eq 
+      :args (($flat_and_or and (and a a))
+
+             (and a a)))
+
+(step $test_$flat_and_or_2 true 
+      :rule $assert_eq 
+      :args (($flat_and_or and ($f_list_cons and 
+                                             ($f_list_cons and a b)
+                                             ($f_list_cons or c c)))
+
+             ($f_list_cons and a ($f_list_cons and b ($f_list_cons or c c)))))
