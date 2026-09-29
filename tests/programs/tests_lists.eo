@@ -4,6 +4,74 @@
 
 ; Unit tests for lists.eo.
 
+;----------------
+; $f_list_concat
+;----------------
+
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+
+(step $test_$f_list_concat_1 true 
+      :rule $assert_eq 
+      :args (($f_list_concat or false false false)
+             
+             false))
+
+(step $test_$f_list_concat_2 true 
+      :rule $assert_eq 
+      :args (($f_list_concat and true true true)
+             
+             true))
+
+(step $test_$f_list_concat_3 true 
+      :rule $assert_eq 
+      :args (($f_list_concat and true true (and a))
+             
+             (and a)))
+
+(step $test_$f_list_concat_4 true 
+      :rule $assert_eq 
+      :args (($f_list_concat and true (and a) (and b))
+             
+             (and a b)))
+
+(step $test_$f_list_concat_5 true 
+      :rule $assert_eq 
+      :args (($f_list_concat and true (and a) (and b c))
+             
+             (and a b c)))
+
+(step $test_$f_list_concat_6 true 
+      :rule $assert_eq 
+      :args (($f_list_concat and true (and a b) (and b c))
+             
+             (and a b b c)))
+
+(step $test_$f_list_concat_7 true 
+      :rule $assert_eq 
+      :args (($f_list_concat and true (and a b) (and b c d))
+             
+             (and a b b c d)))
+
+(step $test_$f_list_concat_8 true 
+      :rule $assert_eq 
+      :args (($f_list_concat and true (and a b) (or b c d))
+             
+             ($f_list_cons and a 
+                           ($f_list_cons and b (or b c d)))))
+
+(step $test_$f_list_concat_9 true 
+      :rule $assert_eq 
+      :args (($f_list_concat and true (and a b c) (or b c d))
+             
+             ($f_list_cons and a 
+                           ($f_list_cons and b 
+                                         ($f_list_cons and c (or b c d))))))
+
+
 ;---------------------------------
 ; $f_list_count_up_to_nil
 ;---------------------------------
@@ -154,6 +222,117 @@
       :args (($f_list_equal_mod_commut or (or a (or b a c) c) (or (or a b c) c a))
              
              false))
+
+;-------------------------------------
+; $f_list_equal_mod_commut_and_length
+;-------------------------------------
+
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Int)
+(declare-const e Int)
+(declare-const f Int)
+
+; Commutativity
+(step $test_$f_list_equal_mod_commut_and_length_1 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut_and_length and (and a b) (and b a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_and_length_2 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut_and_length and (and a b c) (and b c a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_and_length_3 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut_and_length and (and a (and a b c) c) (and (and a b c) c a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_and_length_4 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut_and_length and (and a (and b a c) c) (and (and a b c) c a))
+             
+             false))
+
+(step $test_$f_list_equal_mod_commut_and_length_5 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut_and_length or (or a b) (or b a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_and_length_6 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut_and_length or (or a b c) (or b c a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_and_length_7 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut_and_length or (or a (or a b c) c) (or (or a b c) c a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_and_length_8 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut_and_length or (or a (or b a c) c) (or (or a b c) c a))
+             
+             false))
+
+; Length
+(step $test_$f_list_equal_mod_commut_and_length_9 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut_and_length and (and a b) (and b a a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_and_length_10 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut_and_length and (and a b c) (and b c c a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_and_length_11 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut_and_length and (and a (and a b c) c) (and (and a b c) c c a a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_and_length_12 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut_and_length and (and a (and b a c) c) (and (and a b b c) c a))
+             
+             false))
+
+(step $test_$f_list_equal_mod_commut_and_length_13 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut_and_length or (or a b b b) (or b a a a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_and_length_14 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut_and_length or (or b a b c) (or b a c a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_and_length_15 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut_and_length or (or a (or a b b c) c b) (or (or a b b c) b c a))
+             
+             true))
+
+(step $test_$f_list_equal_mod_commut_and_length_16 true 
+      :rule $assert_eq 
+      :args (($f_list_equal_mod_commut_and_length or (or a (or b a c) c) (or c a b (or a b c b)))
+             
+             false))
+
 
 ;--------------------------
 ; $f_list_remove_every_elem
