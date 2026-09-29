@@ -3953,21 +3953,49 @@
 ; Rule and_intro
 ;----------------
 
-(program $check_and_intro ((lhs Bool) (rhs Bool))
-         :signature (Bool Bool Bool) Bool
+; program: $check_and_intro
+; args:
+; - premises @VarList: @VarList of the premises invoked when applying and_intro.
+; - conclusion Bool: Conclusion of the application of and_intro
+; return: >
+;   A boolean indicating if `conclusion` is the result of the and-introduction 
+;   rule over every premise in `premises`.
+(program $check_and_intro ((premise Bool) (premises @VarList :list) 
+                           (conjuncts Bool :list) (conclusion Bool))
+         :signature (@VarList Bool) Bool
          (
           (
-           ($check_and_intro (@cl lhs) (@cl rhs) (@cl (and lhs rhs)))
+           ($check_and_intro (@varlist (@cl premise)) (and premise))
 
            true
+           )
+
+          (; { premises != false, conjuncts != true }
+           ($check_and_intro (@varlist (@cl premise) premises) (and premise conjuncts))
+
+           ($check_and_intro premises conjuncts)
+           )
+
+          (; { premises and conclusion have different structure than expected }
+           ($check_and_intro premises conclusion)
+
+           false
            )
           )
          )
 
-(declare-rule and_intro ((lhs Bool) (rhs Bool) (conclusion Bool))
-   :premises ( lhs rhs )
-   :requires ((($check_and_intro lhs rhs conclusion) true))
-   :conclusion-explicit conclusion
+; rule: and_intro
+; premises:
+; - premises @VarList: >
+;   A @VarList containing each premise invoked when instantiating the and_intro rule.
+; requires: >
+;   For the conclusion to be the result of the instantiation of the introduction
+;   rule for conjunction, over every invoked premise.
+; conclusion: A single-clause whose unique disjunct satisfies the previous side-condition.
+(declare-rule and_intro ((premises @VarList) (conclusion Bool))
+   :premise-list premises @varlist
+   :requires ((($check_and_intro premises conclusion) true))
+   :conclusion-explicit (@cl conclusion)
 )
 
 ;-------------
