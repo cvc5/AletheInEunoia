@@ -1023,3 +1023,77 @@
       :rule not_symm
       :premises (premise_not_symm_3))
 
+;----------
+; and_intro
+;----------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+
+(assume premise_and_intro_1_lhs (@cl a))
+(assume premise_and_intro_1_rhs (@cl b))
+(step $test_and_intro_1
+      (@cl (and a b))
+      :rule and_intro
+      :premises (premise_and_intro_1_lhs premise_and_intro_1_rhs))
+
+(assume premise_and_intro_2_lhs (@cl (or a b)))
+(assume premise_and_intro_2_rhs (@cl c))
+(step $test_and_intro_2
+      (@cl (and (or a b) c))
+      :rule and_intro
+      :premises (premise_and_intro_2_lhs premise_and_intro_2_rhs))
+
+(assume premise_and_intro_3_lhs (@cl (or a b)))
+(assume premise_and_intro_3_rhs (@cl (=> c d)))
+(step $test_and_intro_3
+      (@cl (and (or a b) (=> c d)))
+      :rule and_intro
+      :premises (premise_and_intro_3_lhs premise_and_intro_3_rhs))
+
+(assume premise_and_intro_4_lhs (@cl (xor true (or a b))))
+(assume premise_and_intro_4_rhs (@cl (=> c d)))
+(step $test_and_intro_4
+      (@cl (and (xor true (or a b)) (=> c d)))
+      :rule and_intro
+      :premises (premise_and_intro_4_lhs premise_and_intro_4_rhs))
+
+(assume premise_and_intro_5_lhs (@cl (and true (or a b))))
+(assume premise_and_intro_5_rhs (@cl (=> c d)))
+(step $test_and_intro_5
+      (@cl (and (and true (or a b)) (=> c d)))
+      :rule and_intro
+      :premises (premise_and_intro_5_lhs premise_and_intro_5_rhs))
+
+(assume premise_and_intro_6_1 (@cl (and true (or a b))))
+(assume premise_and_intro_6_2 (@cl (=> c d)))
+(assume premise_and_intro_6_3 (@cl d))
+(step $test_and_intro_6
+      (@cl (and (and true (or a b)) (=> c d) d))
+      :rule and_intro
+      :premises (premise_and_intro_6_1 premise_and_intro_6_2 premise_and_intro_6_3))
+
+
+(assume premise_and_intro_7_1 (@cl (and true (or a b))))
+(assume premise_and_intro_7_2 (@cl (=> c d)))
+(assume premise_and_intro_7_3 (@cl d))
+(assume premise_and_intro_7_4 (@cl (xor a b)))
+(step $test_and_intro_7
+      (@cl (and (and true (or a b)) (=> c d) d (xor a b)))
+      :rule and_intro
+      :premises (premise_and_intro_7_1 premise_and_intro_7_2 premise_and_intro_7_3
+                 premise_and_intro_7_4))
+
+
+(assume premise_and_intro_8_1 (@cl (and true (or a b))))
+(assume premise_and_intro_8_2 (@cl (=> c d)))
+(assume premise_and_intro_8_3 (@cl d))
+(assume premise_and_intro_8_4 (@cl (xor a b)))
+(assume premise_and_intro_8_5 (@cl (distinct a b c d)))
+(step $test_and_intro_8
+      (@cl (and (and true (or a b)) (=> c d) d (xor a b) (distinct a b c d)))
+      :rule and_intro
+      :premises (premise_and_intro_8_1 premise_and_intro_8_2 premise_and_intro_8_3
+                 premise_and_intro_8_4 premise_and_intro_8_5))
