@@ -426,17 +426,17 @@
    )
 )
 
-; program: cl_equal
+; program: cl_equal_mod_commut
 ; args:
 ; - cl_1 Bool: A clause, built with @cl.
 ; - cl_2 Bool: A clause, built with @cl.
 ; return: >
-;   A boolean indicating if cl_1 and cl_2 are equal modulo permutations.
-(program $cl_equal ((cl_1 Bool) (cl_2 Bool))
+;   A boolean indicating if cl_1 and cl_2 are equal modulo commutativity.
+(program $cl_equal_mod_commut ((cl_1 Bool) (cl_2 Bool))
   :signature (Bool Bool) Bool
   (
    (
-    ($cl_equal cl_1 cl_2)
+    ($cl_equal_mod_commut cl_1 cl_2)
 
     ($f_list_equal_mod_commut @cl cl_1 cl_2)
     )

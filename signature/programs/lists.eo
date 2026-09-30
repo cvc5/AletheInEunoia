@@ -397,6 +397,8 @@
 ; - list1 A: An f-list.
 ; - list2 A: An f-list.
 ; return: The list resulting from concatenating `list1` and `list2`.
+; note: >
+;   This service is agnostic of f's associativity and does not build proper nil-terminated f-lists.
 (program $f_list_concat ((A Type) (hd A) (tl A) (f (-> A A A)) (nil A)
                           (list_2 A))
   :signature ((-> A A A) A A A) A
