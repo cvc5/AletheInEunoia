@@ -58,18 +58,17 @@
 
 (step $test_$f_list_concat_8 true 
       :rule $assert_eq 
-      :args (($f_list_concat and true (and a b) (or b c d))
-             
-             ($f_list_cons and a 
-                           ($f_list_cons and b (or b c d)))))
+      :args (($f_list_concat and true (and a b) (and (or b c d)))
+
+             (and a b (or b c d))
+             ))
 
 (step $test_$f_list_concat_9 true 
       :rule $assert_eq 
-      :args (($f_list_concat and true (and a b c) (or b c d))
+      :args (($f_list_concat and true (and a b c) (and (or b c d)))
              
-             ($f_list_cons and a 
-                           ($f_list_cons and b 
-                                         ($f_list_cons and c (or b c d))))))
+             (and a b c (or b c d))
+             ))
 
 
 ;---------------------------------

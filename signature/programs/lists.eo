@@ -392,14 +392,11 @@
 
 ; program: $f_list_concat
 ; args:
-; - f (-> A A A): Constructor of f-lists.
+; - f (-> A A A): Right-assoc-nil constructor of f-lists
 ; - nil A: Nil element of f-lists.
 ; - list1 A: An f-list.
 ; - list2 A: An f-list.
-; return: The list resulting from concatenating `list1` and `list2`.
-; note: >
-;   This service is agnostic of f's associativity and does not guarantee properly 
-;   nil-terminated f-lists as a result.
+; return: The f-list resulting from concatenating `list1` and `list2`.
 (program $f_list_concat ((A Type) (hd A) (tl A) (f (-> A A A)) (nil A)
                           (list_2 A))
   :signature ((-> A A A) A A A) A
@@ -407,7 +404,7 @@
    (
     ($f_list_concat f nil (f hd tl) list_2)
     
-    ($f_list_cons f hd ($f_list_concat f nil tl list_2))
+    (f hd ($f_list_concat f nil tl list_2))
     )
 
    (
