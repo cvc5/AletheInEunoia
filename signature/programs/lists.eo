@@ -397,6 +397,9 @@
 ; - list1 A: An f-list.
 ; - list2 A: An f-list.
 ; return: The f-list resulting from concatenating `list1` and `list2`.
+; note: >
+;   The returned list is guaranteed to be a proper nil-terminated f-list, provided
+;   the given lists are proper nil-terminated f-lists.
 (program $f_list_concat ((A Type) (hd A) (tl A) (f (-> A A A)) (nil A)
                           (list_2 A))
   :signature ((-> A A A) A A A) A
