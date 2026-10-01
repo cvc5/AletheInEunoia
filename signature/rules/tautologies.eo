@@ -998,7 +998,7 @@
           (
            ($idempotency_simp (or hd tl))
 
-           (eo::ite ($eo_is_eq ($f_list_length or tl) 2)
+           (eo::ite ($eo_is_eq ($f_list_count_up_to_nil or tl) 2)
 
                     ; Nil-terminated list?
                     (eo::ite (eo::and ($eo_is_eq ($f_list_index or tl 0) hd)
@@ -1010,8 +1010,8 @@
                              ;                ($eo_is_eq ($f_list_index or tl 1) false)) }
                              (or hd tl))
 
-                    ; { not ($eo_is_eq ($f_list_length or tl) 2) }
-                    (eo::ite ($eo_is_eq ($f_list_length or tl) 1)
+                    ; { not ($eo_is_eq ($f_list_count_up_to_nil or tl) 2) }
+                    (eo::ite ($eo_is_eq ($f_list_count_up_to_nil or tl) 1)
 
                              ; Non nil-terminated list?
                              (eo::ite ($eo_is_eq tl hd)
@@ -1021,14 +1021,14 @@
                                         ; { not ($eo_is_eq ($f_list_index or tl 0) hd) }
                                       (or hd tl))
 
-                             ; {not ($eo_is_eq ($f_list_length and tl) 1) }
+                             ; {not ($eo_is_eq ($f_list_count_up_to_nil and tl) 1) }
                              (or hd tl)))
            )
 
           (
            ($idempotency_simp (and hd tl))
 
-           (eo::ite ($eo_is_eq ($f_list_length and tl) 2)
+           (eo::ite ($eo_is_eq ($f_list_count_up_to_nil and tl) 2)
 
                     ; Nil-terminated list?
                     (eo::ite (eo::and ($eo_is_eq ($f_list_index and tl 0) hd)
@@ -1040,8 +1040,8 @@
                              ;                ($eo_is_eq ($f_list_index and tl 1) true)) }
                              (and hd tl))
 
-                    ; { not ($eo_is_eq ($f_list_length and tl) 2) }
-                    (eo::ite ($eo_is_eq ($f_list_length and tl) 1)
+                    ; { not ($eo_is_eq ($f_list_count_up_to_nil and tl) 2) }
+                    (eo::ite ($eo_is_eq ($f_list_count_up_to_nil and tl) 1)
 
                              ; Non nil-terminated list?
                              (eo::ite ($eo_is_eq tl hd)
@@ -1051,7 +1051,7 @@
                                         ; { not ($eo_is_eq ($f_list_index and tl 0) hd) }
                                       (and hd tl))
 
-                             ; {not ($eo_is_eq ($f_list_length and tl) 1) }
+                             ; {not ($eo_is_eq ($f_list_count_up_to_nil and tl) 1) }
                              (and hd tl)))
            )
 
