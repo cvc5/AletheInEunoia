@@ -179,6 +179,27 @@
   )
 )
 
+; program: $f_list_equal_mod_commut_and_length
+; args:
+; - f (-> A B B): Operator used to build the f-list.
+; - list_1 B: An f-list.
+; - list_2 B: An f-list.
+; return: >
+; A boolean indicating if the operands from list_1 and list_2 are the 
+; same, regardless of the order and possible repetitions.
+(program $f_list_equal_mod_commut_and_length ((A Type) (B Type) (f (-> A B B))
+                       (f_list_1 B) (f_list_2 B))
+  :signature ((-> A B B) B B) Bool
+  (
+   (
+    ($f_list_equal_mod_commut_and_length f f_list_1 f_list_2)
+
+    (eo::and ($f_list_contains_f_list f f_list_1 f_list_2)
+             ($f_list_contains_f_list f f_list_2 f_list_1))
+    )
+  )
+)
+
 ; program: $f_list_cons
 ; args:
 ; - f (-> A B B): Operator used to build the f-list.
@@ -316,31 +337,33 @@
 ; program: $f_list_remove_duplicates
 ; args:
 ; - f (-> A B B): An Eunoia's "variadic" function.
-; - f_nil B: Nil element of "f".
 ; - f_list B: An f-list from which we want to remove repeated elements.
 ; return: >
 ;   A f-list obtained from removing repeated elements from "f_list".
 ;   Removes the first repeated occurrence of an element, traversing 
-;   "f_list" from left to right.
+;   "f_list" from left to right. It preserves the nil-terminator.
 (program $f_list_remove_duplicates ((A Type) (B Type) (f (-> A B B)) (hd A) 
-                                    (f_nil B) (tl B :list))
-         :signature ((-> A B B) B B) B
+                                    (tl B))
+         :signature ((-> A B B) B) B
          (
           (
-           ($f_list_remove_duplicates f f_nil (f hd tl))
+           ($f_list_remove_duplicates f (f hd tl))
            
-           ($f_list_cons f hd 
-                         ($f_list_remove_every_elem f  ($f_list_remove_duplicates f f_nil tl)
-                                                    hd f_nil))
+           (eo::ite ($f_list_contains_elem f hd tl)
+
+                    ($f_list_remove_duplicates f tl)
+
+                    ; { not ($f_list_contains_elem f hd tl) }
+                    ($f_list_cons f hd ($f_list_remove_duplicates f tl)))
            )
 
           (; { hd <> f some_element tail }
-           ($f_list_remove_duplicates f f_nil hd)
+           ($f_list_remove_duplicates f hd)
            
            hd
            )
           )
-)
+         )
 
 ; program: $f_list_last_element
 ; args:
@@ -366,6 +389,34 @@
            )
           )
          )
+
+; program: $f_list_concat
+; args:
+; - f (-> A A A): Right-assoc-nil constructor of f-lists
+; - nil A: Nil element of f-lists.
+; - list1 A: An f-list.
+; - list2 A: An f-list.
+; return: The f-list resulting from concatenating `list1` and `list2`.
+; note: >
+;   The returned list is guaranteed to be a proper nil-terminated f-list, provided
+;   the given lists are proper nil-terminated f-lists.
+(program $f_list_concat ((A Type) (hd A) (tl A) (f (-> A A A)) (nil A)
+                          (list_2 A))
+  :signature ((-> A A A) A A A) A
+  (
+   (
+    ($f_list_concat f nil (f hd tl) list_2)
+    
+    (f hd ($f_list_concat f nil tl list_2))
+    )
+
+   (
+    ($f_list_concat f nil nil list_2)
+    
+    list_2
+    )
+   )
+  )
 
 ; program: $to_nil_terminated_f_list
 ; args:
