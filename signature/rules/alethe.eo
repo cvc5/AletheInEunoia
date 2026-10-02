@@ -168,7 +168,7 @@
            )
 
           (; { tail != @cl ... }
-           ($remove_pivot_from_clause pivot tail)
+           ($remove_pivot_from_clause pivot false)
            
            @empty_cl
            )
