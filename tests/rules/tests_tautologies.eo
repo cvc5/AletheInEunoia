@@ -589,6 +589,301 @@
 
              true))
 
+;------------------------------
+; $and_simplify_rec_remove_true
+;------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+(step $test_$and_simplify_rec_1 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_remove_true true) true))
+
+(step $test_$and_simplify_rec_2 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_remove_true (and true true)) true))
+
+(step $test_$and_simplify_rec_3 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_remove_true (and true true true)) true))
+
+(step $test_$and_simplify_rec_4 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_remove_true (and a true)) a))
+
+(step $test_$and_simplify_rec_4b true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_remove_true (and true a)) a))
+
+(step $test_$and_simplify_rec_5 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_remove_true (and true a true)) a))
+
+(step $test_$and_simplify_rec_6 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_remove_true (and true a true b)) 
+             ($f_list_cons and a b)))
+
+(step $test_$and_simplify_rec_7 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_remove_true (and true a true b c)) 
+             ($f_list_cons and a 
+                           ($f_list_cons and b c))))
+
+;------------------------------
+; $and_simplify_rec_abs_elem
+;------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+(step $test_$and_simplify_rec_abs_elem_1 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_abs_elem false) false))
+
+(step $test_$and_simplify_rec_abs_elem_2 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_abs_elem (and false a)) false))
+
+(step $test_$and_simplify_rec_abs_elem_3 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_abs_elem (and b false a)) false))
+
+(step $test_$and_simplify_rec_abs_elem_4 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_abs_elem (and b false a c)) false))
+
+(step $test_$and_simplify_rec_abs_elem_5 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_abs_elem (and b false a true c)) false))
+
+(step $test_$and_simplify_rec_abs_elem_6 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_abs_elem (and b false true a true c)) false))
+
+;----------------------------------
+; $and_simplify_rec_remove_repeated
+;----------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+(step $test_$and_simplify_rec_remove_repeated_1 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_remove_repeated false) false))
+
+(step $test_$and_simplify_rec_remove_repeated_2 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_remove_repeated true) true))
+
+(step $test_$and_simplify_rec_remove_repeated_3 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_remove_repeated a) a))
+
+(step $test_$and_simplify_rec_remove_repeated_4 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_remove_repeated (and a a)) (and a)))
+
+(step $test_$and_simplify_rec_remove_repeated_5 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_remove_repeated (and a b a)) (and b a)))
+
+(step $test_$and_simplify_rec_remove_repeated_6 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_remove_repeated (and a b c a)) (and b c a)))
+
+;-----------------------------
+; $and_simplify_rec_exclud_mid
+;-----------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+(step $test_$and_simplify_rec_exclud_mid_1 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_exclud_mid false) false))
+
+(step $test_$and_simplify_rec_exclud_mid_2 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_exclud_mid (and a (not a))) false))
+
+(step $test_$and_simplify_rec_exclud_mid_3 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_exclud_mid (and b a (not a))) false))
+
+(step $test_$and_simplify_rec_exclud_mid_4 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_exclud_mid (and b c a (not a))) false))
+
+(step $test_$and_simplify_rec_exclud_mid_5 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_exclud_mid (and (not a) true b c true a)) false))
+
+(step $test_$and_simplify_rec_exclud_mid_6 true 
+      :rule $assert_eq 
+      :args (($and_simplify_rec_exclud_mid (and (not a) (not a) true b c true a)) false))
+
+;-------------
+; and_simplify
+;-------------
+
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+; First case of $and_simplify_rec
+(step $test_$and_simplify_1
+      (@cl (= true true))
+      :rule and_simplify)
+
+(step $test_$and_simplify_2
+      (@cl (= (and true true) true))
+      :rule and_simplify)
+
+(step $test_$and_simplify_3
+      (@cl (= (and true true true) true))
+      :rule and_simplify)
+
+(step $test_$and_simplify_4
+      (@cl (= (and true true true true) true))
+      :rule and_simplify)
+
+; Second case of $and_simplify_rec
+(step $test_$and_simplify_5
+      (@cl (= (and a true) a))
+      :rule and_simplify)
+
+(step $test_$and_simplify_6
+      (@cl (= (and true a) a))
+      :rule and_simplify)
+
+(step $test_$and_simplify_7
+      (@cl (= (and true a true) a))
+      :rule and_simplify)
+
+(step $test_$and_simplify_8
+      (@cl (= (and true true a true) a))
+      :rule and_simplify)
+
+(step $test_$and_simplify_9
+      (@cl (= (and true true true a) a))
+      :rule and_simplify)
+
+(step $test_$and_simplify_10
+      (@cl (= (and true a true b) 
+              (and a b)))
+      :rule and_simplify)
+
+(step $test_$and_simplify_11
+      (@cl (= (and true a b c true) 
+              (and a b c)))
+      :rule and_simplify)
+
+; Third case of $and_simplify_rec
+(step $test_$and_simplify_12
+      (@cl (= (and a a true) a))
+      :rule and_simplify)
+
+(step $test_$and_simplify_13
+      (@cl (= (and a true a) a))
+      :rule and_simplify)
+
+(step $test_$and_simplify_14
+      (@cl (= (and a true a true) a))
+      :rule and_simplify)
+
+(step $test_$and_simplify_15
+      (@cl (= (and true a true a true) a))
+      :rule and_simplify)
+
+(step $test_$and_simplify_16
+      (@cl (= (and true a a a) a))
+      :rule and_simplify)
+
+(step $test_$and_simplify_17
+      (@cl (= (and true a b true a b) 
+              (and a b)))
+      :rule and_simplify)
+
+(step $test_$and_simplify_18
+      (@cl (= (and true a b c c true a) 
+              (and b c a)))
+      :rule and_simplify)
+
+; Fourth case of $and_simplify_rec
+(step $test_$and_simplify_19
+      (@cl (= (and a false) false))
+      :rule and_simplify)
+
+(step $test_$and_simplify_20
+      (@cl (= (and a false a) false))
+      :rule and_simplify)
+
+(step $test_$and_simplify_21
+      (@cl (= (and a false a true) false))
+      :rule and_simplify)
+
+(step $test_$and_simplify_22
+      (@cl (= (and false a true a true) false))
+      :rule and_simplify)
+
+(step $test_$and_simplify_23
+      (@cl (= (and false a a true) false))
+      :rule and_simplify)
+
+(step $test_$and_simplify_24
+      (@cl (= (and false a b false true b) 
+              false))
+      :rule and_simplify)
+
+(step $test_$and_simplify_25
+      (@cl (= (and false a b c c true a) 
+              false))
+      :rule and_simplify)
+
+; Fifth case of $and_simplify_rec
+(step $test_$and_simplify_26
+      (@cl (= (and (not a) a) 
+              false))
+      :rule and_simplify)
+
+(step $test_$and_simplify_27
+      (@cl (= (and a (not a)) 
+              false))
+      :rule and_simplify)
+
+(step $test_$and_simplify_28
+      (@cl (= (and a (not (not (not a))))
+              false))
+      :rule and_simplify)
+
+(step $test_$and_simplify_29
+      (@cl (= (and (not (not a)) (not (not (not a))))
+              false))
+      :rule and_simplify)
+
+(step $test_$and_simplify_30
+      (@cl (= (and (not (not a)) true (not (not (not a))))
+              false))
+      :rule and_simplify)
+
+(step $test_$and_simplify_31
+      (@cl (= (and (not (not (not (not a)))) true (not (not (not a))))
+              false))
+      :rule and_simplify)
+
+(step $test_$and_simplify_32
+      (@cl (= (and (not (not (not (not a)))) true (not (not (not a))) b)
+              false))
+      :rule and_simplify)
+
+
 ;-------------
 ; $or_simplify_rec
 ;-------------
@@ -1404,3 +1699,1566 @@
       (@cl true)
       :rule tautology
       :premises (premise_tautology_7))
+
+;---------------------------
+; eq_simplify_small_step
+;---------------------------
+
+(declare-const a Int)
+(declare-const c Real)
+
+; Case 𝑡 ≈ 𝑡 ⇒ ⊤
+(step $test_$eq_simplify_small_step_1 true
+      :rule $assert_eq 
+      :args (($eq_simplify_small_step (= 13 13))
+
+             true))
+
+(step $test_$eq_simplify_small_step_2 true
+      :rule $assert_eq 
+      :args (($eq_simplify_small_step (= 13/2 13/2))
+
+             true))
+
+(step $test_$eq_simplify_small_step_3 true
+      :rule $assert_eq 
+      :args (($eq_simplify_small_step (= a a))
+
+             true))
+
+(step $test_$eq_simplify_small_step_4 true
+      :rule $assert_eq 
+      :args (($eq_simplify_small_step (= b b))
+
+             true))
+
+; Case (𝑡1 ≈ 𝑡2) ⇒ ⊥if 𝑡1 and 𝑡2 are different numeric constants
+(step $test_$eq_simplify_small_step_5 true
+      :rule $assert_eq 
+      :args (($eq_simplify_small_step (= 1 2))
+
+             false))
+
+(step $test_$eq_simplify_small_step_6 true
+      :rule $assert_eq 
+      :args (($eq_simplify_small_step (= 1/1 2/1))
+
+             false))
+
+(step $test_$eq_simplify_small_step_7 true
+      :rule $assert_eq 
+      :args (($eq_simplify_small_step (= 1 a))
+
+             (= 1 a)))
+
+(step $test_$eq_simplify_small_step_8 true
+      :rule $assert_eq 
+      :args (($eq_simplify_small_step (= b 1/1))
+
+             (= b 1/1)))
+
+; Case ¬(𝑡 ≈ 𝑡) ⇒ ⊥ if 𝑡 is a numeric constant.
+(step $test_$eq_simplify_small_step_9 true
+      :rule $assert_eq 
+      :args (($eq_simplify_small_step (not (= 1 1)))
+
+             false))
+
+(step $test_$eq_simplify_small_step_10 true
+      :rule $assert_eq 
+      :args (($eq_simplify_small_step (not (= 1/1 1/1)))
+
+             false))
+
+(step $test_$eq_simplify_small_step_11 true
+      :rule $assert_eq 
+      :args (($eq_simplify_small_step (not (= 1/1 b)))
+
+             (not (= 1/1 b))))
+
+(step $test_$eq_simplify_small_step_12 true
+      :rule $assert_eq 
+      :args (($eq_simplify_small_step (not (= a 1)))
+
+             (not (= a 1))))
+
+;---------------------------
+; eq_simplify
+;---------------------------
+
+(declare-const a Int)
+(declare-const b Real)
+
+; Case 𝑡 ≈ 𝑡 ⇒ ⊤
+(step $test_$eq_simplify_small_step_1 
+      (@cl (= (= 13 13) true))
+      :rule eq_simplify)
+
+(step $test_$eq_simplify_small_step_2 
+      (@cl (= (= 13/2 13/2) true))
+      :rule eq_simplify)
+
+(step $test_$eq_simplify_small_step_3 
+      (@cl (= (= a a) true))
+      :rule eq_simplify)
+
+(step $test_$eq_simplify_small_step_4 
+      (@cl (= (= b b) true))
+      :rule eq_simplify)
+
+; Case (𝑡1 ≈ 𝑡2) ⇒ ⊥if 𝑡1 and 𝑡2 are different numeric constants
+(step $test_$eq_simplify_small_step_5 
+      (@cl (= (= 1 2) false))
+      :rule eq_simplify)
+
+(step $test_$eq_simplify_small_step_6
+      (@cl (= (= 1/1 2/1) false))
+      :rule eq_simplify)
+
+(step $test_$eq_simplify_small_step_7 
+      (@cl (= (= 1 a) (= 1 a)))
+      :rule eq_simplify)
+
+(step $test_$eq_simplify_small_step_8 
+      (@cl (= (= b 1/1) (= b 1/1)))
+      :rule eq_simplify)
+
+; Case ¬(𝑡 ≈ 𝑡) ⇒ ⊥ if 𝑡 is a numeric constant.
+(step $test_$eq_simplify_small_step_9 
+      (@cl (= (not (= 1 1)) false))
+      :rule eq_simplify)
+
+(step $test_$eq_simplify_small_step_10 
+      (@cl (= (not (= 1/1 1/1)) false))
+      :rule eq_simplify)
+
+(step $test_$eq_simplify_small_step_11 
+      (@cl (= (not (= 1/1 b)) (not (= 1/1 b))))
+      :rule eq_simplify)
+
+(step $test_$eq_simplify_small_step_12 
+      (@cl (= (not (= a 1)) (not (= a 1))))
+      :rule eq_simplify)
+
+;---------------------------
+; div_simplify_small_step
+;--------------------------
+
+(declare-const a Int)
+(declare-const c Real)
+
+; Case 𝑡 / 𝑡 ⇒ 1
+(step $test_$div_simplify_small_step_1 true
+      :rule $assert_eq 
+      :args (($div_simplify_small_step (/ 13 13))
+
+             1))
+
+(step $test_$div_simplify_small_step_2 true
+      :rule $assert_eq 
+      :args (($div_simplify_small_step (/ 13/1 13/1))
+
+             1/1))
+
+(step $test_$div_simplify_small_step_3 true
+      :rule $assert_eq 
+      :args (($div_simplify_small_step (/ a a))
+
+             1))
+
+(step $test_$div_simplify_small_step_4 true
+      :rule $assert_eq 
+      :args (($div_simplify_small_step (/ c c))
+
+             1/1))
+
+; Case 𝑡 / 1 ⇒ t
+(step $test_$div_simplify_small_step_5 true
+      :rule $assert_eq 
+      :args (($div_simplify_small_step (/ 13 1))
+
+             13))
+
+(step $test_$div_simplify_small_step_6 true
+      :rule $assert_eq 
+      :args (($div_simplify_small_step (/ 13/1 1/1))
+
+             13/1))
+
+(step $test_$div_simplify_small_step_7 true
+      :rule $assert_eq 
+      :args (($div_simplify_small_step (/ a 1))
+
+             a))
+
+(step $test_$div_simplify_small_step_8 true
+      :rule $assert_eq 
+      :args (($div_simplify_small_step (/ c 1/1))
+
+             c))
+
+; Case 𝑡1 / 𝑡2 ⇒𝑡3 if 𝑡1 and 𝑡2 are constants and 𝑡3 is 𝑡1 divided by 𝑡2 according 
+; to the semantics of the current theory.
+(step $test_$div_simplify_small_step_9 true
+      :rule $assert_eq 
+      :args (($div_simplify_small_step (/ 13 2))
+
+             6))
+
+(step $test_$div_simplify_small_step_10 true
+      :rule $assert_eq 
+      :args (($div_simplify_small_step (/ 13/1 2/1))
+
+             13/2))
+
+; Misc. 
+
+(step $test_$div_simplify_small_step_11 true
+      :rule $assert_eq 
+      :args (($div_simplify_small_step (/ a 19))
+
+             (/ a 19)))
+
+(step $test_$div_simplify_small_step_12 true
+      :rule $assert_eq 
+      :args (($div_simplify_small_step (/ c 3/4))
+
+             (/ c 3/4)))
+
+;---------------------------
+; div_simplify_rec
+;---------------------------
+
+(declare-const a Int)
+(declare-const c Real)
+
+; Case 𝑡 / 𝑡 ⇒ 1
+(step $test_$div_simplify_rec_1 true
+      :rule $assert_eq 
+      :args (($div_simplify_rec (/ 13 13))
+
+             1))
+
+(step $test_$div_simplify_rec_2 true
+      :rule $assert_eq 
+      :args (($div_simplify_rec (/ 13/1 13/1))
+
+             1/1))
+
+(step $test_$div_simplify_rec_3 true
+      :rule $assert_eq 
+      :args (($div_simplify_rec (/ a a))
+
+             1))
+
+(step $test_$div_simplify_rec_4 true
+      :rule $assert_eq 
+      :args (($div_simplify_rec (/ c c))
+
+             1/1))
+
+; Case 𝑡 / 1 ⇒ t
+(step $test_$div_simplify_rec_5 true
+      :rule $assert_eq 
+      :args (($div_simplify_rec (/ 13 1))
+
+             13))
+
+(step $test_$div_simplify_rec_6 true
+      :rule $assert_eq 
+      :args (($div_simplify_rec (/ 13/1 1/1))
+
+             13/1))
+
+(step $test_$div_simplify_rec_7 true
+      :rule $assert_eq 
+      :args (($div_simplify_rec (/ a 1))
+
+             a))
+
+(step $test_$div_simplify_rec_8 true
+      :rule $assert_eq 
+      :args (($div_simplify_rec (/ c 1/1))
+
+             c))
+
+; Case 𝑡1 / 𝑡2 ⇒𝑡3 if 𝑡1 and 𝑡2 are constants and 𝑡3 is 𝑡1 divided by 𝑡2 according 
+; to the semantics of the current theory.
+(step $test_$div_simplify_rec_9 true
+      :rule $assert_eq 
+      :args (($div_simplify_rec (/ 13 2))
+
+             6))
+
+(step $test_$div_simplify_rec_10 true
+      :rule $assert_eq 
+      :args (($div_simplify_rec (/ 13/1 2/1))
+
+             13/2))
+
+; Misc. 
+(step $test_$div_simplify_rec_11 true
+      :rule $assert_eq 
+      :args (($div_simplify_rec (/ a 19))
+
+             (/ a 19)))
+
+(step $test_$div_simplify_rec_12 true
+      :rule $assert_eq 
+      :args (($div_simplify_rec (/ c 3/4))
+
+             (/ c 3/4)))
+
+; Testing evaluation order.
+(step $test_$div_simplify_rec_13 true
+      :rule $assert_eq 
+      :args (($div_simplify_rec (/ (/ a a) a))
+
+             (/ 1 a)))
+
+(step $test_$div_simplify_rec_14 true
+      :rule $assert_eq 
+      :args (($div_simplify_rec (/ c (/ c c)))
+
+             c))
+
+(step $test_$div_simplify_rec_15 true
+      :rule $assert_eq 
+      :args (($div_simplify_rec (/ (/ 2/2 2/2) (/ c c)))
+
+             1/1))
+
+;---------------------------
+; div_simplify
+;---------------------------
+
+(declare-const a Int)
+(declare-const c Real)
+
+; Case 𝑡 / 𝑡 ⇒ 1
+(step $test_div_simplify_1 
+      (@cl (= (/ 13 13) 1))
+      :rule div_simplify)
+
+(step $test_div_simplify_2 
+      (@cl (= (/ 13/1 13/1) 1/1))
+      :rule div_simplify)
+
+(step $test_div_simplify_3 
+      (@cl (= (/ a a) 1))
+      :rule div_simplify)
+
+(step $test_div_simplify_4 
+      (@cl (= (/ c c) 1/1))
+      :rule div_simplify)
+
+; Case 𝑡 / 1 ⇒ t
+(step $test_div_simplify_5 
+      (@cl (= (/ 13 1) 13))
+      :rule div_simplify)
+
+(step $test_div_simplify_6 
+      (@cl (= (/ 13/1 1/1) 13/1))
+      :rule div_simplify)
+
+(step $test_div_simplify_7 
+      (@cl (= (/ a 1) a))
+      :rule div_simplify)
+
+(step $test_div_simplify_8 
+      (@cl (= (/ c 1/1) c))
+      :rule div_simplify)
+
+; Case 𝑡1 / 𝑡2 ⇒𝑡3 if 𝑡1 and 𝑡2 are constants and 𝑡3 is 𝑡1 divided by 𝑡2 according 
+; to the semantics of the current theory.
+(step $test_div_simplify_9 
+      (@cl (= (/ 13 2) 6))
+      :rule div_simplify)
+
+(step $test_div_simplify_10 
+      (@cl (= (/ 13/1 2/1) 13/2))
+      :rule div_simplify)
+
+; Misc. 
+(step $test_div_simplify_11 
+      (@cl (= (/ a 19) (/ a 19)))
+      :rule div_simplify)
+
+(step $test_div_simplify_12 
+      (@cl (= (/ c 3/4) (/ c 3/4)))
+      :rule div_simplify)
+
+; Testing evaluation order.
+(step $test_div_simplify_13 
+      (@cl (= (/ (/ a a) a) (/ 1 a)))
+      :rule div_simplify)
+
+(step $test_div_simplify_14 
+      (@cl (= (/ c (/ c c)) c))
+      :rule div_simplify)
+
+(step $test_div_simplify_15 
+      (@cl (= (/ (/ 2/2 2/2) (/ c c)) 1/1))
+      :rule div_simplify)
+
+;---------------------------
+; comp_simplify_small_step
+;---------------------------
+
+(declare-const a Int)
+(declare-const b Int)
+
+; Case 𝑠1 < 𝑠2 ⇒ ⊤, if 𝑠1, 𝑠2 are numerical constants and 𝑠1 is strictly less than 𝑠2
+(step $test_$comp_simplify_small_step_1 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (< 1 2))
+
+             true))
+
+(step $test_$comp_simplify_small_step_2 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (< 1.0 2.0))
+
+             true))
+
+; Case 𝑠1 < 𝑠2 ⇒ ⊥, if 𝑠1, 𝑠2 are numerical constants and 𝑠1 is greater or equal than 𝑠2
+(step $test_$comp_simplify_small_step_3 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (< 2 1))
+
+             false))
+
+(step $test_$comp_simplify_small_step_4 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (< 2.0 1.0))
+
+             false))
+
+; Case 𝑠1 ≤ 𝑠2 ⇒ ⊤ if 𝑠1, 𝑠2 are numerical constants and 𝑠1 is less or equal than 𝑠2.
+(step $test_$comp_simplify_small_step_5 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (<= 1 2))
+
+             true))
+
+(step $test_$comp_simplify_small_step_6 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (<= 2.0 2.0))
+
+             true))
+
+; Case 𝑠1 ≤ 𝑠2 ⇒ ⊥ if 𝑠1, 𝑠2 are numerical constants and 𝑠1 is strictly greater than 𝑠2
+(step $test_$comp_simplify_small_step_5 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (<= 2 1))
+
+             false))
+
+(step $test_$comp_simplify_small_step_6 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (<= 4.0 2.0))
+
+             false))
+
+; Case 𝑠 < 𝑠 ⇒ ⊥
+(step $test_$comp_simplify_small_step_6 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (< 2 2))
+
+             false))
+
+(step $test_$comp_simplify_small_step_7 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (< 4.0 4.0))
+
+             false))
+
+(step $test_$comp_simplify_small_step_8 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (< a a))
+
+             false))
+
+; Case 𝑠 <= 𝑠 ⇒ ⊤
+(step $test_$comp_simplify_small_step_9 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (<= 2 2))
+
+             true))
+
+(step $test_$comp_simplify_small_step_10 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (<= 4.0 4.0))
+
+             true))
+
+(step $test_$comp_simplify_small_step_11 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (<= a a))
+
+             true))
+
+; Case 𝑠1 ≥ 𝑠2 ⇒ 𝑠2 ≤ 𝑠1
+(step $test_$comp_simplify_small_step_12 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (>= a b))
+
+             (<= b a)))
+
+(step $test_$comp_simplify_small_step_13 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (>= 1 2))
+
+             (<= 2 1)))
+
+; Case 𝑠1 < 𝑠2 ⇒ not (𝑠2 ≤ 𝑠1)
+(step $test_$comp_simplify_small_step_14 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (< a b))
+
+             (not (<= b a))))
+
+; Case 𝑠1 > 𝑠2 ⇒ not (𝑠1 ≤ 𝑠2)
+(step $test_$comp_simplify_small_step_14 true
+      :rule $assert_eq 
+      :args (($comp_simplify_small_step (> a b))
+
+             (not (<= a b))))
+
+;---------------------------
+; $comp_simplify_rec
+;---------------------------
+
+(declare-const a Int)
+(declare-const b Int)
+
+; Case 𝑠1 < 𝑠2 ⇒ ⊤, if 𝑠1, 𝑠2 are numerical constants and 𝑠1 is strictly less than 𝑠2
+(step $test_$comp_simplify_rec_1 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (< 1 2))
+
+             true))
+
+(step $test_$comp_simplify_rec_2 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (< 1.0 2.0))
+
+             true))
+
+; Case 𝑠1 < 𝑠2 ⇒ ⊥, if 𝑠1, 𝑠2 are numerical constants and 𝑠1 is greater or equal than 𝑠2
+(step $test_$comp_simplify_rec_3 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (< 2 1))
+
+             false))
+
+(step $test_$comp_simplify_rec_4 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (< 2.0 1.0))
+
+             false))
+
+; Case 𝑠1 ≤ 𝑠2 ⇒ ⊤ if 𝑠1, 𝑠2 are numerical constants and 𝑠1 is less or equal than 𝑠2.
+(step $test_$comp_simplify_rec_5 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (<= 1 2))
+
+             true))
+
+(step $test_$comp_simplify_rec_6 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (<= 2.0 2.0))
+
+             true))
+
+; Case 𝑠1 ≤ 𝑠2 ⇒ ⊥ if 𝑠1, 𝑠2 are numerical constants and 𝑠1 is strictly greater than 𝑠2
+(step $test_$comp_simplify_rec_5 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (<= 2 1))
+
+             false))
+
+(step $test_$comp_simplify_rec_6 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (<= 4.0 2.0))
+
+             false))
+
+; Case 𝑠 < 𝑠 ⇒ ⊥
+(step $test_$comp_simplify_rec_6 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (< 2 2))
+
+             false))
+
+(step $test_$comp_simplify_rec_7 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (< 4.0 4.0))
+
+             false))
+
+(step $test_$comp_simplify_rec_8 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (< a a))
+
+             false))
+
+; Case 𝑠 <= 𝑠 ⇒ ⊤
+(step $test_$comp_simplify_rec_9 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (<= 2 2))
+
+             true))
+
+(step $test_$comp_simplify_rec_10 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (<= 4.0 4.0))
+
+             true))
+
+(step $test_$comp_simplify_rec_11 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (<= a a))
+
+             true))
+
+; Case 𝑠1 ≥ 𝑠2 ⇒ 𝑠2 ≤ 𝑠1
+(step $test_$comp_simplify_rec_12 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (>= a b))
+
+             (<= b a)))
+
+(step $test_$comp_simplify_rec_13 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (>= 1 2))
+
+             false))
+
+; Case 𝑠1 < 𝑠2 ⇒ not (𝑠2 ≤ 𝑠1)
+(step $test_$comp_simplify_rec_14 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (< a b))
+
+             (not (<= b a))))
+
+; Case 𝑠1 > 𝑠2 ⇒ not (𝑠1 ≤ 𝑠2)
+(step $test_$comp_simplify_rec_14 true
+      :rule $assert_eq 
+      :args (($comp_simplify_rec (> a b))
+
+             (not (<= a b))))
+
+
+;---------------------------
+; comp_simplify
+;---------------------------
+
+(declare-const a Int)
+(declare-const b Int)
+
+; Case 𝑠1 < 𝑠2 ⇒ ⊤, if 𝑠1, 𝑠2 are numerical constants and 𝑠1 is strictly less than 𝑠2
+(step $test_comp_simplify_1 
+      (@cl (= (< 1 2) true))
+      :rule comp_simplify)
+
+(step $test_comp_simplify_2 
+      (@cl (= (< 1.0 2.0) true))
+      :rule comp_simplify)
+
+; Case 𝑠1 < 𝑠2 ⇒ ⊥, if 𝑠1, 𝑠2 are numerical constants and 𝑠1 is greater or equal than 𝑠2
+(step $test_comp_simplify_3 
+      (@cl (= (< 2 1) false))
+      :rule comp_simplify)
+
+(step $test_comp_simplify_4 
+      (@cl (= (< 2.0 1.0) false))
+      :rule comp_simplify)
+
+; Case 𝑠1 ≤ 𝑠2 ⇒ ⊤ if 𝑠1, 𝑠2 are numerical constants and 𝑠1 is less or equal than 𝑠2.
+(step $test_comp_simplify_5 
+      (@cl (= (<= 1 2) true))
+      :rule comp_simplify)
+
+(step $test_comp_simplify_6 
+      (@cl (= (<= 2.0 2.0) true))
+      :rule comp_simplify)
+
+; Case 𝑠1 ≤ 𝑠2 ⇒ ⊥ if 𝑠1, 𝑠2 are numerical constants and 𝑠1 is strictly greater than 𝑠2
+(step $test_comp_simplify_5 
+      (@cl (= (<= 2 1) false))
+      :rule comp_simplify)
+
+(step $test_comp_simplify_6 
+      (@cl (= (<= 4.0 2.0) false))
+      :rule comp_simplify)
+
+; Case 𝑠 < 𝑠 ⇒ ⊥
+(step $test_comp_simplify_6 
+      (@cl (= (< 2 2) false))
+      :rule comp_simplify)
+
+(step $test_comp_simplify_7 
+      (@cl (= (< 4.0 4.0) false))
+      :rule comp_simplify)
+
+(step $test_comp_simplify_8 
+      (@cl (= (< a a) false))
+      :rule comp_simplify)
+
+; Case 𝑠 <= 𝑠 ⇒ ⊤
+(step $test_comp_simplify_9 
+      (@cl (= (<= 2 2) true))
+      :rule comp_simplify)
+
+(step $test_comp_simplify_10 
+      (@cl (= (<= 4.0 4.0) true))
+      :rule comp_simplify)
+
+(step $test_comp_simplify_11 
+      (@cl (= (<= a a) true))
+      :rule comp_simplify)
+
+; Case 𝑠1 ≥ 𝑠2 ⇒ 𝑠2 ≤ 𝑠1
+(step $test_comp_simplify_12 
+      (@cl (= (>= a b) (<= b a)))
+      :rule comp_simplify)
+
+(step $test_comp_simplify_13 
+      (@cl (= (>= 1 2) false))
+      :rule comp_simplify)
+
+; Case 𝑠1 < 𝑠2 ⇒ not (𝑠2 ≤ 𝑠1)
+(step $test_comp_simplify_14 
+      (@cl (= (< a b) (not (<= b a))))
+      :rule comp_simplify)
+
+; Case 𝑠1 > 𝑠2 ⇒ not (𝑠1 ≤ 𝑠2)
+(step $test_comp_simplify_14 
+      (@cl (= (> a b) (not (<= a b))))
+      :rule comp_simplify)
+
+;---------------------------
+; $ite_simplify_small_step
+;---------------------------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+
+; Case (ite ⊤ 𝑡1 𝑡2) ⇒ 𝑡1
+(step $test_$ite_simplify_small_step_1 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite true a b))
+
+             a))
+
+(step $test_$ite_simplify_small_step_2 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite true (or a b) b))
+
+             (or a b)))
+
+; Case (ite ⊥ 𝑡1 𝑡2) ⇒ 𝑡2
+(step $test_$ite_simplify_small_step_3 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite false a b))
+
+             b))
+
+(step $test_$ite_simplify_small_step_4 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite false a (or a b)))
+
+             (or a b)))
+
+; Case (ite 𝜓 𝑡 𝑡) ⇒ 𝑡
+(step $test_$ite_simplify_small_step_5 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite a b b))
+
+             b))
+
+(step $test_$ite_simplify_small_step_6 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite a (or a b) (or a b)))
+
+             (or a b)))
+
+; Case (ite ¬𝜑 𝑡1 𝑡2) ⇒ (ite 𝜑 𝑡2 𝑡1)
+(step $test_$ite_simplify_small_step_7 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite (not a) b c))
+
+             (ite a c b)))
+
+(step $test_$ite_simplify_small_step_8 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite (not (or a a)) b c))
+
+             (ite (or a a) c b)))
+
+; Case (ite 𝜓 (ite 𝜓 𝑡1 𝑡2) 𝑡3) ⇒ (ite 𝜓 𝑡1 𝑡3)
+(step $test_$ite_simplify_small_step_9 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite a (ite a b c) d))
+
+             (ite a b d)))
+
+(step $test_$ite_simplify_small_step_10 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite (or a a) (ite (or a a) b c) d))
+
+             (ite (or a a) b d)))
+
+; Case (ite 𝜓 𝑡1 (ite 𝜓 𝑡2 𝑡3) ⇒ (ite 𝜓 𝑡1 𝑡3)
+(step $test_$ite_simplify_small_step_11 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite a b (ite a c d)))
+
+             (ite a b d)))
+
+(step $test_$ite_simplify_small_step_12 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite (or a a) b (ite (or a a) c d)))
+
+             (ite (or a a) b d)))
+
+; Case (ite 𝜓 ⊤ ⊥) ⇒ 𝜓
+(step $test_$ite_simplify_small_step_13 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite a true false))
+
+             a))
+
+(step $test_$ite_simplify_small_step_14 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite (and a b c) true false))
+
+             (and a b c)))
+
+; Case (ite 𝜓 ⊥ ⊤) ⇒ ¬ 𝜓
+(step $test_$ite_simplify_small_step_15 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite a false true))
+
+             (not a)))
+
+(step $test_$ite_simplify_small_step_16 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite (and a b c) false true))
+
+             (not (and a b c))))
+
+; Case (ite 𝜓 ⊤ 𝜑) ⇒ 𝜓 ∨ 𝜑
+(step $test_$ite_simplify_small_step_17 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite a true b))
+
+             (or a b)))
+
+(step $test_$ite_simplify_small_step_18 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite (or a b) true (and b c)))
+
+             (or (or a b) (and b c))))
+
+; Case (ite  𝜓 𝜑 ⊥) ⇒ 𝜓 ∧ 𝜑
+(step $test_$ite_simplify_small_step_19 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite a b false))
+
+             (and a b)))
+
+(step $test_$ite_simplify_small_step_20 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite (or a b) (and b c) false))
+
+             (and (or a b) (and b c))))
+
+; Case (ite 𝜓 ⊥ 𝜑) ⇒ not 𝜓 ∧ 𝜑
+(step $test_$ite_simplify_small_step_21 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite a false b))
+
+             (and (not a) b)))
+
+(step $test_$ite_simplify_small_step_22 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite (or a b) false (and c d)))
+
+             (and (not (or a b)) (and c d))))
+
+; Case (ite 𝜓 𝜑 ⊤) ⇒ ¬𝜓 ∨ 𝜑
+(step $test_$ite_simplify_small_step_22 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite a b true))
+
+             (or (not a) b)))
+
+(step $test_$ite_simplify_small_step_23 true
+      :rule $assert_eq 
+      :args (($ite_simplify_small_step (ite (or a b) (and c d) true))
+
+             (or (not (or a b)) (and c d))))
+
+
+;---------------------------
+; $ite_simplify_rec
+;---------------------------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+
+; Case (ite ⊤ 𝑡1 𝑡2) ⇒ 𝑡1
+(step $test_$ite_simplify_rec_1 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite true a b))
+
+             a))
+
+(step $test_$ite_simplify_rec_2 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite true (or a b) b))
+
+             (or a b)))
+
+; Case (ite ⊥ 𝑡1 𝑡2) ⇒ 𝑡2
+(step $test_$ite_simplify_rec_3 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite false a b))
+
+             b))
+
+(step $test_$ite_simplify_rec_4 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite false a (or a b)))
+
+             (or a b)))
+
+; Case (ite 𝜓 𝑡 𝑡) ⇒ 𝑡
+(step $test_$ite_simplify_rec_5 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite a b b))
+
+             b))
+
+(step $test_$ite_simplify_rec_6 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite a (or a b) (or a b)))
+
+             (or a b)))
+
+; Case (ite ¬𝜑 𝑡1 𝑡2) ⇒ (ite 𝜑 𝑡2 𝑡1)
+(step $test_$ite_simplify_rec_7 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite (not a) b c))
+
+             (ite a c b)))
+
+(step $test_$ite_simplify_rec_8 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite (not (or a a)) b c))
+
+             (ite (or a a) c b)))
+
+; Case (ite 𝜓 (ite 𝜓 𝑡1 𝑡2) 𝑡3) ⇒ (ite 𝜓 𝑡1 𝑡3)
+(step $test_$ite_simplify_rec_9 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite a (ite a b c) d))
+
+             (ite a b d)))
+
+(step $test_$ite_simplify_rec_10 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite (or a a) (ite (or a a) b c) d))
+
+             (ite (or a a) b d)))
+
+; Case (ite 𝜓 𝑡1 (ite 𝜓 𝑡2 𝑡3) ⇒ (ite 𝜓 𝑡1 𝑡3)
+(step $test_$ite_simplify_rec_11 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite a b (ite a c d)))
+
+             (ite a b d)))
+
+(step $test_$ite_simplify_rec_12 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite (or a a) b (ite (or a a) c d)))
+
+             (ite (or a a) b d)))
+
+; Case (ite 𝜓 ⊤ ⊥) ⇒ 𝜓
+(step $test_$ite_simplify_rec_13 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite a true false))
+
+             a))
+
+(step $test_$ite_simplify_rec_14 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite (and a b c) true false))
+
+             (and a b c)))
+
+; Case (ite 𝜓 ⊥ ⊤) ⇒ ¬ 𝜓
+(step $test_$ite_simplify_rec_15 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite a false true))
+
+             (not a)))
+
+(step $test_$ite_simplify_rec_16 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite (and a b c) false true))
+
+             (not (and a b c))))
+
+; Case (ite 𝜓 ⊤ 𝜑) ⇒ 𝜓 ∨ 𝜑
+(step $test_$ite_simplify_rec_17 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite a true b))
+
+             (or a b)))
+
+(step $test_$ite_simplify_rec_18 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite (or a b) true (and b c)))
+
+             (or (or a b) (and b c))))
+
+; Case (ite  𝜓 𝜑 ⊥) ⇒ 𝜓 ∧ 𝜑
+(step $test_$ite_simplify_rec_19 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite a b false))
+
+             (and a b)))
+
+(step $test_$ite_simplify_rec_20 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite (or a b) (and b c) false))
+
+             (and (or a b) (and b c))))
+
+; Case (ite 𝜓 ⊥ 𝜑) ⇒ not 𝜓 ∧ 𝜑
+(step $test_$ite_simplify_rec_21 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite a false b))
+
+             (and (not a) b)))
+
+(step $test_$ite_simplify_rec_22 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite (or a b) false (and c d)))
+
+             (and (not (or a b)) (and c d))))
+
+; Case (ite 𝜓 𝜑 ⊤) ⇒ ¬𝜓 ∨ 𝜑
+(step $test_$ite_simplify_rec_22 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite a b true))
+
+             (or (not a) b)))
+
+(step $test_$ite_simplify_rec_23 true
+      :rule $assert_eq 
+      :args (($ite_simplify_rec (ite (or a b) (and c d) true))
+
+             (or (not (or a b)) (and c d))))
+
+;---------------------------
+; ite_simplify
+;---------------------------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+
+; Case (ite ⊤ 𝑡1 𝑡2) ⇒ 𝑡1
+(step $test_ite_simplify_1 
+      (@cl (= (ite true a b) a))
+      :rule ite_simplify)
+
+(step $test_ite_simplify_2 
+      (@cl (= (ite true (or a b) b) (or a b)))
+      :rule ite_simplify)
+
+; Case (ite ⊥ 𝑡1 𝑡2) ⇒ 𝑡2
+(step $test_ite_simplify_3 
+      (@cl (= (ite false a b) b))
+      :rule ite_simplify)
+
+(step $test_ite_simplify_4 
+      (@cl (= (ite false a (or a b)) (or a b)))
+      :rule ite_simplify)
+
+; Case (ite 𝜓 𝑡 𝑡) ⇒ 𝑡
+(step $test_ite_simplify_5 
+      (@cl (= (ite a b b) b))
+      :rule ite_simplify)
+
+(step $test_ite_simplify_6 
+      (@cl (= (ite a (or a b) (or a b)) (or a b)))
+      :rule ite_simplify)
+
+; Case (ite ¬𝜑 𝑡1 𝑡2) ⇒ (ite 𝜑 𝑡2 𝑡1)
+(step $test_ite_simplify_7 
+      (@cl (= (ite (not a) b c) (ite a c b)))
+      :rule ite_simplify)
+
+(step $test_ite_simplify_8 
+      (@cl (= (ite (not (or a a)) b c) (ite (or a a) c b)))
+      :rule ite_simplify)
+
+; Case (ite 𝜓 (ite 𝜓 𝑡1 𝑡2) 𝑡3) ⇒ (ite 𝜓 𝑡1 𝑡3)
+(step $test_ite_simplify_9 
+      (@cl (= (ite a (ite a b c) d) (ite a b d)))
+      :rule ite_simplify)
+
+(step $test_ite_simplify_10 
+      (@cl (= (ite (or a a) (ite (or a a) b c) d) (ite (or a a) b d)))
+      :rule ite_simplify)
+
+; Case (ite 𝜓 𝑡1 (ite 𝜓 𝑡2 𝑡3) ⇒ (ite 𝜓 𝑡1 𝑡3)
+(step $test_ite_simplify_11 
+      (@cl (= (ite a b (ite a c d)) (ite a b d)))
+      :rule ite_simplify)
+
+(step $test_ite_simplify_12 
+      (@cl (= (ite (or a a) b (ite (or a a) c d)) (ite (or a a) b d)))
+      :rule ite_simplify)
+
+; Case (ite 𝜓 ⊤ ⊥) ⇒ 𝜓
+(step $test_ite_simplify_13 
+      (@cl (= (ite a true false) a))
+      :rule ite_simplify)
+
+(step $test_ite_simplify_14 
+      (@cl (= (ite (and a b c) true false) (and a b c)))
+      :rule ite_simplify)
+
+; Case (ite 𝜓 ⊥ ⊤) ⇒ ¬ 𝜓
+(step $test_ite_simplify_15 
+      (@cl (= (ite a false true) (not a)))
+      :rule ite_simplify)
+
+(step $test_ite_simplify_16 
+      (@cl (= (ite (and a b c) false true) (not (and a b c))))
+      :rule ite_simplify)
+
+; Case (ite 𝜓 ⊤ 𝜑) ⇒ 𝜓 ∨ 𝜑
+(step $test_ite_simplify_17 
+      (@cl (= (ite a true b) (or a b)))
+      :rule ite_simplify)
+
+(step $test_ite_simplify_18 
+      (@cl (= (ite (or a b) true (and b c)) (or (or a b) (and b c))))
+      :rule ite_simplify)
+
+; Case (ite  𝜓 𝜑 ⊥) ⇒ 𝜓 ∧ 𝜑
+(step $test_ite_simplify_19 
+      (@cl (= (ite a b false) (and a b)))
+      :rule ite_simplify)
+
+(step $test_ite_simplify_20 
+      (@cl (= (ite (or a b) (and b c) false) (and (or a b) (and b c))))
+      :rule ite_simplify)
+
+; Case (ite 𝜓 ⊥ 𝜑) ⇒ not 𝜓 ∧ 𝜑
+(step $test_ite_simplify_21 
+      (@cl (= (ite a false b) (and (not a) b)))
+      :rule ite_simplify)
+
+(step $test_ite_simplify_22 
+      (@cl (= (ite (or a b) false (and c d)) (and (not (or a b)) (and c d))))
+      :rule ite_simplify)
+
+; Case (ite 𝜓 𝜑 ⊤) ⇒ ¬𝜓 ∨ 𝜑
+(step $test_ite_simplify_22 
+      (@cl (= (ite a b true) (or (not a) b)))
+      :rule ite_simplify)
+
+(step $test_ite_simplify_23 
+      (@cl (= (ite (or a b) (and c d) true) (or (not (or a b)) (and c d))))
+      :rule ite_simplify)
+
+
+;---------------------------
+; $minus_simplify_small_step
+;---------------------------
+
+(declare-const a Int)
+(declare-const b Int)
+(declare-const c Real)
+(declare-const d Real)
+
+; Case t - t => 0
+(step $test_$minus_simplify_small_step_1 true
+      :rule $assert_eq 
+      :args (($minus_simplify_small_step (- a a))
+
+             0))
+
+(step $test_$minus_simplify_small_step_2 true
+      :rule $assert_eq 
+      :args (($minus_simplify_small_step (- c c))
+
+             0/1))
+
+(step $test_$minus_simplify_small_step_3 true
+      :rule $assert_eq 
+      :args (($minus_simplify_small_step (- 3 3))
+
+             0))
+
+(step $test_$minus_simplify_small_step_4 true
+      :rule $assert_eq 
+      :args (($minus_simplify_small_step (- 3/1 3/1))
+
+             0/1))
+
+; Case 𝑡1 − 𝑡2 ⇒ 𝑡3, where 𝑡1 and 𝑡2 are numerical constants and 𝑡3 is 𝑡2 subtracted 
+(step $test_$minus_simplify_small_step_5 true
+      :rule $assert_eq 
+      :args (($minus_simplify_small_step (- 3 2))
+
+             1))
+
+(step $test_$minus_simplify_small_step_6 true
+      :rule $assert_eq 
+      :args (($minus_simplify_small_step (- 3/1 2/1))
+
+             1/1))
+
+(step $test_$minus_simplify_small_step_7 true
+      :rule $assert_eq 
+      :args (($minus_simplify_small_step (- 3/2 3/4))
+
+             3/4))
+
+; Case t - 0 => t
+(step $test_$minus_simplify_small_step_8 true
+      :rule $assert_eq 
+      :args (($minus_simplify_small_step (- a 0))
+
+             a))
+
+(step $test_$minus_simplify_small_step_9 true
+      :rule $assert_eq 
+      :args (($minus_simplify_small_step (- c 0))
+
+             c))
+
+(step $test_$minus_simplify_small_step_10 true
+      :rule $assert_eq 
+      :args (($minus_simplify_small_step (- 10 0))
+
+             10))
+
+(step $test_$minus_simplify_small_step_11 true
+      :rule $assert_eq 
+      :args (($minus_simplify_small_step (- 10/1 0/1))
+
+             10/1))
+
+; Case 0 - t => - t
+(step $test_$minus_simplify_small_step_12 true
+      :rule $assert_eq 
+      :args (($minus_simplify_small_step (- 0 a))
+
+             (- a)))
+
+(step $test_$minus_simplify_small_step_13 true
+      :rule $assert_eq 
+      :args (($minus_simplify_small_step (- 0 c))
+
+             (- c)))
+
+(step $test_$minus_simplify_small_step_14 true
+      :rule $assert_eq 
+      :args (($minus_simplify_small_step (- 0 10))
+
+             (- 10)))
+
+(step $test_$minus_simplify_small_step_15 true
+      :rule $assert_eq 
+      :args (($minus_simplify_small_step (- 0/1 10/1))
+
+             (- 10/1)))
+
+
+;---------------------------
+; $minus_simplify_rec
+;---------------------------
+
+(declare-const a Int)
+(declare-const b Int)
+(declare-const c Real)
+(declare-const d Real)
+
+; Case t - t => 0
+(step $test_$minus_simplify_rec_1 true
+      :rule $assert_eq 
+      :args (($minus_simplify_rec (- a a))
+
+             0))
+
+(step $test_$minus_simplify_rec_2 true
+      :rule $assert_eq 
+      :args (($minus_simplify_rec (- c c))
+
+             0/1))
+
+(step $test_$minus_simplify_rec_3 true
+      :rule $assert_eq 
+      :args (($minus_simplify_rec (- 3 3))
+
+             0))
+
+(step $test_$minus_simplify_rec_4 true
+      :rule $assert_eq 
+      :args (($minus_simplify_rec (- 3/1 3/1))
+
+             0/1))
+
+; Case 𝑡1 − 𝑡2 ⇒ 𝑡3, where 𝑡1 and 𝑡2 are numerical constants and 𝑡3 is 𝑡2 subtracted 
+(step $test_$minus_simplify_rec_5 true
+      :rule $assert_eq 
+      :args (($minus_simplify_rec (- 3 2))
+
+             1))
+
+(step $test_$minus_simplify_rec_6 true
+      :rule $assert_eq 
+      :args (($minus_simplify_rec (- 3/1 2/1))
+
+             1/1))
+
+(step $test_$minus_simplify_rec_7 true
+      :rule $assert_eq 
+      :args (($minus_simplify_rec (- 3/2 3/4))
+
+             3/4))
+
+; Case t - 0 => t
+(step $test_$minus_simplify_rec_8 true
+      :rule $assert_eq 
+      :args (($minus_simplify_rec (- a 0))
+
+             a))
+
+(step $test_$minus_simplify_rec_9 true
+      :rule $assert_eq 
+      :args (($minus_simplify_rec (- c 0))
+
+             c))
+
+(step $test_$minus_simplify_rec_10 true
+      :rule $assert_eq 
+      :args (($minus_simplify_rec (- 10 0))
+
+             10))
+
+(step $test_$minus_simplify_rec_11 true
+      :rule $assert_eq 
+      :args (($minus_simplify_rec (- 10/1 0/1))
+
+             10/1))
+
+; Case 0 - t => - t
+(step $test_$minus_simplify_rec_12 true
+      :rule $assert_eq 
+      :args (($minus_simplify_rec (- 0 a))
+
+             (- a)))
+
+(step $test_$minus_simplify_rec_13 true
+      :rule $assert_eq 
+      :args (($minus_simplify_rec (- 0 c))
+
+             (- c)))
+
+(step $test_$minus_simplify_rec_14 true
+      :rule $assert_eq 
+      :args (($minus_simplify_rec (- 0 10))
+
+             (- 10)))
+
+(step $test_$minus_simplify_rec_15 true
+      :rule $assert_eq 
+      :args (($minus_simplify_rec (- 0/1 10/1))
+
+             (- 10/1)))
+
+;---------------------------
+; minus_simplify
+;---------------------------
+
+(declare-const a Int)
+(declare-const b Int)
+(declare-const c Real)
+(declare-const d Real)
+
+; Case t - t => 0
+(step $test_minus_simplify_1 
+      (@cl (= (- a a) 0))
+      :rule minus_simplify)
+
+(step $test_minus_simplify_2 
+      (@cl (= (- c c) 0/1))
+      :rule minus_simplify)
+
+(step $test_minus_simplify_3 
+      (@cl (= (- 3 3) 0))
+      :rule minus_simplify)
+
+(step $test_minus_simplify_4 
+      (@cl (= (- 3/1 3/1) 0/1))
+      :rule minus_simplify)
+
+; Case 𝑡1 − 𝑡2 ⇒ 𝑡3, where 𝑡1 and 𝑡2 are numerical constants and 𝑡3 is 𝑡2 subtracted 
+(step $test_minus_simplify_5 
+      (@cl (= (- 3 2) 1))
+      :rule minus_simplify)
+
+(step $test_minus_simplify_6 
+      (@cl (= (- 3/1 2/1) 1/1))
+      :rule minus_simplify)
+
+(step $test_minus_simplify_7 
+      (@cl (= (- 3/2 3/4) 3/4))
+      :rule minus_simplify)
+
+; Case t - 0 => t
+(step $test_minus_simplify_8 
+      (@cl (= (- a 0) a))
+      :rule minus_simplify)
+
+(step $test_minus_simplify_9 
+      (@cl (= (- c 0) c))
+      :rule minus_simplify)
+
+(step $test_minus_simplify_10 
+      (@cl (= (- 10 0) 10))
+      :rule minus_simplify)
+
+(step $test_minus_simplify_11 
+      (@cl (= (- 10/1 0/1) 10/1))
+      :rule minus_simplify)
+
+; Case 0 - t => - t
+(step $test_minus_simplify_12 
+      (@cl (= (- 0 a) (- a)))
+      :rule minus_simplify)
+
+(step $test_minus_simplify_13 
+      (@cl (= (- 0 c) (- c)))
+      :rule minus_simplify)
+
+(step $test_minus_simplify_14 
+      (@cl (= (- 0 10) (- 10)))
+      :rule minus_simplify)
+
+(step $test_minus_simplify_15 
+      (@cl (= (- 0/1 10/1) (- 10/1)))
+      :rule minus_simplify)
+
+;---------------------------
+; unary_minus_simplify
+;---------------------------
+
+(declare-const a Int)
+(declare-const c Real)
+
+; Case (- (- t)) => t
+(step $test_unary_minus_simplify_1 
+      (@cl (= (- (- a)) a))
+      :rule unary_minus_simplify)
+
+(step $test_unary_minus_simplify_2
+      (@cl (= (- (- 1)) 1))
+      :rule unary_minus_simplify)
+
+(step $test_unary_minus_simplify_3
+      (@cl (= (- (- 3/2)) 3/2))
+      :rule unary_minus_simplify)
+
+(step $test_unary_minus_simplify_4
+      (@cl (= (- (- (+ a b))) (+ a b)))
+      :rule unary_minus_simplify)
+
+; Case (- t) => u, for numerical constant t, u, such that u is negative t.
+(step $test_unary_minus_simplify_5
+      (@cl (= (- 1) -1))
+      :rule unary_minus_simplify)
+
+(step $test_unary_minus_simplify_6
+      (@cl (= (- 2/3) -2/3))
+      :rule unary_minus_simplify)
+
+(step $test_unary_minus_simplify_7
+      (@cl (= (- 0/1) -0/1))
+      :rule unary_minus_simplify)
+
+(step $test_unary_minus_simplify_8
+      (@cl (= (- 0) -0))
+      :rule unary_minus_simplify)
+
+
+;---------------------------
+; sum_simplify
+;---------------------------
+
+(declare-const a Int)
+(declare-const b Int)
+(declare-const c Real)
+(declare-const d Real)
+
+
+; Case  𝑡1 + ⋯ + 𝑡𝑛 ⇒ 𝑐 where all 𝑡𝑖 are constants and 𝑐 is their sum
+(step $test_sum_simplify_1 
+      (@cl (= (+ 1/1 2/1) 3/1))
+      :rule sum_simplify)
+
+(step $test_sum_simplify_2
+      (@cl (= (+ 1/1 2/1 3/1 4/1) 10/1))
+      :rule sum_simplify)
+
+(step $test_sum_simplify_3
+      (@cl (= (+ 1/1 2/1 3/1 4/1 5/1 6/1) 21/1))
+      :rule sum_simplify)
+
+; Case 𝑡1 + ⋯ + 𝑡𝑛 ⇒ 𝑐 + 𝑡𝑘1 + ⋯ + 𝑡𝑘𝑛 where 𝑐 is the sum of the constants of 
+; 𝑡1, … , 𝑡𝑛 and 𝑡𝑘1, … , 𝑡𝑘𝑛 is 𝑡1, … , 𝑡𝑛 with the constants removed
+(step $test_sum_simplify_4
+      (@cl (= (+ 1/1 2/1 c) ($f_list_cons + 3/1 c)))
+      :rule sum_simplify)
+
+(step $test_sum_simplify_5
+      (@cl (= (+ 1/1 2/1 c 3/1) ($f_list_cons + 6/1 c)))
+      :rule sum_simplify)
+
+(step $test_sum_simplify_6
+      (@cl (= (+ 1/1 2/1 c 3/1 b) ($f_list_cons + 6/1 ($f_list_cons + b c))))
+      :rule sum_simplify)
+
+; Case  𝑡1 + ⋯ + 𝑡𝑛 ⇒ 𝑡𝑘1 + ⋯ + 𝑡𝑘𝑛: same as the previous case if c is 0
+(step $test_sum_simplify_7
+      (@cl (= (+ 1 -1 a) a))
+      :rule sum_simplify)
+
+(step $test_sum_simplify_8
+      (@cl (= (+ 1/1 -1/1 c) c))
+      :rule sum_simplify)
+
+(step $test_sum_simplify_9
+      (@cl (= (+ 1/1 -1/1 2/1 -2/1 c) c))
+      :rule sum_simplify)
+
+(step $test_sum_simplify_10
+      (@cl (= (+ 1/1 -1/1 d 2/1 -2/1 c) ($f_list_cons + c d)))
+      :rule sum_simplify)

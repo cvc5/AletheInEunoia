@@ -472,9 +472,9 @@
 )
 
 
-;------------------
-; Rule or_simplify
-;------------------
+;-------------------
+; Rule and_simplify
+;-------------------
 
 ; program: $remove_leading_negations
 ; args:
@@ -497,6 +497,323 @@
            )
           )
          )
+
+; program: $remove_leading_negations_in_conjuncts
+; args:
+; - conjunct Bool: An conjunct built with `or`.
+; return: >
+;   The result from removing leading double negations from each conjunct
+;   in `conjunct`.
+(program $remove_leading_negations_in_conjuncts ((conjunct Bool) (conjuncts Bool :list))
+         :signature (Bool) Bool
+         (
+          (
+           ($remove_leading_negations_in_conjuncts (and conjunct conjuncts))
+
+           ($f_list_cons and
+                         ($remove_leading_negations conjunct)
+                         ($remove_leading_negations_in_conjuncts conjuncts))
+           )
+
+          (; { `formula` is not a conjunct }
+           ($remove_leading_negations_in_conjuncts true)
+
+           true
+           )
+          )
+         )
+
+; program: $and_simplify_rec_remove_true
+; args:
+; - formula Bool: A formula.
+; return: >
+;   The result from applying the following equivalence-preserving 
+;   transformation, until a fixed-point is reached:
+;   - 𝜑1 ... ∧ ⊤ ∧ ... ∧ 𝜑n ⇒ 𝜑1 ... ∧ ⊤ ∧ ... ∧ 𝜑n
+; note: PRE : { $remove_leading_negations_in_conjuncts `formula` = `formula`}
+(program $and_simplify_rec_remove_true ((conjunct Bool) (conjuncts Bool :list))
+  :signature (Bool) Bool
+  (
+   (
+    ($and_simplify_rec_remove_true (and true conjuncts))
+
+    ($and_simplify_rec_remove_true conjuncts)
+    )
+
+   (; { conjunct != true }
+    ($and_simplify_rec_remove_true (and conjunct conjuncts))
+
+    (eo::ite ($eo_is_eq conjuncts true)
+
+             conjunct
+
+             ; { not ($eo_is_eq conjuncts true) }
+             (eo::define
+
+              (
+               (conjuncts_no_true ($and_simplify_rec_remove_true conjuncts))
+               )
+
+              (eo::ite ($eo_is_eq conjuncts_no_true true)
+
+                       conjunct
+
+                       ; { not ($eo_is_eq conjuncts_no_true true) }
+                       ($f_list_cons and conjunct conjuncts_no_true))))
+    )
+
+   ( ; { conjunct != and ... }
+    ($and_simplify_rec_remove_true conjunct)
+
+    conjunct
+    )
+   )
+  )
+
+; program: $and_simplify_rec_abs_elem
+; args:
+; - formula Bool: A formula.
+; return: >
+;   The result from applying the following equivalence-preserving 
+;   transformation, until a fixed-point is reached:
+;   - 𝜑1 ∧ ... ∧ ⊥ ∧ ... ∧ 𝜑𝑛 ⇒ ⊥
+; note: PRE : { $remove_leading_negations_in_conjuncts `formula` = `formula`}
+(program $and_simplify_rec_abs_elem ((conjunct Bool) (conjuncts Bool :list))
+  :signature (Bool) Bool
+  (
+   (
+    ($and_simplify_rec_abs_elem (and false conjuncts))
+
+    false
+    )
+
+   (
+    ($and_simplify_rec_abs_elem (and conjunct conjuncts))
+
+    (eo::define
+
+     (
+      (conjuncts_absorbed ($and_simplify_rec_abs_elem conjuncts))
+      )
+     
+     (eo::ite ($eo_is_eq conjuncts_absorbed false)
+
+              false
+
+              ; { not ($eo_is_eq conjuncts false) }
+              ; { conjuncts_absorbed == conjuncts }
+              (and conjunct conjuncts)))
+    )
+
+   (; { conjunct != and ...}
+    ($and_simplify_rec_abs_elem conjunct)
+
+    conjunct
+    )
+   )
+  )
+
+; program: $and_simplify_rec_remove_repeated
+; args:
+; - formula Bool: A formula.
+; return: >
+;   The result from applying the following equivalence-preserving 
+;   transformation, until a fixed-point is reached:
+;   - 𝜑1 ∧ ⋯ ∧ 𝜑𝑛 ⇒ 𝜑1 ∧ ⋯ ∧ 𝜑𝑛′ where the right-hand side a repeated 
+;     literal removed.
+; note: PRE : { $remove_leading_negations_in_conjuncts `formula` = `formula`}
+(program $and_simplify_rec_remove_repeated ((conjunct Bool) (conjuncts Bool :list))
+  :signature (Bool) Bool
+  (
+   (
+    ($and_simplify_rec_remove_repeated (and conjunct conjuncts))
+
+    (eo::ite ($f_list_contains_elem and conjunct conjuncts)
+
+             ($and_simplify_rec_remove_repeated conjuncts)
+
+             ; { not ($f_list_contains_elem and conjunct conjuncts) }
+             ($f_list_cons and conjunct ($and_simplify_rec_remove_repeated conjuncts)))
+    )
+
+   ( ; { conjunct != and ... }
+    ($and_simplify_rec_remove_repeated conjunct)
+
+    conjunct
+    )
+   )
+  )
+
+; program: $and_simplify_rec_exclud_mid
+; args:
+; - formula Bool: A formula.
+; return: >
+;   The result from applying the following equivalence-preserving 
+;   transformation, until a fixed-point is reached::
+;   - 𝜑1 ∧ ⋯ ∧ 𝜑𝑖 ∧ ⋯ ∧ 𝜑𝑗 ∧ ⋯ ∧ 𝜑𝑛 ⇒ ⊥,
+;     where 𝜑𝑖, 𝜑𝑗 are such that one has the form ¬ 𝜓 and the other is 𝜓
+; note: PRE : { $remove_leading_negations_in_conjuncts `formula` = `formula`}
+(program $and_simplify_rec_exclud_mid ((conjunct Bool) (conjuncts Bool :list))
+  :signature (Bool) Bool
+  (
+   (
+    ($and_simplify_rec_exclud_mid (and (not conjunct) conjuncts))
+
+    (eo::ite ($f_list_contains_elem and conjunct conjuncts)
+
+             ; We have a and (not conjunct) conjunct ... = false
+             false
+
+             ; { not ($f_list_contains_elem and conjunct conjuncts) }
+             (eo::define
+
+              (
+               (conjuncts_excl ($and_simplify_rec_exclud_mid conjuncts))
+               )
+
+              (eo::ite ($eo_is_eq conjuncts_excl false)
+
+                       false
+                       
+                       ; {not ($eo_is_eq conjuncts_excl false) }
+                       ; { conjuncts_excl == conjuncts }
+                       (and (not conjunct) conjuncts))))
+    )
+
+   (
+    ($and_simplify_rec_exclud_mid (and conjunct conjuncts))
+
+    (eo::ite ($f_list_contains_elem and (not conjunct) conjuncts)
+
+             ; We have a (and conjunct (not conjunct)) ... = false
+             false
+
+             ; { not ($f_list_contains_elem and (not conjunct) conjuncts) }
+             (eo::define
+
+              (
+               (conjuncts_excl ($and_simplify_rec_exclud_mid conjuncts))
+               )
+
+              (eo::ite ($eo_is_eq conjuncts_excl false)
+
+                       false
+                       
+                       ; {not ($eo_is_eq conjuncts_excl false) }
+                       ; { conjuncts_excl == conjuncts }
+                       (and conjunct conjuncts))))
+    )
+
+   ( ; { conjunct != and ... }
+    ($and_simplify_rec_exclud_mid conjunct)
+
+    conjunct
+    )
+   )
+  )
+
+; program: $check_and_simplify_norm
+; args:
+; - lhs Bool: A formula.
+; - rhs Bool: A formula.
+; return: >
+;   The boolean result from comparing with `rhs` the result of applying the 
+;   equivalence-preserving transformations `$and_simplify_small_step...` over
+;   `lhs`.
+; note: PRE : { $remove_leading_negations_in_conjuncts `lhs` = `lhs`
+;               && $to_non_nil_terminated_f_list and true `rhs` = `rhs` }
+(program $check_and_simplify_norm ((lhs Bool) (rhs Bool))
+  :signature (Bool Bool) Bool
+  (
+   (; First, we try to remove every occurrence of `true`.
+    ($check_and_simplify_norm lhs rhs)
+    
+    (eo::define
+
+     (
+      (lhs_no_true ($and_simplify_rec_remove_true lhs))
+      )
+
+    (eo::ite ($f_list_equal_mod_commut and lhs_no_true rhs)
+
+             true
+
+             ; { not ($f_list_equal_mod_commut and lhs_no_true rhs) }
+             ; We continue with the removal of duplicates.
+             (eo::define
+
+              (
+               (lhs_no_dups ($and_simplify_rec_remove_repeated lhs_no_true))
+               )
+
+              (eo::ite ($f_list_equal_mod_commut and lhs_no_dups rhs)
+
+                       true
+
+                       ; { not ($f_list_equal_mod_commut and lhs_no_dups rhs)}
+                       ; We try by looking for the presence of absorbent element.
+                       (eo::define
+
+                        (
+                         (lhs_absorbed ($and_simplify_rec_abs_elem lhs_no_dups))
+                         )
+
+                        (eo::ite ($f_list_equal_mod_commut and lhs_absorbed rhs)
+
+                                 true
+                                 
+                                 ; { not ($f_list_equal_mod_commut and lhs_absorbed rhs) }
+                                 ; We try by looking for "excluded middle" instances.
+                                 (eo::ite ($f_list_equal_mod_commut and
+                                                                    ($and_simplify_rec_exclud_mid lhs_absorbed)
+                                                                    rhs)
+
+                                          true
+
+                                          ; { not ($f_list_equal_mod_commut and
+                                          ;                          ($and_simplify_rec_exclud_mid lhs_absorbed)
+                                          ;                          rhs) }
+                                          false)))))))
+    )
+   )
+  )
+
+; program: $check_and_simplify
+; args:
+; - lhs Bool: >
+;   The left-hand side of the equality in the conclusion passed to rule 
+;   `and_simplify`
+; - rhs: >
+;   The right-hand side of the equality in the conclusion passed to rule 
+;   `and_simplify`
+; return: >
+;   A boolean indicating if `lhs` can be reduced to `rhs` using 
+;   `$and_simplify_rec_...` transformations.
+(program $check_and_simplify ((lhs Bool) (rhs Bool) (hd Bool) (tl Bool :list))
+  :signature (Bool Bool) Bool
+  (
+   (
+    ($check_and_simplify lhs rhs)
+
+    ($check_and_simplify_norm ($remove_leading_negations_in_conjuncts lhs) 
+                              ($to_non_nil_terminated_f_list and true rhs))
+    )
+  )
+)
+
+; rule: and_simplify
+; requires: >
+;   For `lhs` to be reducible to `rhs` following the rules 
+;   `$and_simplify_rec...`.
+; conclusion-explicit: (@cl (= lhs rhs))
+(declare-rule and_simplify ((lhs Bool) (rhs Bool))
+  :requires ((($check_and_simplify lhs rhs) true))
+  :conclusion-explicit (@cl (= lhs rhs))
+)
+
+;------------------
+; Rule or_simplify
+;------------------
 
 ; program: $remove_leading_negations_in_disjuncts
 ; args:
@@ -1026,6 +1343,180 @@
   :conclusion-explicit (@cl (= (forall varlist phi) phi))
 )
 
+;-------------------
+; Rule ite_simplify
+;-------------------
+
+; program: $ite_simplify_small_step
+; args:
+; - formula Bool: A boolean formula.
+; return: >
+;   The result from applying one of the following equivalence-preserving 
+;   transformations, to `formula`:
+;   - (ite ⊤ 𝑡1 𝑡2) ⇒ 𝑡1
+;   - (ite ⊥ 𝑡1 𝑡2) ⇒ 𝑡2
+;   - (ite 𝜓 𝑡 𝑡) ⇒ 𝑡
+;   - (ite ¬𝜑 𝑡1 𝑡2) ⇒ (ite 𝜑 𝑡2 𝑡1)
+;   - (ite 𝜓 (ite 𝜓 𝑡1 𝑡2) 𝑡3) ⇒ (ite 𝜓 𝑡1 𝑡3)
+;   - (ite 𝜓 𝑡1 (ite 𝜓 𝑡2 𝑡3) ⇒ (ite 𝜓 𝑡1 𝑡3)
+;   - (ite 𝜓⊤⊥) ⇒ 𝜓
+;   - (ite 𝜓⊥⊤) ⇒ ¬𝜓
+;   - (ite 𝜓 ⊤ 𝜑) ⇒ 𝜓 ∨ 𝜑
+;   - (ite 𝜓 𝜑 ⊥) ⇒ 𝜓 ∧ 𝜑
+;   - (ite 𝜓 ⊥ 𝜑) ⇒ ¬ 𝜓 ∧ 𝜑
+;   - (ite 𝜓 𝜑 ⊤) ⇒ ¬ 𝜓 ∨ 𝜑
+(program $ite_simplify_small_step ((t1 Bool) (t2 Bool) (t3 Bool) (psi Bool) (phi Bool))
+
+         :signature (Bool) Bool
+
+         (
+          (
+           ($ite_simplify_small_step (ite true t1 t2))
+
+           t1
+           )
+
+          (
+           ($ite_simplify_small_step (ite false t1 t2))
+
+           t2
+           )
+
+          (
+           ($ite_simplify_small_step (ite psi t1 t1))
+
+           t1
+           )
+
+          (
+           ($ite_simplify_small_step (ite (not psi) t1 t2))
+
+           (ite psi t2 t1)
+           )
+
+          (
+           ($ite_simplify_small_step (ite psi (ite psi t1 t2) t3))
+
+           (ite psi t1 t3)
+           )
+
+          (
+           ($ite_simplify_small_step (ite psi t1 (ite psi t2 t3)))
+
+           (ite psi t1 t3)
+           )
+
+          (
+           ($ite_simplify_small_step (ite psi true false))
+
+           psi
+           )
+
+          (
+           ($ite_simplify_small_step (ite psi false true))
+
+           (not psi)
+           )
+
+          (
+           ($ite_simplify_small_step (ite psi true phi))
+
+           (or psi phi)
+           )
+
+          (
+           ($ite_simplify_small_step (ite psi phi false))
+
+           (and psi phi)
+           )
+
+          (
+           ($ite_simplify_small_step (ite psi false phi))
+
+           (and (not psi) phi)
+           )
+
+          (
+           ($ite_simplify_small_step (ite psi phi true))
+
+           (or (not psi) phi)
+           )
+
+          (; { psi is not an ite construction }
+           ($ite_simplify_small_step psi)
+           
+           psi
+           )
+          )
+         )
+
+; program: $ite_simplify_rec
+; args:
+; - formula A: A boolean formula.
+; return: >
+;   The result from applying the equivalence-preserving transformations described
+;   in `$ite_simplify_small_step`, until a fixed point is reached.
+(program $ite_simplify_rec ((ite_term Bool))
+
+  :signature (Bool) Bool
+
+  (
+   (
+    ($ite_simplify_rec ite_term)
+
+    (eo::define 
+
+     (
+      (ite_term_reduced ($ite_simplify_small_step ite_term))
+      )
+
+     (eo::ite ($eo_is_eq ite_term_reduced ite_term)
+
+              ite_term
+
+              ; { not ($eo_is_eq item_term_reduced ite_term) }
+              ($ite_simplify_rec ite_term_reduced)))
+    )
+
+   ( 
+    ($ite_simplify_rec ite_term)
+
+    ite_term
+    )
+   )
+  )
+
+; program: $check_ite_simplify
+; args:
+; - lhs Bool: >
+;   left-hand side term present in the conclusion passed to `ite_simplify`
+; - rhs Bool: >
+;   right-hand side term present in the conclusion passed to `ite_simplify`
+; return: >
+;   A boolean indicating if `div` can be reduced to `term`, using the rules
+;   in `$ite_simplify_rec`.
+(program $check_ite_simplify ((lhs Bool) (rhs Bool))
+
+  :signature (Bool Bool) Bool
+
+  (
+   (
+    ($check_ite_simplify lhs rhs)
+
+    ($eo_is_eq ($ite_simplify_rec lhs) rhs)
+    )
+   )
+  )
+
+; rule: ite_simplify
+; requires: >
+;  For `rhs` in conclusion to be the canonical form of `lhs`, according to
+;  rules in `$ite_simplify_rec`.
+; conclusion-explicit: Conclusion of the form (@cl (= lhs rhs)),
+(declare-rule ite_simplify ((lhs Bool) (rhs Bool))
+  :requires ((($check_ite_simplify lhs rhs) true))
+  :conclusion-explicit (@cl (= lhs rhs))
+)
 
 ;--------------------
 ; Rule qnt_rm_unused
@@ -1116,6 +1607,247 @@
   :conclusion-explicit (@cl (= lhs rhs))
 )
 
+;------------------
+; Rule eq_simplify
+;------------------
+
+; program: $eq_simplify_small_step
+; args:
+; - exp A: An arith expression.
+; return: >
+;   The result from applying one of the following equivalence-preserving 
+;   transformations, to `exp`:
+;   - 𝑡 ≈ 𝑡 ⇒ ⊤
+;   - (𝑡1 ≈ 𝑡2) ⇒ ⊥ if 𝑡1 and 𝑡2 are different numeric constants.
+;   - ¬(𝑡 ≈ 𝑡) ⇒ ⊥ if 𝑡 is a numeric constant
+(program $eq_simplify_small_step ((A Type) (t1 A) (t2 A) (eq Bool))
+
+         :signature (Bool) Bool
+
+         (
+          (
+           ($eq_simplify_small_step (= t1 t1))
+
+           true
+           )
+
+          (; { t1 != t2 }
+           ($eq_simplify_small_step (= t1 t2))
+
+           (eo::ite (eo::and ($is_numeric_literal t1)
+                             ($is_numeric_literal t2))
+                    
+                    false
+
+                    (= t1 t2))
+           )
+
+          (
+           ($eq_simplify_small_step (not (= t1 t1)))
+
+           (eo::ite ($is_numeric_literal t1)
+                    
+                    false
+
+                    (not (= t1 t1)))
+           )
+
+          (
+           ($eq_simplify_small_step eq)
+           
+           eq
+           )
+          )
+         )
+
+; program: $check_eq_simplify
+; args:
+; - lhs Bool: >
+;   left-hand side term present in the conclusion passed to `eq_simplify`
+; - rhs Bool: >
+;   right-hand side term present in the conclusion passed to `eq_simplify`
+; return: >
+;   A boolean indicating if `lhs` can be reduced to `rhs`, using the rules
+;   in `$eq_simplify_small_step`.
+(program $check_eq_simplify ((lhs Bool) (rhs Bool))
+  :signature (Bool Bool) Bool
+  (
+   (
+    ($check_eq_simplify lhs rhs)
+
+    ($eo_is_eq ($eq_simplify_small_step lhs) rhs)
+    )
+   )
+  )
+
+; rule: eq_simplify
+; requires: >
+;  For `rhs` in conclusion to be the canonical form of `lhs`, according to
+;  rules in `$eq_simplify_small_step`.
+; conclusion-explicit: Conclusion of the form (@cl (= lhs rhs)),
+(declare-rule eq_simplify ((A Type) (lhs A) (rhs A))
+  :requires ((($check_eq_simplify lhs rhs) true))
+  :conclusion-explicit (@cl (= lhs rhs))
+)
+
+
+;-------------------
+; Rule div_simplify
+;-------------------
+
+; program: $div_simplify_small_step
+; args:
+; - exp A: An arith expression.
+; return: >
+;   The result from applying one of the following value-preserving 
+;   transformations, to `exp`:
+;   - 𝑡/𝑡 ⇒ 1
+;   - 𝑡/1 ⇒ 𝑡
+;   - 𝑡1/𝑡2 ⇒ 𝑡3, if 𝑡1 and 𝑡2 are constants and 𝑡3 is 𝑡1 divided by 𝑡2 according 
+;     to the semantics of the current theory.
+(program $div_simplify_small_step ((A Type) (t1 A) (t2 A))
+         :signature (A) A
+         (
+          (
+           ($div_simplify_small_step (/ t1 t1))
+
+           (eo::ite ($eo_is_eq (eo::typeof t1) Int)
+
+                    1
+                    
+                    ; { not ($eo_is_eq (eo::typeof t1) Int) }
+                    1/1)
+           )
+
+          (
+           ($div_simplify_small_step (/ t1 1))
+
+           t1
+           )
+
+          (
+           ($div_simplify_small_step (/ t1 1/1))
+
+           t1
+           )
+
+          (
+           ($div_simplify_small_step (/ t1 t2))
+
+           (eo::ite (eo::and ($is_numeric_literal t1)
+                             ($is_numeric_literal t2))
+
+                    (eo::ite ($eo_is_eq (eo::typeof t1) Int)
+
+                             (eo::zdiv t1 t2)
+                             
+                             ; { not ($eo_is_eq (eo::typeof t1) Int) }
+                             (eo::qdiv t1 t2))
+
+                    ; { not (eo::and ($is_numeric_literal t1)
+                    ;                ($is_numeric_literal t2)) }
+                    (/ t1 t2)
+                    )
+           )
+
+          (; { t1 is not a division }
+           ($div_simplify_small_step t1)
+           
+           t1
+          )
+         )
+         )
+
+; program: $div_simplify_rec
+; args:
+; - term A: An arithmetic term.
+; return: >
+;   The result from applying the value-preserving transformations described
+;   in `$div_simplify_small_step`, until a fixed point is reached.
+(program $div_simplify_rec ((A Type) (num A) (den A) (term A))
+
+  :signature (A) A
+
+  (
+   (
+    ($div_simplify_rec (/ num den))
+
+    (eo::define 
+
+     (
+      (num_reduced ($div_simplify_small_step num))
+      )
+
+     (eo::ite ($eo_is_eq num_reduced num)
+
+              (eo::define 
+
+               (
+                (den_reduced ($div_simplify_small_step den))
+                )
+
+               (eo::ite ($eo_is_eq den_reduced den)
+
+                        (eo::define 
+
+                         (
+                          (div_reduced ($div_simplify_small_step 
+                                        (/ num_reduced den_reduced)))
+                          )
+
+                         (eo::ite ($eo_is_eq div_reduced (/ num_reduced den_reduced))
+
+                                  div_reduced
+                                  
+                                  ; {not ($eo_is_eq div_reduced (/ num_reduced den_reduced))}
+                                  ($div_simplify_rec div_reduced)))
+
+                        ; { not ($eo_is_eq den_reduced den) }
+                        ($div_simplify_rec (/ num_reduced den_reduced))))
+              
+              ; { not ($eo_is_eq num_reduced num) }
+              ($div_simplify_rec (/ num_reduced den))))
+    )
+
+   ( 
+    ($div_simplify_rec term)
+
+    term
+    )
+   )
+  )
+
+; program: $check_div_simplify
+; args:
+; - div A: >
+;   left-hand side term present in the conclusion passed to `div_simplify`
+; - term A: >
+;   right-hand side term present in the conclusion passed to `div_simplify`
+; return: >
+;   A boolean indicating if `div` can be reduced to `term`, using the rules
+;   in `$div_simplify_rec`.
+(program $check_div_simplify ((A Type) (num A) (den A) (term A))
+
+  :signature (A A) Bool
+
+  (
+   (
+    ($check_div_simplify (/ num den) term)
+
+    ($eo_is_eq ($div_simplify_rec (/ num den)) term)
+    )
+   )
+  )
+
+; rule: div_simplify
+; requires: >
+;  For `rhs` in conclusion to be the canonical form of `lhs`, according to
+;  rules in `$div_simplify_rec`.
+; conclusion-explicit: Conclusion of the form (@cl (= lhs rhs)),
+(declare-rule div_simplify ((A Type) (lhs A) (rhs A))
+  :requires ((($check_div_simplify lhs rhs) true))
+  :conclusion-explicit (@cl (= lhs rhs))
+)
 
 ;--------------------
 ; Rule prod_simplify
@@ -1169,6 +1901,378 @@
   :conclusion-explicit (@cl (= lhs rhs))
 )
 
+;---------------------------
+; Rule unary_minus_simplify
+;---------------------------
+
+; program: $check_unary_minus_simplify
+; args:
+; - lhs A: >
+;   left-hand side term present in the conclusion passed to `unary_minus_simplify`
+; - rhs A: >
+;   right-hand side term present in the conclusion passed to `unary_minus_simplify`
+; return: >
+;   A boolean indicating if `lhs` can be reduced to `rhs`, applying, either,
+;   double negation or evaluating the negation, over `lhs`.
+(program $check_unary_minus_simplify ((A Type) (t A) (u A))
+  :signature (A A) Bool
+  (
+   (
+    ($check_unary_minus_simplify (- (- t)) t)
+
+    true
+    )
+
+   (
+    ($check_unary_minus_simplify (- t) u)
+
+    (eo::ite (eo::and ($is_numeric_literal t)
+                      ($is_numeric_literal u))
+
+             (eo::ite ($eo_is_eq u (eo::neg t))
+
+                      true
+                      ; { not ($eo_is_eq u (eo::neg t)) }
+                      false)
+
+             ; { not (eo::and ($is_numeric_literal t)
+             ;                ($is_numeric_literal u)) }
+             false)
+                      
+    )
+   )
+  )
+
+; rule: unary_minus_simplify
+; requires: >
+;  For `rhs` in conclusion to be the canonical form of `lhs`, according to
+;  rules in `$unary_minus_simplify_rec`.
+; conclusion-explicit: Conclusion of the form (@cl (= lhs rhs)),
+(declare-rule unary_minus_simplify ((A Type) (lhs A) (rhs A))
+  :requires ((($check_unary_minus_simplify lhs rhs) true))
+  :conclusion-explicit (@cl (= lhs rhs))
+)
+
+;---------------------
+; Rule minus_simplify
+;---------------------
+
+; program: $minus_simplify_small_step
+; args:
+; - term A: An arithmetic term.
+; return: >
+;   The result from applying one of the following value-preserving 
+;   transformations, to `term`:
+;   - 𝑡 − 𝑡 ⇒ 0
+;   - 𝑡1 − 𝑡2 ⇒ 𝑡3, where 𝑡1 and 𝑡2 are numerical constants and 𝑡3 is 𝑡2 subtracted 
+;     from 𝑡1.
+;   - 𝑡 − 0 ⇒ 𝑡
+;   - 0 − 𝑡 ⇒ − 𝑡
+(program $minus_simplify_small_step ((A Type) (t1 A) (t2 A))
+
+         :signature (A) A
+
+         (
+          (
+           ($minus_simplify_small_step (- t1 t1))
+
+           (eo::ite ($eo_is_eq (eo::typeof t1) Int)
+
+                    0
+                    
+                    ; { not ($eo_is_eq (eo::typeof t1) Int) }
+                    0/1)
+           )
+
+          (
+           ($minus_simplify_small_step (- t1 0))
+
+           t1
+           )
+
+          (
+           ($minus_simplify_small_step (- t1 0/1))
+
+           t1
+           )
+
+          (
+           ($minus_simplify_small_step (- 0 t1))
+
+           (- t1)
+           )
+
+          (
+           ($minus_simplify_small_step (- 0/1 t1))
+
+           (- t1)
+           )
+
+          (
+           ($minus_simplify_small_step (- t1 t2))
+
+           (eo::ite (eo::and ($is_numeric_literal t1)
+                             ($is_numeric_literal t2))
+
+                    (eo::add t1 (eo::neg t2))
+
+                    ; { not (eo::and ($is_numeric_literal t1)
+                    ;                ($is_numeric_literal t2)) }
+                    (- t1 t2))
+           )
+
+          (
+           ($minus_simplify_small_step t1)
+
+           t1
+           )
+          )
+         )
+
+; program: $minus_simplify_rec
+; args:
+; - term A: An arithmetic term.
+; return: >
+;   The result from applying the value-preserving transformations described
+;   in `$minus_simplify_small_step`, until a fixed point is reached.
+(program $minus_simplify_rec ((A Type) (minus_term A))
+
+  :signature (A) A
+
+  (
+   (
+    ($minus_simplify_rec minus_term)
+
+    (eo::define 
+
+     (
+      (minus_term_reduced ($minus_simplify_small_step minus_term))
+      )
+
+     (eo::ite ($eo_is_eq minus_term_reduced minus_term)
+
+              minus_term
+
+              ; { not ($eo_is_eq item_term_reduced minus_term) }
+              ($minus_simplify_rec minus_term_reduced)))
+    )
+
+   ( 
+    ($minus_simplify_rec minus_term)
+
+    minus_term
+    )
+   )
+  )
+
+; program: $check_minus_simplify
+; args:
+; - lhs A: >
+;   left-hand side term present in the conclusion passed to `minus_simplify`
+; - rhs A: >
+;   right-hand side term present in the conclusion passed to `minus_simplify`
+; return: >
+;   A boolean indicating if `lhs` can be reduced to `rhs`, using the rules
+;   in `$minus_simplify_rec`.
+(program $check_minus_simplify ((A Type) (lhs A) (rhs A))
+  :signature (A A) Bool
+  (
+   (
+    ($check_minus_simplify lhs rhs)
+
+    ($eo_is_eq ($minus_simplify_rec lhs) rhs)
+    )
+   )
+  )
+
+; rule: minus_simplify
+; requires: >
+;  For `rhs` in conclusion to be the canonical form of `lhs`, according to
+;  rules in `$minus_simplify_rec`.
+; conclusion-explicit: Conclusion of the form (@cl (= lhs rhs)),
+(declare-rule minus_simplify ((A Type) (lhs A) (rhs A))
+  :requires ((($check_minus_simplify lhs rhs) true))
+  :conclusion-explicit (@cl (= lhs rhs))
+)
+
+;-------------------
+; Rule sum_simplify
+;-------------------
+
+; program: $check_sum_simplify
+; args:
+; - lhs A: >
+;   left-hand side term present in the conclusion passed to `sum_simplify`
+; - rhs A: >
+;   right-hand side term present in the conclusion passed to `sum_simplify`
+; return: >
+;   A boolean indicating if `lhs` can be reduced to `rhs`, using only
+;   reordering of terms and evaluation.
+(program $check_sum_simplify ((A Type) (lhs A) (rhs A))
+  :signature (A A) Bool
+  (
+   (
+    ($check_sum_simplify lhs rhs)
+
+    ($eo_is_eq ($small_step_evaluator_arith_term
+                ($assoc_evaluatable_terms 
+                 ($reorder_arith_term lhs)))
+
+               rhs)
+    )
+   )
+  )
+
+; rule: sum_simplify
+; requires: >
+;  For `rhs` in conclusion to be the canonical form of `lhs`, according to
+;  rules in `$sum_simplify_rec`.
+; conclusion-explicit: Conclusion of the form (@cl (= lhs rhs)),
+(declare-rule sum_simplify ((A Type) (lhs A) (rhs A))
+  :requires ((($check_sum_simplify lhs rhs) true))
+  :conclusion-explicit (@cl (= lhs rhs))
+)
+
+
+;--------------------
+; Rule comp_simplify
+;--------------------
+
+; program: $comp_simplify_small_step
+; args:
+; - formula Bool: A formula of the form 𝑡1 ⋈ 𝑡2, where ⋈ ∈ {<, >, ≤, ≥}
+; return: >
+;   The result from applying one of the following equivalence-preserving 
+;   transformations:
+;   - 𝑠1 < 𝑠2 ⇒⊤ if 𝑠1, 𝑠2 are numerical constants and 𝑠1 is strictly less than 𝑠2
+;   - 𝑠1 < 𝑠2 ⇒⊥ if 𝑠1, 𝑠2 are numerical constants and 𝑠1 is greater or equal than 𝑠2
+;   - 𝑠1 ≤ 𝑠2 ⇒⊤ if 𝑠1, 𝑠2 are numerical constants and 𝑠1 is less or equal than 𝑠2
+;   - 𝑠1 ≤ 𝑠2 ⇒⊥ if 𝑠1, 𝑠2 are numerical constants and 𝑠1 is strictly greater than 𝑠2
+;   - 𝑠 < 𝑠 ⇒ ⊥
+;   - 𝑠 ≤ 𝑠 ⇒ ⊤
+;   - 𝑠1 ≥ 𝑠2 ⇒ 𝑠2 ≤ 𝑠1
+;   - 𝑠1 < 𝑠2 ⇒ ¬(𝑠2 ≤ 𝑠1)
+;   - 𝑠1 > 𝑠2 ⇒ ¬(𝑠1 ≤ 𝑠2)
+(program $comp_simplify_small_step ((A Type) (t1 A) (t2 A))
+         :signature (Bool) Bool
+         (
+          (
+           ($comp_simplify_small_step (< t1 t1))
+
+           false
+           )
+
+          (
+           ($comp_simplify_small_step (<= t1 t1))
+
+           true
+           )
+
+          (
+           ($comp_simplify_small_step (>= t1 t2))
+
+           (<= t2 t1)
+           )
+
+          (
+           ($comp_simplify_small_step (> t1 t2))
+
+           (not (<= t1 t2))
+           )
+
+          (; { t1 != t2 }
+           ($comp_simplify_small_step (<= t1 t2))
+
+           (eo::ite (eo::and ($is_numeric_literal t1)
+                             ($is_numeric_literal t2))
+
+                    (eo::not (eo::gt t1 t2))
+
+                    ; { not (eo::and ($is_numeric_literal t1)
+                    ;                ($is_numeric_literal t2))}
+                    (<= t1 t2)
+                    )
+           )
+
+          (; { t1 != t2 }
+           ($comp_simplify_small_step (< t1 t2))
+
+           (eo::ite (eo::and ($is_numeric_literal t1)
+                             ($is_numeric_literal t2))
+
+                    (eo::gt t2 t1)
+
+                    ; { not (eo::and ($is_numeric_literal t1)
+                    ;                ($is_numeric_literal t2))}
+                    (not (<= t2 t1))
+                    )
+           )
+          )
+         )
+
+; program: $comp_simplify_rec
+; args:
+; - formula Bool: A formula.
+; return: >
+;   The result from applying the equivalence-preserving transformations described
+;   in `$comp_simplify_small_step`, until a fixed point is reached.
+(program $comp_simplify_rec ((ineq Bool) (A Type) (order (-> A A Bool)) 
+                             (lhs A) (rhs A))
+  :signature (Bool) Bool
+  (
+   (
+    ($comp_simplify_rec (order lhs rhs))
+
+    (eo::define 
+
+     ((order_reduced ($comp_simplify_small_step (order lhs rhs))))
+
+     (eo::ite ($eo_is_eq order_reduced (order lhs rhs))
+
+              order_reduced
+
+              ; { not ($eo_is_eq order_reduced (order lhs rhs)) }
+              ($comp_simplify_rec order_reduced)))
+    )
+
+   ( ; { ineq != order ...}
+     ($comp_simplify_rec ineq)
+
+     ineq
+     )
+    )
+  )
+
+; program: $check_comp_simplify
+; args:
+; - ineq Bool: >
+;   left-hand side inequality present in the conclusion passed to `comp_simplify`
+; - psi Bool: >
+;   right-hand side inequality present in the conclusion passed to `comp_simplify`
+; return: >
+;   A boolean indicating if `ineq` can be reduced to `psi`, using the rules
+;   in `$comp_simplify_rec`.
+(program $check_comp_simplify ((A Type) (lhs A) (rhs A) (psi Bool)
+                               (order (-> A A Bool)))
+  :signature (Bool Bool) Bool
+  (
+   (
+    ($check_comp_simplify (order lhs rhs) psi) 
+
+    ($eo_is_eq ($comp_simplify_rec (order lhs rhs)) psi)
+    )
+   )
+  )
+
+; rule: comp_simplify
+; requires: >
+;  For `rhs` in conclusion to be the canonical form of `lhs`, according to
+;  rules in `$comp_simplify_rec`.
+; conclusion-explicit: Conclusion of the form (@cl (= lhs rhs)),
+(declare-rule comp_simplify ((lhs Bool) (rhs Bool))
+  :requires ((($check_comp_simplify lhs rhs) true))
+  :conclusion-explicit (@cl (= lhs rhs))
+)
 
 ;-------------------
 ; Rule eq_symmetric
