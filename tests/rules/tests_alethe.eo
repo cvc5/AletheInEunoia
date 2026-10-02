@@ -1097,3 +1097,97 @@
       :rule and_intro
       :premises (premise_and_intro_8_1 premise_and_intro_8_2 premise_and_intro_8_3
                  premise_and_intro_8_4 premise_and_intro_8_5))
+;----------------
+; $check_qnt_join
+;----------------
+; Some constants to build terms, for testing purposes.
+(declare-const U Type)
+(declare-const a U)
+(declare-const b U)
+(declare-const c U)
+(declare-const quantifier (-> @VarList Bool Bool))
+
+(step $test_$check_qnt_join_1 true
+      :rule $assert_eq 
+      :args (($check_qnt_join forall (@varlist a) (@varlist b) (@varlist a b))
+
+             true))
+
+(step $test_$check_qnt_join_1b true
+      :rule $assert_eq 
+      :args (($check_qnt_join exists (@varlist a) (@varlist b) (@varlist a b))
+
+             true))
+
+(step $test_$check_qnt_join_1c true
+      :rule $assert_eq 
+      :args (($check_qnt_join quantifier (@varlist a) (@varlist b) (@varlist a b))
+
+             false))
+
+(step $test_$check_qnt_join_2 true
+      :rule $assert_eq 
+      :args (($check_qnt_join forall (@varlist a b) (@varlist c) (@varlist a b c))
+
+             true))
+
+(step $test_$check_qnt_join_2b true
+      :rule $assert_eq 
+      :args (($check_qnt_join exists (@varlist a b) (@varlist c) (@varlist a b c))
+
+             true))
+
+(step $test_$check_qnt_join_2c true
+      :rule $assert_eq 
+      :args (($check_qnt_join quantifier (@varlist a b) (@varlist c) (@varlist a b c))
+
+             false))
+
+(step $test_$check_qnt_join_3 true
+      :rule $assert_eq 
+      :args (($check_qnt_join forall (@varlist a b) (@varlist c) (@varlist a b c c))
+
+             false))
+
+(step $test_$check_qnt_join_3b true
+      :rule $assert_eq 
+      :args (($check_qnt_join exists (@varlist a b) (@varlist c) (@varlist a b c c))
+
+             false))
+
+(step $test_$check_qnt_join_3c true
+      :rule $assert_eq 
+      :args (($check_qnt_join quantifier (@varlist a b) (@varlist c) (@varlist a b c c))
+
+             false))
+
+;---------
+; qnt_join
+;---------
+; Some constants to build terms, for testing purposes.
+(declare-const U Type)
+(declare-const a U)
+(declare-const b U)
+(declare-const c U)
+(declare-const body Bool)
+
+(step $test_qnt_join_1
+      (@cl (= (forall (@varlist a) (forall (@varlist b) body))
+              (forall (@varlist a b) body)))
+      :rule qnt_join)
+
+(step $test_qnt_join_1b
+      (@cl (= (exists (@varlist a) (exists (@varlist b) body))
+              (exists (@varlist a b) body)))
+      :rule qnt_join)
+
+(step $test_qnt_join_2
+      (@cl (= (exists (@varlist a b) (exists (@varlist c) body))
+              (exists (@varlist a b c) body)))
+      :rule qnt_join)
+
+(step $test_qnt_join_2b
+      (@cl (= (forall (@varlist a b) (forall (@varlist c) body))
+              (forall (@varlist a b c) body)))
+      :rule qnt_join)
+
