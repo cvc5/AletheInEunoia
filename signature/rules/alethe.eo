@@ -265,10 +265,10 @@
 ;   considered for resolution.
 ; - already_tried_pivot_clauses Bool: >
 ;   And-list of clauses already considered for resolution with the current
-;   pivot (firs element in `pivots`)
+;   pivot (first element in `pivots`)
 ; - already_tried_not_pivot_clauses Bool: >
 ;   And-list of clauses already considered for resolution with the negation
-;   of the current pivot (firs element in `pivots`)
+;   of the current pivot (first element in `pivots`)
 ; - pivots @VarList: A list of pivots used during resolution.
 ; - conclusion Bool: Conclusion provided to the rule.
 ; return: >
