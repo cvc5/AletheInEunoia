@@ -205,6 +205,6 @@
 ; Strings
 ;--------
 
-; We declaring string literals as inhabitants of the String type.
+; We declare string literals as inhabitants of the String type.
 (declare-const String Type)
 (declare-consts <string> String)
