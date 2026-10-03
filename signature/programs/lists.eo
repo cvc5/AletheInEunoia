@@ -294,12 +294,12 @@
 ; program: f_list_filter
 ; args:
 ; - f (-> A B B): Operator used to build the f-list.
-; - f_nil B: The "nil" element of variadic operator f.
-; - list B: An f-list, where f is a variadic operator with some "nil" element.
+; - f_nil B: The "nil" terminator of variadic operator `f`.
+; - list B: An f-list.
 ; - flags @VarList: List of flags indicating which element must be removed.
 ; return: >
-;   Removes element in index i from "list", if the flag in position i from 
-;   "flags" is true.
+;   Removes element in index i from `list`, if the flag in position i from 
+;   `flags` is true.
 (program $f_list_filter ((A Type) (B Type) (f (-> A B B)) (nil_elem B)
                          (hd A) (f_tl B :list) (varlist_tl @VarList :list))
          :signature ((-> A B B) B B @VarList) B
@@ -418,6 +418,91 @@
    )
   )
 
+; program: $f_list_zip
+; args:
+; - f (-> A A A): Constructor of f-lists.
+; - nil A: nil-terminator of f-lists.
+; - list1 A: An arbitrary f-list.
+; - list2 A: An arbitrary f-list.
+; - pair_constructor (-> A A A): Constructor of pairs to be used when "ziping"
+; return: >
+;   An f-list resulting from performing a zip operation between `list1` and
+;   `list2`, where each pair generated is built with `pair_constructor`
+; note: PRE : { `list1` and `list2` have the same length }
+(program $f_list_zip ((A Type) (f (-> A A A)) (pair_constructor (-> A A A))
+                      (nil A) (hd_l A) (tl_l A) (hd_r A) (tl_r A))
+         :signature ((-> A A A) A A A (-> A A A)) A
+         (
+          (
+           ($f_list_zip f nil (f hd_l tl_l) (f hd_r tl_r) pair_constructor)
+
+           (f (pair_constructor hd_l hd_r)
+              ($f_list_zip f nil tl_l tl_r pair_constructor))
+           )
+
+          (
+           ($f_list_zip f nil nil nil pair_constructor)
+
+           nil
+           )
+          )
+         )
+
+; program: $f_list_map_zip
+; args:
+; - f (-> A A A): Constructor of f-lists.
+; - nil A: nil-terminator of f-lists.
+; - list1 A: An arbitrary f-list of f-lists.
+; - list2 A: An arbitrary f-list of f-lists.
+; - pair_constructor (-> A A A): Constructor of pairs to be used when "ziping"
+; return: >
+;   An f-list resulting from performing a zip operation between each element of
+;   `list1` and `list2` (which are f-lists themselves), where each pair 
+;   generated is built with `pair_constructor`.
+; note: PRE : { `list1` and `list2` have the same length }
+(program $f_list_map_zip ((A Type) (f (-> A A A)) (pair_constructor (-> A A A))
+                          (nil A) (hd_l A) (tl_l A) (hd_r A) (tl_r A))
+         :signature ((-> A A A) A A A (-> A A A)) A
+         (
+          (
+           ($f_list_map_zip f nil (f hd_l tl_l) (f hd_r tl_r) pair_constructor)
+           
+           (f ($f_list_zip f nil hd_l hd_r pair_constructor)
+              ($f_list_map_zip f nil tl_l tl_r pair_constructor))
+           )
+
+          (
+           ($f_list_map_zip f nil nil nil pair_constructor)
+           
+           nil
+           )
+          )
+         )
+
+; program: $f_list_repeat_elem
+; args:
+; - f (-> A A A): f-lists constructor.
+; - elem A: Element to be repeated within the list to be constructed.
+; - nil A: nil terminator of f-lists.
+; - n Int: Amount of times that we want for element `elem` to be repeated.
+; return: An f-list of length `n`, consisting only of the element `elem`.
+(program $f_list_repeat_elem ((A Type) (f (-> A A A)) (elem A) (nil A) (n Int))
+         :signature ((-> A A A) A A Int) A
+         (
+          (
+           ($f_list_repeat_elem f elem nil 0)
+           
+           nil
+           )
+
+          (; { n > 0, by PRE }
+           ($f_list_repeat_elem f elem nil n)
+           
+           ($f_list_cons f elem ($f_list_repeat_elem f elem nil (eo::add n (eo::neg 1))))
+           )
+          )
+         )
+
 ; program: $to_nil_terminated_f_list
 ; args:
 ; - f (-> A A A): Constructor of f-lists, that is righ-assoc-nil.
@@ -518,7 +603,6 @@
            )
           )
          )
-
 
 ;-------------
 ; Reflection
