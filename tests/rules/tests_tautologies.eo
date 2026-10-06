@@ -697,36 +697,36 @@
       :args (($and_simplify_rec_remove_repeated (and a b c a)) (and b c a)))
 
 ;-----------------------------
-; $and_simplify_rec_exclud_mid
+; $and_simplify_rec_contradiction
 ;-----------------------------
 ; Some constants to build terms, for testing purposes.
 (declare-const a Bool)
 (declare-const b Bool)
 (declare-const c Bool)
 
-(step $test_$and_simplify_rec_exclud_mid_1 true 
+(step $test_$and_simplify_rec_contradiction_1 true 
       :rule $assert_eq 
-      :args (($and_simplify_rec_exclud_mid false) false))
+      :args (($and_simplify_rec_contradiction false) false))
 
-(step $test_$and_simplify_rec_exclud_mid_2 true 
+(step $test_$and_simplify_rec_contradiction_2 true 
       :rule $assert_eq 
-      :args (($and_simplify_rec_exclud_mid (and a (not a))) false))
+      :args (($and_simplify_rec_contradiction (and a (not a))) false))
 
-(step $test_$and_simplify_rec_exclud_mid_3 true 
+(step $test_$and_simplify_rec_contradiction_3 true 
       :rule $assert_eq 
-      :args (($and_simplify_rec_exclud_mid (and b a (not a))) false))
+      :args (($and_simplify_rec_contradiction (and b a (not a))) false))
 
-(step $test_$and_simplify_rec_exclud_mid_4 true 
+(step $test_$and_simplify_rec_contradiction_4 true 
       :rule $assert_eq 
-      :args (($and_simplify_rec_exclud_mid (and b c a (not a))) false))
+      :args (($and_simplify_rec_contradiction (and b c a (not a))) false))
 
-(step $test_$and_simplify_rec_exclud_mid_5 true 
+(step $test_$and_simplify_rec_contradiction_5 true 
       :rule $assert_eq 
-      :args (($and_simplify_rec_exclud_mid (and (not a) true b c true a)) false))
+      :args (($and_simplify_rec_contradiction (and (not a) true b c true a)) false))
 
-(step $test_$and_simplify_rec_exclud_mid_6 true 
+(step $test_$and_simplify_rec_contradiction_6 true 
       :rule $assert_eq 
-      :args (($and_simplify_rec_exclud_mid (and (not a) (not a) true b c true a)) false))
+      :args (($and_simplify_rec_contradiction (and (not a) (not a) true b c true a)) false))
 
 ;-------------
 ; and_simplify

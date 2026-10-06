@@ -530,7 +530,7 @@
 ; return: >
 ;   The result from applying the following equivalence-preserving 
 ;   transformation, until a fixed-point is reached:
-;   - 𝜑1 ... ∧ ⊤ ∧ ... ∧ 𝜑n ⇒ 𝜑1 ... ∧ ⊤ ∧ ... ∧ 𝜑n
+;   - 𝜑1 ∧ ... ∧ ⊤ ∧ ... ∧ 𝜑n ⇒ 𝜑1 ∧ ... ∧ 𝜑n
 ; note: PRE : { $remove_leading_negations_in_conjuncts `formula` = `formula`}
 (program $and_simplify_rec_remove_true ((conjunct Bool) (conjuncts Bool :list))
   :signature (Bool) Bool
@@ -620,8 +620,8 @@
 ; return: >
 ;   The result from applying the following equivalence-preserving 
 ;   transformation, until a fixed-point is reached:
-;   - 𝜑1 ∧ ⋯ ∧ 𝜑𝑛 ⇒ 𝜑1 ∧ ⋯ ∧ 𝜑𝑛′ where the right-hand side a repeated 
-;     literal removed.
+;   - 𝜑1 ∧ ⋯ ∧ 𝜑𝑛 ⇒ 𝜑1 ∧ ⋯ ∧ 𝜑𝑛′ where, in the right-hand side, a repeated 
+;     literal was removed.
 ; note: PRE : { $remove_leading_negations_in_conjuncts `formula` = `formula`}
 (program $and_simplify_rec_remove_repeated ((conjunct Bool) (conjuncts Bool :list))
   :signature (Bool) Bool
@@ -645,7 +645,7 @@
    )
   )
 
-; program: $and_simplify_rec_exclud_mid
+; program: $and_simplify_rec_contradiction
 ; args:
 ; - formula Bool: A formula.
 ; return: >
@@ -654,11 +654,11 @@
 ;   - 𝜑1 ∧ ⋯ ∧ 𝜑𝑖 ∧ ⋯ ∧ 𝜑𝑗 ∧ ⋯ ∧ 𝜑𝑛 ⇒ ⊥,
 ;     where 𝜑𝑖, 𝜑𝑗 are such that one has the form ¬ 𝜓 and the other is 𝜓
 ; note: PRE : { $remove_leading_negations_in_conjuncts `formula` = `formula`}
-(program $and_simplify_rec_exclud_mid ((conjunct Bool) (conjuncts Bool :list))
+(program $and_simplify_rec_contradiction ((conjunct Bool) (conjuncts Bool :list))
   :signature (Bool) Bool
   (
    (
-    ($and_simplify_rec_exclud_mid (and (not conjunct) conjuncts))
+    ($and_simplify_rec_contradiction (and (not conjunct) conjuncts))
 
     (eo::ite ($f_list_contains_elem and conjunct conjuncts)
 
@@ -669,7 +669,7 @@
              (eo::define
 
               (
-               (conjuncts_excl ($and_simplify_rec_exclud_mid conjuncts))
+               (conjuncts_excl ($and_simplify_rec_contradiction conjuncts))
                )
 
               (eo::ite ($eo_is_eq conjuncts_excl false)
@@ -682,7 +682,7 @@
     )
 
    (
-    ($and_simplify_rec_exclud_mid (and conjunct conjuncts))
+    ($and_simplify_rec_contradiction (and conjunct conjuncts))
 
     (eo::ite ($f_list_contains_elem and (not conjunct) conjuncts)
 
@@ -693,7 +693,7 @@
              (eo::define
 
               (
-               (conjuncts_excl ($and_simplify_rec_exclud_mid conjuncts))
+               (conjuncts_excl ($and_simplify_rec_contradiction conjuncts))
                )
 
               (eo::ite ($eo_is_eq conjuncts_excl false)
@@ -706,7 +706,7 @@
     )
 
    ( ; { conjunct != and ... }
-    ($and_simplify_rec_exclud_mid conjunct)
+    ($and_simplify_rec_contradiction conjunct)
 
     conjunct
     )
@@ -719,7 +719,7 @@
 ; - rhs Bool: A formula.
 ; return: >
 ;   The boolean result from comparing with `rhs` the result of applying the 
-;   equivalence-preserving transformations `$and_simplify_small_step...` over
+;   equivalence-preserving transformations `$and_simplify_rec...` over
 ;   `lhs`.
 ; note: PRE : { $remove_leading_negations_in_conjuncts `lhs` = `lhs`
 ;               && $to_non_nil_terminated_f_list and true `rhs` = `rhs` }
@@ -766,13 +766,13 @@
                                  ; { not ($f_list_equal_mod_commut and lhs_absorbed rhs) }
                                  ; We try by looking for "excluded middle" instances.
                                  (eo::ite ($f_list_equal_mod_commut and
-                                                                    ($and_simplify_rec_exclud_mid lhs_absorbed)
+                                                                    ($and_simplify_rec_contradiction lhs_absorbed)
                                                                     rhs)
 
                                           true
 
                                           ; { not ($f_list_equal_mod_commut and
-                                          ;                          ($and_simplify_rec_exclud_mid lhs_absorbed)
+                                          ;                          ($and_simplify_rec_contradiction lhs_absorbed)
                                           ;                          rhs) }
                                           false)))))))
     )
