@@ -200,3 +200,14 @@
 ; TODO: we don't want for the user to employ directly this constructor
 (declare-const @substitution (-> @Substitute @Substitution @Substitution)
                :right-assoc-nil @substitution.nil)
+
+;--------
+; Strings
+;--------
+
+; We declare string literals as inhabitants of the String type.
+; NOTE: currently, string literals are only used for internal computation 
+; purposes, specifically, to be able to impose an "order" over identifiers of 
+; variables by means of mapping them into strings.
+(declare-const String Type)
+(declare-consts <string> String)
