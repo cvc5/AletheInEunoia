@@ -4099,7 +4099,7 @@
                                                          ($varlist_flag_members varlist 
                                                                                 bool_vars)))
 
-              (quantity_bool_vars (eo::add ($f_list_length @varlist bool_vars)
+              (quantity_bool_vars (eo::add ($f_list_count_up_to_nil @varlist bool_vars)
                                            (eo::neg 1)))
               )
 
@@ -4125,7 +4125,7 @@
                                   @varlist.nil 
                                   bool_vars_repeated 
                                   boolean_sequence 
-                                  @varlist))
+                                  @pair))
                 )
 
                (eo::define

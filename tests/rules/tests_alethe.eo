@@ -2353,7 +2353,7 @@
       :rule $assert_eq 
       :args (($instantiate_specific_bool_variables x1 
                                           (@varlist 
-                                           (@varlist ($f_list_cons @varlist x1 false)))
+                                           (@varlist (@pair x1 false)))
                                           forall)
 
              (and false)))
@@ -2362,10 +2362,10 @@
       :rule $assert_eq 
       :args (($instantiate_specific_bool_variables (or x1 x2)
                                           (@varlist 
-                                           (@varlist ($f_list_cons @varlist x1 false)
-                                                     ($f_list_cons @varlist x2 false))
-                                           (@varlist ($f_list_cons @varlist x1 true)
-                                                     ($f_list_cons @varlist x2 false)))
+                                           (@varlist (@pair x1 false)
+                                                     (@pair x2 false))
+                                           (@varlist (@pair x1 true)
+                                                     (@pair x2 false)))
                                           forall)
 
              ($f_list_cons and 
@@ -2376,14 +2376,14 @@
       :rule $assert_eq 
       :args (($instantiate_specific_bool_variables (or x1 x2)
                                           (@varlist 
-                                           (@varlist ($f_list_cons @varlist x1 false)
-                                                     ($f_list_cons @varlist x2 false))
-                                           (@varlist ($f_list_cons @varlist x1 true)
-                                                     ($f_list_cons @varlist x2 false))
-                                           (@varlist ($f_list_cons @varlist x1 false)
-                                                     ($f_list_cons @varlist x2 true))
-                                           (@varlist ($f_list_cons @varlist x1 true)
-                                                     ($f_list_cons @varlist x2 true)))
+                                           (@varlist (@pair x1 false)
+                                                     (@pair x2 false))
+                                           (@varlist (@pair x1 true)
+                                                     (@pair x2 false))
+                                           (@varlist (@pair x1 false)
+                                                     (@pair x2 true))
+                                           (@varlist (@pair x1 true)
+                                                     (@pair x2 true)))
                                           forall)
 
              ($f_list_cons and 
@@ -2400,14 +2400,14 @@
       :rule $assert_eq 
       :args (($instantiate_specific_bool_variables (or x1 x2)
                                           (@varlist 
-                                           (@varlist ($f_list_cons @varlist x1 false)
-                                                     ($f_list_cons @varlist x2 false))
-                                           (@varlist ($f_list_cons @varlist x1 true)
-                                                     ($f_list_cons @varlist x2 false))
-                                           (@varlist ($f_list_cons @varlist x1 false)
-                                                     ($f_list_cons @varlist x2 true))
-                                           (@varlist ($f_list_cons @varlist x1 true)
-                                                     ($f_list_cons @varlist x2 true)))
+                                           (@varlist (@pair x1 false)
+                                                     (@pair x2 false))
+                                           (@varlist (@pair x1 true)
+                                                     (@pair x2 false))
+                                           (@varlist (@pair x1 false)
+                                                     (@pair x2 true))
+                                           (@varlist (@pair x1 true)
+                                                     (@pair x2 true)))
                                           exists)
 
              ($f_list_cons or 
