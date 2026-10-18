@@ -205,6 +205,6 @@
 ; Pairs
 ;-------
 (declare-const @Pair Type)
-(declare-parameterized-const @pair ((Var Type :implicit) 
-                                    (Value Type :implicit))
-                             (-> Var Value @Pair))
+(declare-parameterized-const @pair ((A Type :implicit) 
+                                    (B Type :implicit))
+                             (-> A B @Pair))
