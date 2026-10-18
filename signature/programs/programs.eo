@@ -153,7 +153,7 @@
 ; program: $varlist_concat
 ; args:
 ; - list1 @VarList: A @VarList.
-; - list2 @VarList:: A @VarList.
+; - list2 @VarList: A @VarList.
 ; return: The @VarList: resulting from concatenating `list1` and `list2`.
 (program $varlist_concat ((varlist_1 @VarList) (varlist_2 @VarList))
   :signature (@VarList @VarList) @VarList
@@ -426,17 +426,17 @@
    )
 )
 
-; program: cl_equal
+; program: cl_equal_mod_commut
 ; args:
 ; - cl_1 Bool: A clause, built with @cl.
 ; - cl_2 Bool: A clause, built with @cl.
 ; return: >
-;   A boolean indicating if cl_1 and cl_2 are equal modulo permutations.
-(program $cl_equal ((cl_1 Bool) (cl_2 Bool))
+;   A boolean indicating if cl_1 and cl_2 are equal modulo commutativity.
+(program $cl_equal_mod_commut ((cl_1 Bool) (cl_2 Bool))
   :signature (Bool Bool) Bool
   (
    (
-    ($cl_equal cl_1 cl_2)
+    ($cl_equal_mod_commut cl_1 cl_2)
 
     ($f_list_equal_mod_commut @cl cl_1 cl_2)
     )
@@ -510,12 +510,12 @@
    )
 )
 
-; program: transform_not_and
+; program: $de_morgan_not_and
 ; args:
-; - ls Bool: A conjunction of terms.
+; - conjunction Bool: A boolean conjunction.
 ; return: >
-;   Applies De Morgan's law over the conjuncts of "ls", returning a new clause
-;   built with @cl.
+;   Applies De Morgan's law over the conjuncts of `conjunction`, returning a new clause
+;   built with `@cl`.
 (program $de_morgan_not_and ((l Bool) (ls Bool :list))
   :signature (Bool) Bool
   (
@@ -1498,7 +1498,7 @@
 ;    should be substituted by "value".
 ; return: The corresponding @Substitution.
 (program $substitution_build_from_pairs ((Vars Type) (Values Type) (var Vars) 
-                                         (value Values) (pairs_tail @VarList :list))
+                                         (value Values :list) (pairs_tail @VarList :list))
          :signature (@VarList) @Substitution
          (
           (

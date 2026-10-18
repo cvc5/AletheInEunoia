@@ -110,24 +110,24 @@
   )
 )
 
-; program: $f_list_length
+; program: $f_list_count_up_to_nil
 ; args:
 ; - f (-> A B B): Operator used to build the f-list.
 ; - list B: An f-list.
 ; return: Quantity of elements of `list`, including the nil terminator.
-(program $f_list_length ((B Type) (f (-> B B B)) (hd B) (tl B :list))
+(program $f_list_count_up_to_nil ((B Type) (f (-> B B B)) (hd B) (tl B :list))
 
   :signature ((-> B B B) B) Int
 
   (
    (
-    ($f_list_length f (f hd tl))
+    ($f_list_count_up_to_nil f (f hd tl))
 
-    (eo::add 1 ($f_list_length f tl))
+    (eo::add 1 ($f_list_count_up_to_nil f tl))
     )
 
    (; { hd != f ...}
-    ($f_list_length f hd)
+    ($f_list_count_up_to_nil f hd)
 
     1
     )
@@ -150,8 +150,8 @@
     ($f_list_equal_mod_commut f f_list_1 f_list_2)
 
     (eo::and 
-     (eo::is_eq ($f_list_length f f_list_1)
-                ($f_list_length f f_list_2))
+     (eo::is_eq ($f_list_count_up_to_nil f f_list_1)
+                ($f_list_count_up_to_nil f f_list_2))
      ($f_list_contains_f_list f f_list_1 f_list_2)
      ($f_list_contains_f_list f f_list_2 f_list_1))
     )
@@ -392,11 +392,14 @@
 
 ; program: $f_list_concat
 ; args:
-; - f (-> A A A): Constructor of f-lists.
+; - f (-> A A A): Right-assoc-nil constructor of f-lists
 ; - nil A: Nil element of f-lists.
 ; - list1 A: An f-list.
 ; - list2 A: An f-list.
-; return: The list resulting from concatenating `list1` and `list2`.
+; return: The f-list resulting from concatenating `list1` and `list2`.
+; note: >
+;   The returned list is guaranteed to be a proper nil-terminated f-list, provided
+;   the given lists are proper nil-terminated f-lists.
 (program $f_list_concat ((A Type) (hd A) (tl A) (f (-> A A A)) (nil A)
                           (list_2 A))
   :signature ((-> A A A) A A A) A
@@ -404,7 +407,7 @@
    (
     ($f_list_concat f nil (f hd tl) list_2)
     
-    ($f_list_cons f hd ($f_list_concat f nil tl list_2))
+    (f hd ($f_list_concat f nil tl list_2))
     )
 
    (
@@ -421,14 +424,14 @@
 ; - nil A: nil-terminator of f-lists.
 ; - list1 A: An arbitrary f-list.
 ; - list2 A: An arbitrary f-list.
-; - pair_constructor (-> A A A): Constructor of pairs to be used when "ziping"
+; - pair_constructor (-> A A B): Constructor of pairs to be used when "zipping"
 ; return: >
 ;   An f-list resulting from performing a zip operation between `list1` and
 ;   `list2`, where each pair generated is built with `pair_constructor`
 ; note: PRE : { `list1` and `list2` have the same length }
-(program $f_list_zip ((A Type) (f (-> A A A)) (pair_constructor (-> A A A))
+(program $f_list_zip ((A Type) (B Type) (f (-> A A A)) (pair_constructor (-> A A B))
                       (nil A) (hd_l A) (tl_l A) (hd_r A) (tl_r A))
-         :signature ((-> A A A) A A A (-> A A A)) A
+         :signature ((-> A A A) A A A (-> A A B)) A
          (
           (
            ($f_list_zip f nil (f hd_l tl_l) (f hd_r tl_r) pair_constructor)
@@ -451,15 +454,23 @@
 ; - nil A: nil-terminator of f-lists.
 ; - list1 A: An arbitrary f-list of f-lists.
 ; - list2 A: An arbitrary f-list of f-lists.
-; - pair_constructor (-> A A A): Constructor of pairs to be used when "ziping"
+; - pair_constructor (-> A A B): Constructor of pairs to be used when "ziping"
 ; return: >
-;   An f-list resulting from performing a zip operation between each element of
-;   `list1` and `list2` (which are f-lists themselves), where each pair 
-;   generated is built with `pair_constructor`.
+;   Maps `$f_list_zip` over each pair of elements from `list_1` and `list_2`,
+;   which must be lists themselves. Results in a f-list of zipped f-lists, where
+;   each pair in the result is built using `pair_constructor`.
+;   Example:
+;    ($f_list_map_zip @varlist @varlist.nil 
+;                     (@varlist (@varlist x1) (@varlist x1))
+;                     (@varlist (@varlist false) (@varlist true))
+;                     @varlist)
+;    =
+;    (@varlist (@varlist (@varlist x1 false))
+;              (@varlist (@varlist x1 true)))
 ; note: PRE : { `list1` and `list2` have the same length }
-(program $f_list_map_zip ((A Type) (f (-> A A A)) (pair_constructor (-> A A A))
+(program $f_list_map_zip ((A Type) (B Type) (f (-> A A A)) (pair_constructor (-> A A B))
                           (nil A) (hd_l A) (tl_l A) (hd_r A) (tl_r A))
-         :signature ((-> A A A) A A A (-> A A A)) A
+         :signature ((-> A A A) A A A (-> A A B)) A
          (
           (
            ($f_list_map_zip f nil (f hd_l tl_l) (f hd_r tl_r) pair_constructor)
@@ -481,7 +492,7 @@
 ; - f (-> A A A): f-lists constructor.
 ; - elem A: Element to be repeated within the list to be constructed.
 ; - nil A: nil terminator of f-lists.
-; - n Int: Amount of times that we want for element `elem` to be repeated.
+; - n Int: Number of times that the element `elem` to be repeated.
 ; return: An f-list of length `n`, consisting only of the element `elem`.
 (program $f_list_repeat_elem ((A Type) (f (-> A A A)) (elem A) (nil A) (n Int))
          :signature ((-> A A A) A A Int) A

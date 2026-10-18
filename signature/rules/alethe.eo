@@ -6,23 +6,27 @@
 ; Note: The hole here does not allow for args or premises.
 
 ; rule: hole
+; premises:
+; - premises Bool: Arbitrary list of premises. There could be no premises at all.
 ; conclusion: Just the arbitrary conclusion passed to the rule.
 ; sorry: >
 ;   This models the following (taken from the standard spec.):
 ;   "A proof checker must not accept as valid a proof that contains this
 ;     rule even if the checker can somehow check this rule."
-(declare-rule hole ((hd Bool) (tail Bool :list))
-  :conclusion-explicit (@cl hd tail)
+(declare-rule hole ((conclusion Bool) (premises Bool))
+  :premise-list premises and
+  :conclusion-explicit conclusion
   :sorry
 )
+
 
 (declare-rule true ()
   :conclusion-explicit (@cl true)
 )
 
-;-------------
-; Rule 4: false
-;-------------
+;------------
+; Rule false
+;------------
 
 ; rule: false
 ; conclusion: Conclusion must be of the form (@cl (not false)).
@@ -30,9 +34,9 @@
   :conclusion-explicit (@cl (not false))
 )
 
-;-------------
-; Rule 5: not_not
-;-------------
+;--------------
+; Rule not_not
+;--------------
 
 ; rule: not_not
 ; conclusion: >
@@ -41,9 +45,9 @@
   :conclusion-explicit (@cl (not (not (not phi))) phi)
 )
 
-;-------------
-; Rule 6: th_resolution
-;-------------
+;--------------------
+; Rule th_resolution
+;--------------------
 
 ; program: $remove_double_negation
 ; args:
@@ -76,16 +80,11 @@
 (program $normalize_single_clause ((formula Bool) (formulas Bool :list))
          :signature (Bool) Bool
          (
-          (
-           ($normalize_single_clause (@cl formula))
-
-           (@cl ($remove_double_negation formula))
-           )
-
           (; { literals != false }
            ($normalize_single_clause (@cl formula formulas))
 
-           ($f_list_cons @cl ($remove_double_negation formula) 
+           ($f_list_cons @cl 
+                         ($remove_double_negation formula) 
                          ($normalize_single_clause formulas))
            )
 
@@ -94,6 +93,14 @@
 
            @empty_cl
            )
+
+          (; { formula != empty_cl }
+           ($normalize_single_clause formula)
+
+           ($remove_double_negation formula)
+           )          
+
+          
           )
          )
 
@@ -107,16 +114,17 @@
          :signature (Bool) Bool
          (
           (
-           ($normalize_clauses (and clause))
-           
-           ($normalize_single_clause clause)
-           )
-
-          ( ; { clauses != true }
            ($normalize_clauses (and clause clauses))
 
-           ($f_list_cons and ($normalize_single_clause clause)
+           ($f_list_cons and 
+                         ($normalize_single_clause clause)
                          ($normalize_clauses clauses))
+           )
+          
+          (; { clause != and ... }
+           ($normalize_clauses clause)
+           
+           ($normalize_single_clause clause)
            )
           )
          )
@@ -133,10 +141,10 @@
 ;          &&
 ;          `clause` is normalized }
 (program $remove_pivot_from_clause ((hd Bool) (tail Bool :list) 
-                                      (pivot Bool))
+                                    (pivot Bool))
          :signature (Bool Bool) Bool
          (
-          (
+          (; { tail != false }
            ($remove_pivot_from_clause pivot (@cl pivot))
 
            @empty_cl
@@ -145,7 +153,8 @@
           (; { tail != false }
            ($remove_pivot_from_clause pivot (@cl pivot tail))
 
-           tail
+           ; We remove every instance of pivot.
+           ($remove_pivot_from_clause pivot tail)
            )
 
           (; { hd != pivot, tail != false }
@@ -156,6 +165,12 @@
            ; build the result clause.
            ($cl_disjunct (@cl hd)
                          ($remove_pivot_from_clause pivot tail))
+           )
+
+          (; { tail != @cl ... }
+           ($remove_pivot_from_clause pivot false)
+           
+           @empty_cl
            )
           )
          )
@@ -191,142 +206,211 @@
            ; { clause is just a single @cl clause }
            ($find_and_remove_pivot_from_clauses pivot clause)
 
-           ;; ($f_list_remove_elem @cl clause pivot @empty_cl)
            ($remove_pivot_from_clause pivot clause)
            )
           )
 )
 
-; program: $return_untouched_clauses
+; program: $find_clause
 ; args:
 ; - pivot Bool: >
-;   Pivot that is being considered in the current binary resolution step.
+;   Pivot to be found from a clause, if it exists.
 ; - clauses Bool: And-list of clauses.
-; return: The And-list of clauses without the clause containing `pivot`.
-; note: >
-;   PRE : { `pivot` is contained in some clause from `clauses`
-;           && 
-;           `pivot` is normalized
-;           && 
-;          `clause` is normalized }
-;   While this function repeats part of the work done by 
-;   $find_and_remove_pivot_from_clauses, it is added to simplify the task
-;   of identifying which are the remaining clauses upon which we must continue
-;   applying resolution steps
-(program $return_untouched_clauses ((clause Bool) (clauses Bool :list) 
-                                               (pivot Bool))
-         :signature (Bool Bool) Bool
+; - already_tried_clauses Bool: >
+;   And-list of clauses that should not be selected from `clauses`.
+; return: >
+;   The clause containing `pivot` that is also not present in 
+;   `already_tried_clauses` if it exists, or @empty_cl, otherwise.
+; note: PRE : { `pivot` is normalized &&  `clause` is normalized }
+(program $find_clause ((clause Bool) (clauses Bool :list) 
+                       (already_tried_clauses Bool)
+                       (pivot Bool))
+         :signature (Bool Bool Bool) Bool
          (
-          (
-           ($return_untouched_clauses pivot (and clause clauses))
+          (; {clauses != true}
+           ($find_clause pivot (and clause clauses) already_tried_clauses)
 
-           (eo::ite ($f_list_contains_elem @cl pivot clause)
+           (eo::ite (eo::and ($f_list_contains_elem @cl pivot clause)
+                             (eo::not ($f_list_contains_elem and clause already_tried_clauses)))
 
-                    clauses
+                    clause
                     
-                    ($f_list_cons and clause ($return_untouched_clauses pivot clauses))
+                    ($find_clause pivot clauses already_tried_clauses)
                     )
            )
 
-          (; By pre, `clause` should contain `pivot`.
-           ; { clause is just a single @cl clause }
-           ($return_untouched_clauses pivot clause)
+          (; Empty clauses
+           ($find_clause pivot true already_tried_clauses)
 
-           true
+           @empty_cl
+           )
+
+          (; { clause is just a single @cl clause }
+           ($find_clause pivot clause already_tried_clauses)
+
+           (eo::ite (eo::and ($f_list_contains_elem @cl pivot clause)
+                             (eo::not ($f_list_contains_elem and clause already_tried_clauses)))
+
+                    clause
+                    
+                    @empty_cl)
            )
           )
-)
+         )
 
 ; program: $check_resolution_with_normalized_clauses 
 ; args:
-; - clauses Bool: And-list of normalized clauses (double negation is simplified).
+; - clauses Bool: >
+;   And-list of normalized clauses (double negation is simplified) not yet 
+;   considered for resolution.
+; - already_tried_pivot_clauses Bool: >
+;   And-list of clauses already considered for resolution with the current
+;   pivot (first element in `pivots`)
+; - already_tried_not_pivot_clauses Bool: >
+;   And-list of clauses already considered for resolution with the negation
+;   of the current pivot (first element in `pivots`)
 ; - pivots @VarList: A list of pivots used during resolution.
 ; - conclusion Bool: Conclusion provided to the rule.
 ; return: >
 ;   A boolean indicating if `conclusion` is a resolvent that can be
 ;   obtained from applying resolution over `clauses`, using the pivots
 ;   contained in `pivots`, in the same order of their appearance in the list.
-; note: PRE : { `clauses` are normalized: double negation is simplified }
-(program $check_resolution_with_normalized_clauses  ((clauses Bool)
+; note: >
+;   PRE : { `clauses` are normalized (double negation is simplified) &
+;           `already_tried_pivot_clauses`, `already_tried_pivot_clauses` and
+;           `clauses` are mutually disjoint &
+;           `conclusion` is normalized }
+(program $check_resolution_with_normalized_clauses  ((current_clauses Bool)
+                                                     (already_tried_pivot_clauses Bool)
+                                                     (already_tried_not_pivot_clauses Bool)
                                                      (polarity Bool)
-                                                     (pivot Bool) (pivots @VarList :list)
-                            (conclusion Bool))
-  :signature (Bool @VarList Bool) Bool
+                                                     (pivot Bool) 
+                                                     (pivots @VarList :list)
+                                                     (conclusion Bool))
+  :signature (Bool Bool Bool @VarList Bool) Bool
   (
-   (; Carcara's elaboration indicates the pivots followed by their "polarity": in 
-    ; this case, true means that `pivot` appears exactly as it is, in some clause.
-    ($check_resolution_with_normalized_clauses clauses (@varlist pivot polarity 
-                                                                 pivots)
+   (; Carcara's elaboration indicates that the pivots are followed by their 
+    ; "polarity": in this case, true means that `pivot` appears exactly as it is, 
+    ; in some clause.
+    ; { current_clauses != true }
+    ($check_resolution_with_normalized_clauses current_clauses
+                                               already_tried_pivot_clauses
+                                               already_tried_not_pivot_clauses
+                                               (@varlist pivot polarity pivots)
                                                conclusion)
 
     (eo::define
      (
-      (normalized_pivot ($remove_double_negation pivot))
+      (normalized_pivot ($remove_double_negation 
+                         (eo::ite polarity pivot (not pivot))))
 
-      (normalized_negated_pivot ($remove_double_negation (not pivot)))
+      (normalized_negated_pivot ($remove_double_negation (eo::ite polarity (not pivot) pivot)))
       )
-
-    (eo::define
-     
-     (
-      (single_clause_without_pivot
-       ($find_and_remove_pivot_from_clauses 
-        (eo::ite polarity 
-                 normalized_pivot
-                 normalized_negated_pivot) clauses)
-       )
-
-      (clauses_without_pivot ($return_untouched_clauses 
-                              (eo::ite polarity 
-                                       normalized_pivot
-                                       normalized_negated_pivot) clauses))
-      )
-
      (eo::define
       (
-       (single_clause_without_not_pivot
-        ($find_and_remove_pivot_from_clauses 
-         (eo::ite polarity 
-                  normalized_negated_pivot
-                  normalized_pivot)
-         clauses_without_pivot)
-        )
+       (single_clause_with_pivot ($find_clause 
+                                  normalized_pivot
+                                  current_clauses
+                                  already_tried_pivot_clauses))
+       )
 
-       (clauses_without_not_pivot ($return_untouched_clauses 
-                                   (eo::ite polarity 
-                                            normalized_negated_pivot
-                                            normalized_pivot)
-                                   clauses_without_pivot))
-      )
+      (eo::ite (eo::not ($eo_is_eq single_clause_with_pivot @empty_cl))
 
-      (eo::define
-       (
-        (new_clause ($cl_disjunct single_clause_without_pivot
-                                  single_clause_without_not_pivot))
-        )
+               (eo::define
+                (
 
-     ; eo::define's body:
-     (eo::ite ($cl_equal conclusion new_clause)
+                 (single_clause_with_not_pivot ($find_clause
+                                                normalized_negated_pivot
+                                                ($f_list_remove_elem and
+                                                                     current_clauses
+                                                                     single_clause_with_pivot
+                                                                     true)
+                                                already_tried_not_pivot_clauses))
+                 )
 
-              true
+                (eo::ite (eo::not ($eo_is_eq single_clause_with_not_pivot @empty_cl))
 
-              ;; {not ($cl_equal new_clause conclusion) }
-              ($check_resolution_with_normalized_clauses
-               ($f_list_cons and new_clause
-                             clauses_without_not_pivot)
-               pivots conclusion)
-              )
-              )
-     )))
+                         (eo::define
+                          
+                          (
+                           (single_clause_without_pivot ($remove_pivot_from_clause 
+                                                         normalized_pivot
+                                                         single_clause_with_pivot))
+                           )
+
+                          (eo::define
+                           (
+                            (single_clause_without_not_pivot ($remove_pivot_from_clause 
+                                                              normalized_negated_pivot
+                                                              single_clause_with_not_pivot))
+                            )
+
+                           (eo::define
+                            (
+                             (new_clause ($cl_disjunct single_clause_without_pivot
+                                                       single_clause_without_not_pivot))
+                             )
+                            
+                            (eo::ite ($f_list_equal_mod_commut_and_length @cl conclusion new_clause)
+
+                                     true
+
+                                     ; {not ($cl_equal new_clause conclusion) }
+                                     ; We continue through this path, or try with different
+                                     ; paths.
+                                     (eo::ite ($check_resolution_with_normalized_clauses
+                                               ($f_list_cons and 
+                                                             new_clause
+                                                             current_clauses)
+                                               ; New pivot, we empty the sets of
+                                               ; already tried pivots.
+                                               true
+                                               true
+                                               pivots 
+                                               conclusion)
+
+                                              true
+
+                                              ; { not ($check_resolution_with_normalized_clauses ... }
+                                              ; We try with changing already selected clauses
+                                              (eo::ite ($check_resolution_with_normalized_clauses
+                                                        current_clauses
+                                                        already_tried_pivot_clauses
+                                                        ($f_list_cons and
+                                                                      single_clause_with_not_pivot
+                                                                      already_tried_not_pivot_clauses)
+                                                        (@varlist pivot polarity pivots)
+                                                        conclusion)
+
+                                                       true
+
+                                                       ($check_resolution_with_normalized_clauses
+                                                        current_clauses
+                                                        ($f_list_cons and
+                                                                      single_clause_with_pivot
+                                                                      already_tried_pivot_clauses)
+                                                        already_tried_not_pivot_clauses
+                                                        (@varlist pivot polarity pivots)
+                                                        conclusion))
+                                              )))))
+                         ; { not (eo::not ($eo_is_eq single_clause_with_not_pivot @empty_cl)) }
+                         false))
+               ; { (eo::not ($eo_is_eq single_clause_with_pivot @empty_cl)) }
+               false))
+     )
     )
 
    (
-    ($check_resolution_with_normalized_clauses clauses @varlist.nil conclusion)
+    ($check_resolution_with_normalized_clauses current_clauses
+                                               already_tried_pivot_clauses
+                                               already_tried_not_pivot_clauses
+                                               @varlist.nil 
+                                               conclusion)
 
     false
     )
    )
-)
+  )
 
 ; program: $check_resolution
 ; args:
@@ -344,11 +428,22 @@
    (
     ($check_resolution clauses pivots conclusion)
 
-    ($check_resolution_with_normalized_clauses 
-     ($normalize_clauses clauses) pivots conclusion)
+    (eo::define
+     
+     (
+      (normalized_clauses ($normalize_clauses clauses))
+      (normalized_conclusion ($normalize_single_clause conclusion))
+      )
+     
+    ($check_resolution_with_normalized_clauses normalized_clauses
+                                               true
+                                               true
+                                               pivots 
+                                               normalized_conclusion)
+    )
     )
    )
-)
+  )
 
 ; rule: th_resolution
 ; premises:
@@ -372,9 +467,9 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 7: resolution
-;-------------
+;-----------------
+; Rule resolution
+;-----------------
 
 ; rule: resolution
 ; premises:
@@ -397,25 +492,9 @@
   :conclusion-explicit conclusion
 )
 
-;TODO
-(program $check_tautology ((CL1 Bool))
-  :signature (Bool) Bool
-  (
-   (($check_tautology CL1) true)
-  )
-)
-
-;TRUST
-(declare-rule tautology ((CL1 Bool))
-  :premises (CL1)
-  :args ((@cl true))
-  :requires ((($check_tautology CL1) true))
-  :conclusion (@cl true)
-)
-
-;-------------
-; Rule 9: contraction
-;-------------
+;------------------
+; Rule contraction
+;------------------
 
 ; program: check_contraction
 ; args:
@@ -449,9 +528,9 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 10: subproof
-;-------------
+;---------------
+; Rule subproof
+;---------------
 
 ; program: $check_subproof
 ; args:
@@ -503,9 +582,9 @@
   :conclusion-explicit conclusion
 )
 
-;--------------------
-; Rule 11: la_generic
-;--------------------
+;-----------------
+; Rule la_generic
+;-----------------
 
 ; From "The Alethe Proof Format":
 ; "Checking the validity of this clause amounts to checking the unsatisfiability 
@@ -1147,9 +1226,79 @@
   :conclusion CL
 )
 
-;---------------------
-; Rule 17: la_mult_neg
-;---------------------
+;------------------
+; Rule la_mult_pos
+;------------------
+
+; args:
+; - conclusion Bool: Conclusion given to rule "la_mult_pos".
+; return: >
+;   A boolean indicating if `conclusion` is an implication of the form, either:
+;   - (𝑡1 > 0 ∧ 𝑡2 ⋈ 𝑡3) → 𝑡1 ∗ 𝑡2 ⋈ 𝑡1 ∗ 𝑡3, with ⋈ ∈ {<, >, ≤, ≥, ≈}.
+;   - (𝑡1 > 0 ∧ ¬(𝑡2 ≈ 𝑡3 )) → ¬(𝑡1 ∗ 𝑡2 ≈ 𝑡1 ∗ 𝑡3 )
+(program $check_la_mult_pos ((A Type) (rel (-> A A Bool))
+                             (t1 A) (t2 A) (t3 A)
+                             (conclusion Bool))
+  :signature (Bool) Bool
+  (
+   (
+    ($check_la_mult_pos (@cl (=> (and (> t1 0/1) (rel t2 t3))
+                                (rel (* t1 t2) (* t1 t3)))))
+
+    ($is_rel_op rel)
+    )
+
+   (
+    ($check_la_mult_pos (@cl (=> (and (> t1 0) (rel t2 t3))
+                                (rel (* t1 t2) (* t1 t3)))))
+
+    ($is_rel_op rel)
+    )
+
+   (
+    ($check_la_mult_pos (@cl (=> (and (> t1 0.0) (rel t2 t3))
+                                (rel (* t1 t2) (* t1 t3)))))
+
+    ($is_rel_op rel)
+    )
+
+   (
+    ($check_la_mult_pos (@cl (=> (and (> t1 0) (not (= t2 t3)))
+                                (not (= (* t1 t2) (* t1 t3))))))
+
+    true
+    )
+
+   (
+    ($check_la_mult_pos (@cl (=> (and (> t1 0/1) (not (= t2 t3)))
+                                (not (= (* t1 t2) (* t1 t3))))))
+
+    true
+    )
+
+   (
+    ($check_la_mult_pos (@cl (=> (and (> t1 0.0) (not (= t2 t3)))
+                                (not (= (* t1 t2) (* t1 t3))))))
+
+    true
+    )
+   )
+)
+
+; rule: la_mult_pos
+; requires: >
+;   For conclusion to be an implication of the form, either:
+;   - (𝑡1 > 0 ∧ 𝑡2 ⋈ 𝑡3) → 𝑡1 ∗ 𝑡2 ⋈ 𝑡1 ∗ 𝑡3, with ⋈ ∈ {<, >, ≤, ≥, ≈}.
+;   - (𝑡1 > 0 ∧ ¬(𝑡2 ≈ 𝑡3 )) → ¬(𝑡1 ∗ 𝑡2 ≈ 𝑡1 ∗ 𝑡3 )
+; conclusion-explicit: A conclusion satisfying the previous side-condition.
+(declare-rule la_mult_pos ((conclusion Bool))
+  :requires ((($check_la_mult_pos conclusion) true))
+  :conclusion-explicit conclusion
+)
+
+;------------------
+; Rule la_mult_neg
+;------------------
 
 ; program: $check_inverse_relations
 ; args:
@@ -1253,9 +1402,10 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 18: bind
-;-------------
+;-----------
+; Rule bind
+;-----------
+
 ; TODO: remove this once we have higher-order programs
 ; program: $embed_within_vars
 ; args:
@@ -1436,7 +1586,7 @@
 )
 
 ;-------------
-; Rule 19: sko_ex
+; Rule sko_ex
 ;-------------
 
 ; program: $check_sko_build_skolem_vars
@@ -1567,9 +1717,9 @@
   :conclusion (@cl (= l r))
 )
 
-;--------------------
-; Rule 21: forall_inst
-;--------------------
+;------------------
+; Rule forall_inst
+;------------------
 
 ; program: $check_forall_inst
 ; args:
@@ -1614,9 +1764,9 @@
                                 forall_body_instantiated))
 )
 
-;--------------------
-; Rule 22: refl
-;--------------------
+;-----------
+; Rule refl
+;-----------
 
 ; program: $check_refl
 ; args:
@@ -1658,9 +1808,9 @@
   :conclusion-explicit (@cl (= t1 t2))
 )
 
-;-------------
-; Rule 23: trans
-;-------------
+;------------
+; Rule trans
+;------------
 
 ; program: $last_eq_right
 ; args:
@@ -1839,9 +1989,9 @@
   :conclusion-explicit (@cl (= t1 tn))
 )
 
-;---------------
-; Rule 24: cong
-;---------------
+;-----------
+; Rule cong
+;-----------
 
 ; program: $check_n_ary_application
 ; args:
@@ -2035,9 +2185,10 @@
   :conclusion-explicit conclusion
 )
 
-;----------------------
-; Rule 25: eq_reflexive
-;----------------------
+;-------------------
+; Rule eq_reflexive
+;-------------------
+
 ; rule: eq_reflexive
 ; conclusion: >
 ; Conclusion should be of the form (@cl (= t t)), for some arbitrary
@@ -2046,43 +2197,498 @@
   :conclusion-explicit (@cl (= t t))
 )
 
-;TODO: to preserve previous def
-; 
-; (program $check_qnt_cnf ((phi Bool) (phiP Bool) (xs @VarList) (xsP @VarList))
-;   (@VarList Bool @VarList Bool) Bool
-;   (
-;    (($check_qnt_cnf xs phi xsP phiP) true)
-;   )
-; )
+;-----------------
+; Rule qnt_cnf
+;-----------------
 
-; ;TRUST
-; (declare-rule qnt_cnf ((phi Bool) (phiP Bool) (xs @VarList) (xsP @VarList))
-;   :args ((@cl (or (not (forall xs phi)) (forall xsP phiP))))
-;   :requires ((($check_qnt_cnf xs phi xsP phiP) true))
-;   :conclusion (@cl (or (not (forall xs phi)) (forall xsP phiP)))
-; )
+; program: $negative_normal_form
+; args:
+; - formula Bool: A formula to be converted to its NNF.
+; - polarity Bool: >
+;   A boolean flag indicating if the formula is currently under a single 
+;   negation (`polarity` = false) or not (`polarity` = true). This is useful for 
+;   recursive definition purposes. The NNF of a formula 𝜑 would be the result of
+;   (`$negative_normal_form` 𝜑 true).
+; return: >
+;   The NNF-equivalent formula of `formula` (if `polarity` = true) or its negated
+;   equivalent (if `polarity` = false).
+(program $negative_normal_form ((phi_1 Bool) (phi_2 Bool) (phi_3 Bool)
+                                (disjunct Bool) (disjuncts Bool :list)
+                                (conjunct Bool) (conjuncts Bool :list)
+                                (varlist @VarList) (body Bool))
 
-;TODO
-(program $check_qnt_cnf ((conclusion Bool))
-  :signature (Bool) Bool
+         :signature (Bool Bool) Bool
+
+         (
+          (
+           ($negative_normal_form (not phi_1) true)
+
+           ($negative_normal_form phi_1 false)
+           )
+
+          (
+           ($negative_normal_form (not phi_1) false)
+
+           ($negative_normal_form phi_1 true)
+           )
+
+          (
+           ($negative_normal_form (or disjunct disjuncts) true)
+
+           ($f_list_cons or 
+                         ($negative_normal_form disjunct true)
+                         ($negative_normal_form disjuncts true))
+           )
+
+          (
+           ($negative_normal_form (or disjunct disjuncts) false)
+
+           ($f_list_cons and 
+                         ($negative_normal_form disjunct false)
+                         ($negative_normal_form disjuncts false))
+           )
+
+          (
+           ($negative_normal_form (and conjunct conjuncts) true)
+
+           ($f_list_cons and
+                         ($negative_normal_form conjunct true)
+                         ($negative_normal_form conjuncts true))
+           )
+
+          (
+           ($negative_normal_form (and conjunct conjuncts) false)
+
+           ($f_list_cons or
+                         ($negative_normal_form conjunct false)
+                         ($negative_normal_form conjuncts false))
+           )
+
+          (
+           ($negative_normal_form (=> phi_1 phi_2) true)
+
+           ($f_list_cons or
+                         ($negative_normal_form phi_1 false)
+                         ($negative_normal_form phi_2 true))
+           )
+
+          (
+           ($negative_normal_form (=> phi_1 phi_2) false)
+
+           ($f_list_cons and
+                         ($negative_normal_form phi_1 true)
+                         ($negative_normal_form phi_2 false))
+           )
+
+          (
+           ($negative_normal_form (ite phi_1 phi_2 phi_3) true)
+
+           ($f_list_cons and
+                         ($f_list_cons or
+                                       ($negative_normal_form phi_1 false)
+                                       ($negative_normal_form phi_2 true))
+
+                         ($f_list_cons or
+                                       ($negative_normal_form phi_1 true)
+                                       ($negative_normal_form phi_3 true)))
+           )
+
+          (
+           ($negative_normal_form (ite phi_1 phi_2 phi_3) false)
+
+           ($f_list_cons or
+                         ($f_list_cons and
+                                       ($negative_normal_form phi_1 true)
+                                       ($negative_normal_form phi_2 false))
+
+                         ($f_list_cons and
+                                       ($negative_normal_form phi_1 false)
+                                       ($negative_normal_form phi_3 false)))
+           )
+
+          (
+           ($negative_normal_form (forall varlist body) true)
+
+           (forall varlist ($negative_normal_form body true))
+           )
+
+          (
+           ($negative_normal_form (forall varlist body) false)
+
+           (exists varlist ($negative_normal_form body false))
+           )
+
+          (
+           ($negative_normal_form (exists varlist body) true)
+
+           (exists varlist ($negative_normal_form body true))
+           )
+
+          (
+           ($negative_normal_form (exists varlist body) false)
+
+           (forall varlist ($negative_normal_form body false))
+           )
+
+          (; { phi_1 is an atom }
+           ($negative_normal_form phi_1 true)
+
+           phi_1
+           )
+
+          (; { phi_1 is an atom }
+           ($negative_normal_form phi_1 false)
+
+           (not phi_1)
+           )
+          )
+         )
+
+; program: $small_step_prenex_normal_form
+; args:
+; - formula Bool: An arbitrary formula, in NNF.
+; return: >
+;   The result of applying a single step of rewrite towards converting `formula`
+;   into its prenex normal form.
+; note: PRE : { `formula` is in NNF }
+(program $small_step_prenex_normal_form ((formula Bool) (formulas Bool)
+                                         (varlist @VarList) (body Bool)
+                                         (op (-> Bool Bool Bool)))
+
+         :signature (Bool) Bool
+
+         (; NOTE: not abstracting the specific quantifiers to avoid undesired
+          ; matches with other kind of constructions of the form
+          ; (some_function value values)
+          (; NOTE: for this to always hold, the domain of the quantifier 
+           ; should not be empty.
+           ($small_step_prenex_normal_form (op (forall varlist body) formulas))
+
+           (forall varlist (op body formulas))
+           )
+
+          (; NOTE: for this to always hold, the domain of the quantifier 
+           ; should not be empty.
+           ($small_step_prenex_normal_form (op (exists varlist body) formulas))
+
+           (exists varlist (op body formulas))
+           )
+
+          (; NOTE: for this to always hold, the domain of the quantifier 
+           ; should not be empty.
+           ($small_step_prenex_normal_form (op formula (forall varlist body)))
+
+           (forall varlist (op formula body))
+           )
+
+          (; NOTE: for this to always hold, the domain of the quantifier 
+           ; should not be empty.
+           ($small_step_prenex_normal_form (op formula (exists varlist body)))
+
+           (exists varlist (op formula body))
+           )
+
+          (; { formula is an atom, a negated atom or a quantifier}
+           ($small_step_prenex_normal_form formula)
+
+           formula
+           )
+          )
+         )
+
+; program: $prenex_normal_form
+; args:
+; - formula Bool: An arbitrary formula, in NNF.
+; return: >
+;   The prenex normal form of `formula`.
+; note: PRE : { `formula` is in NNF }
+(program $prenex_normal_form ((formula Bool) (other_formulas Bool :list)
+                              (variables @VarList) (body Bool)
+                              (op (-> Bool Bool Bool))
+                              (quantifier (-> @VarList Bool Bool)))
+
+         :signature (Bool) Bool
+
+         (
+          (; NOTE: not abstracting the specific quantifiers to avoid undesired
+           ; matches with other kind of constructions of the form
+           ; (some_function value values)
+           ($prenex_normal_form (forall variables body))
+
+           (eo::define
+            
+            (
+             (prenex_body ($prenex_normal_form body))
+             )
+
+            (eo::ite ($eo_is_eq body prenex_body)
+                     ; Original formula is in prenex form.
+                     (forall variables body)
+
+                     ; { not ($eo_is_eq body prenex_body) }
+                     (forall variables ($prenex_normal_form prenex_body))))
+           )
+
+          (
+           ($prenex_normal_form (exists variables body))
+
+           (eo::define
+            
+            (
+             (prenex_body ($prenex_normal_form body))
+             )
+
+            (eo::ite ($eo_is_eq body prenex_body)
+                     ; Original formula is in prenex form.
+                     (exists variables body)
+
+                     ; { not ($eo_is_eq body prenex_body) }
+                     (exists variables ($prenex_normal_form prenex_body))))
+           )
+
+          (
+           ($prenex_normal_form (op formula other_formulas))
+
+           (eo::define
+            
+            (
+             (prenex_formula ($prenex_normal_form formula))
+
+             (prenex_other_formulas ($prenex_normal_form other_formulas))
+             )
+            
+            (eo::define
+             
+             (
+              (prenex_op_formula ($small_step_prenex_normal_form 
+                                  (op prenex_formula prenex_other_formulas)))
+              )
+
+             (eo::ite ($eo_is_eq (op prenex_formula prenex_other_formulas) 
+                                 prenex_op_formula)
+
+                      ; Original formula is in prenex form.
+                      prenex_op_formula
+
+                      ; { not ($eo_is_eq (op formula other_formulas) 
+                      ;        prenex_op_formula) }
+                      ($prenex_normal_form prenex_op_formula))))
+           )
+
+          (; { formula is an atom or a negated atom }
+           ($prenex_normal_form formula)
+
+           formula
+           )
+          )
+         )
+
+; program: $small_step_conjunctive_normal_form
+; args:
+; - $conjunctive_normal_form nil:
+; return:
+; note: PRE : { `formula` is in NNF and does not contain quantifiers }
+(program $small_step_conjunctive_normal_form ((formula Bool) 
+                                              (disjunct Bool) (disjuncts Bool :list)
+                                              (conjunct Bool) (conjuncts Bool :list)
+                                              (op_or (-> Bool Bool Bool))
+                                              (op_and (-> Bool Bool Bool)))
+
+         :signature (Bool) Bool
+
+         (
+          (; Avoiding assoc-nil semantics by not mentioning actual logical
+           ; operators in patterns.
+           ($small_step_conjunctive_normal_form (op_or disjunct (op_and conjunct 
+                                                                        conjuncts)))
+
+           (eo::ite ($eo_is_eq op_or or)
+                    
+                    (eo::ite ($eo_is_eq op_and and)
+                             
+                             (op_and (op_or disjunct conjunct) 
+                                     (op_or disjunct conjuncts))
+
+                             ; { not ($eo_is_eq op_and and) }
+                             ; { op_and == or }
+                             (op_or disjunct (op_and conjunct conjuncts)))
+
+                    ; { not ($eo_is_eq op_or or) }
+                    ; { op_or == and }
+                    (op_or disjunct (op_and conjunct conjuncts)))
+           )
+
+          (; Avoiding assoc-nil semantics by not mentioning actual logical
+           ; operators in patterns.
+           ($small_step_conjunctive_normal_form (op_or (op_and conjunct conjuncts)
+                                                       disjuncts))
+
+           (eo::ite ($eo_is_eq op_or or)
+                    
+                    (eo::ite ($eo_is_eq op_and and)
+                             
+                             (op_and (op_or conjunct disjuncts) 
+                                     (op_or conjuncts disjuncts))
+
+                             ; { not ($eo_is_eq op_and and) }
+                             ; { op_and == or }
+                             (op_or (op_and conjunct conjuncts)
+                                    disjuncts))
+
+                    ; { not ($eo_is_eq op_or or) }
+                    ; { op_or == and }
+                    (op_or (op_and conjunct conjuncts)
+                           disjuncts))
+           )
+
+          (; { formula is, either, a variable or a negated variable }
+           ($small_step_conjunctive_normal_form formula)
+           
+           formula
+           )
+          )
+         )
+
+; program: $rec_conjunctive_normal_form
+; args:
+; - $rec_conjunctive_normal_form nil:
+; return:
+; note: PRE : { `formula` is in NNF and does not contain quantifiers }
+(program $rec_conjunctive_normal_form ((formula Bool) (other_formulas Bool :list)
+                                   (op (-> Bool Bool Bool)))
+
+         :signature (Bool) Bool
+
+         (
+          (
+           ($rec_conjunctive_normal_form (op formula other_formulas))
+
+           (eo::define
+            
+            (
+             (conjunctive_formula ($rec_conjunctive_normal_form formula))
+
+             (conjunctive_other_formulas ($rec_conjunctive_normal_form other_formulas))
+             )
+            
+            (eo::define
+             
+             (
+              (conjunctive_op_formula ($small_step_conjunctive_normal_form 
+                                  (op conjunctive_formula conjunctive_other_formulas)))
+              )
+
+             (eo::ite ($eo_is_eq (op conjunctive_formula conjunctive_other_formulas) 
+                                 conjunctive_op_formula)
+
+                      ; We reach to a conjunctive normal form.
+                      conjunctive_op_formula
+
+                      ; { not ($eo_is_eq (op formula other_formulas) 
+                      ;        conjunctive_op_formula) }
+                      ($rec_conjunctive_normal_form conjunctive_op_formula))))
+           )
+
+          (; { formula is a variable or a negated variable }
+           ($rec_conjunctive_normal_form formula)
+
+           formula
+           )
+          )
+         )
+
+; program: $$conjunctive_normal_form
+; args:
+; - formula Bool: An formula in prenex form and NNF.
+; return: >
+;   Returns the CNF of `formula`, preserving its leading quantifiers, it present.
+; note: PRE : { `formula` is in prenex and NNF }
+(program $conjunctive_normal_form ((formula Bool) 
+                                   (varlist @VarList) (body Bool))
+
+         :signature (Bool) Bool
+
+         (
+          (
+           ($conjunctive_normal_form (forall varlist body))
+
+           (forall varlist ($conjunctive_normal_form body))
+           )
+
+          (
+           ($conjunctive_normal_form (exists varlist body))
+
+           (exists varlist ($conjunctive_normal_form body))
+           )
+
+          (; { `formula` does not begin with quantifiers }
+           ($conjunctive_normal_form formula)
+
+           ($flat_and_or and ($rec_conjunctive_normal_form formula))
+           )
+          )
+         )
+
+; program: $check_qnt_cnf
+; args:
+; - xs @VarList: >
+;   The list of variables quantified by the left-hand side disjunct of the conclusion
+;   passed to `qnt_cnf`.
+; - phi Bool: >
+;   The body of the left-hand side quantification of the conclusion
+;   passed to `qnt_cnf`.
+; - xsP @VarList: >
+;   The list of variables quantified by the right-hand side disjunct of the conclusion
+;   passed to `qnt_cnf`.
+; - phiP Bool: >
+;   The body of the right-hand side quantification of the conclusion
+;   passed to `qnt_cnf`.
+; return: >
+;   A boolean indicating if phiP is a clause from the CNF form of phi, and xsP
+;   is contained in xs.
+(program $check_qnt_cnf ((phi Bool) (phiP Bool) (xs @VarList) (xsP @VarList))
+
+  :signature (@VarList Bool @VarList Bool) Bool
+
   (
-   (($check_qnt_cnf conclusion) true)
-  )
-)
+   (
+    ($check_qnt_cnf xs phi xsP phiP) 
 
-;TRUST
-(declare-rule qnt_cnf ((conclusion Bool))
-  :requires ((($check_qnt_cnf conclusion) true))
-  :conclusion-explicit conclusion
+
+    (eo::and 
+     ; xs is contained in xsP
+     ($f_list_contains_f_list @varlist xs xsP)
+
+     ($f_list_contains_elem and 
+                            phiP 
+                            ($conjunctive_normal_form
+                             ($prenex_normal_form ($negative_normal_form phi true)))))
+    )
+   )
+  )
+
+
+; rule: qnt_cnf
+; requires: >
+;   For conclusion to be of the form ¬(∀𝑥1, … , 𝑥𝑛.𝜑) ∨ ∀𝑥𝑘1, … , 𝑥𝑘𝑚.𝜑′, with
+;   𝜑′ a clause from the CNF form of 𝜑, and 𝑥𝑘1, … , 𝑥𝑘𝑚 a permutation of 
+;   𝑥1, … , 𝑥𝑛.
+; conclusion-explicit: >
+;   A conclusion of the form (@cl (or (not (forall xs phi)) (forall xsP phiP))),
+;   satisfying the previous side-condition.
+(declare-rule qnt_cnf ((phi Bool) (phiP Bool) (xs @VarList) (xsP @VarList))
+  :requires ((($check_qnt_cnf xs phi xsP phiP) true))
+  :conclusion-explicit (@cl 
+                        ($f_list_cons or (not (forall xs phi)) (forall xsP phiP)))
 )
 
 ;-------------
 ; Table 7: Clausification rules
 ;-------------
 
-;-------------
-; Rule 30: and
-;-------------
+;----------
+; Rule and
+;----------
 
 ; program: check_and
 ; args:
@@ -2102,8 +2708,8 @@
    (
     ($check_and premise index conclusion)
 
-    ($cl_equal ($to_cl ($f_list_index and ($from_cl premise) index))
-               conclusion)
+    ($cl_equal_mod_commut ($to_cl ($f_list_index and ($from_cl premise) index))
+                          conclusion)
     )
   )
 )
@@ -2127,7 +2733,7 @@
 )
 
 ;-------------
-; Rule 31: not_or
+; Rule not_or
 ;-------------
 
 ; program: check_not_or
@@ -2151,8 +2757,8 @@
     ($check_not_or premise_non_cl index conclusion))
 
    (($check_not_or (not disjuncts) index conclusion)
-    ($cl_equal ($to_cl (not ($f_list_index or disjuncts index)))
-               conclusion))
+    ($cl_equal_mod_commut ($to_cl (not ($f_list_index or disjuncts index)))
+                          conclusion))
    )
 )
 
@@ -2176,9 +2782,9 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 32: or
-;-------------
+;---------
+; Rule or
+;---------
 
 ; program: check_or
 ; args:
@@ -2196,8 +2802,8 @@
    (
     ($check_or (@cl premise) conclusion)
 
-    ($cl_equal ($convert_or_to_cl premise)
-               conclusion)
+    ($cl_equal_mod_commut ($convert_or_to_cl premise)
+                          conclusion)
     )
   )
 )
@@ -2218,9 +2824,9 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 37: not_and
-;-------------
+;--------------
+; Rule not_and
+;--------------
 
 ; program: check_not_and
 ; args:
@@ -2237,7 +2843,7 @@
    (
     ($check_not_and (@cl (not conjunction)) conclusion)
 
-     ($cl_equal ($de_morgan_not_and conjunction) conclusion)
+     ($cl_equal_mod_commut ($de_morgan_not_and conjunction) conclusion)
      )
   )
 )
@@ -2257,9 +2863,9 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 37: xor1
-;-------------
+;-----------
+; Rule xor1
+;-----------
 
 ; rule: xor1
 ; premises:
@@ -2270,9 +2876,9 @@
   :conclusion-explicit (@cl phi1 phi2)
 )
 
-;-------------
-; Rule 38: xor2
-;-------------
+;-----------
+; Rule xor2
+;-----------
 
 ; rule: xor2
 ; premises:
@@ -2283,9 +2889,9 @@
   :conclusion-explicit (@cl (not phi1) (not phi2))
 )
 
-;-------------
-; Rule 39: not_xor1
-;-------------
+;---------------
+; Rule not_xor1
+;---------------
 
 ; rule: not_xor1
 ; premises:
@@ -2297,9 +2903,9 @@
 )
 
 
-;-------------
-; Rule 40: not_xor2
-;-------------
+;---------------
+; Rule not_xor2
+;---------------
 
 ; rule: not_xor2
 ; premises:
@@ -2310,9 +2916,10 @@
   :conclusion-explicit (@cl (not phi1) phi2)
 )
 
-;-------------
-; Rule 41: implies
-;-------------
+;--------------
+; Rule implies
+;--------------
+
 ; rule: implies
 ; premises:
 ; - premise Bool: >
@@ -2326,9 +2933,9 @@
   :conclusion-explicit (@cl (not phi1) phi2)
 )
 
-;----------------------
-; Rule 42: not_implies1
-;----------------------
+;-------------------
+; Rule not_implies1
+;-------------------
 
 ; rule: not_implies1
 ; premises:
@@ -2341,9 +2948,10 @@
   :conclusion-explicit (@cl phi1)
 )
 
-;----------------------
-; Rule 43: not_implies2
-;----------------------
+;-------------------
+; Rule not_implies2
+;-------------------
+
 ; rule: not_implies2
 ; premises:
 ; - premise Bool: A premise of the form ((@cl (not (=> phi1 phi2)))).
@@ -2356,8 +2964,9 @@
 )
 
 ;-------------
-; Rule 44: equiv1
+; Rule equiv1
 ;-------------
+
 ; rule: equiv1
 ; premises:
 ; - premise Bool: >
@@ -2371,7 +2980,7 @@
 )
 
 ;-------------
-; Rule 45: equiv2
+; Rule equiv2
 ;-------------
 
 ; rule: equiv2
@@ -2387,9 +2996,10 @@
 )
 
 
-;-------------
-; Rule 46: not_equiv1
-;-------------
+;-----------------
+; Rule not_equiv1
+;-----------------
+
 ; rule: not_equiv1
 ; premises:
 ; - premise Bool: >
@@ -2402,9 +3012,25 @@
   :conclusion-explicit (@cl phi1 phi2)
 )
 
-;-------------
-; Rule 48: and_pos
-;-------------
+;-----------------
+; Rule not_equiv2
+;-----------------
+
+; rule: not_equiv2
+; premises:
+; - premise Bool: >
+;   A negated equivalence between some propositions phi1 and phi2, in clause form:
+;   (@cl (not (phi1 = phi2))).
+; conclusion-explicit: >
+;   The conclusion should be of the form (@cl (not phi1) (not phi2)).
+(declare-rule not_equiv2 ((phi1 Bool) (phi2 Bool))
+  :premises ((@cl (not (= phi1 phi2))))
+  :conclusion-explicit (@cl (not phi1) (not phi2))
+)
+
+;--------------
+; Rule and_pos
+;--------------
 
 ; program: check_and_pos
 ; args:
@@ -2423,14 +3049,14 @@
    (
     ($check_and_pos pos (@cl (not antecedent) consequent))
 
-    ($cl_equal ($f_list_index and antecedent pos) consequent)
+    ($cl_equal_mod_commut ($f_list_index and antecedent pos) consequent)
     )
 
    ; To simplify the use of the checker
    (
     ($check_and_pos pos (@cl consequent (not antecedent)))
 
-    ($cl_equal ($f_list_index and antecedent pos) consequent)
+    ($cl_equal_mod_commut ($f_list_index and antecedent pos) consequent)
     )
   )
 )
@@ -2452,9 +3078,9 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 49: and_neg
-;-------------
+;--------------
+; Rule and_neg
+;--------------
 
 ; program: check_and_neg
 ; args:
@@ -2470,7 +3096,7 @@
    (
     ($check_and_neg (@cl left_disjunct right_disjunct))
 
-    ($cl_equal ($de_morgan_not_and left_disjunct) right_disjunct)
+    ($cl_equal_mod_commut ($de_morgan_not_and left_disjunct) right_disjunct)
     )
   )
 )
@@ -2487,7 +3113,7 @@
 )
 
 ;-------------
-; Rule 50: or_pos
+; Rule or_pos
 ;-------------
 
 ; program: check_or_pos
@@ -2503,8 +3129,8 @@
    (
     ($check_or_pos (@cl (not left_disjunct) right_disjunct))
 
-    ($cl_equal ($convert_or_to_cl left_disjunct)
-              (@cl right_disjunct))
+    ($cl_equal_mod_commut ($convert_or_to_cl left_disjunct)
+                          (@cl right_disjunct))
     )
   )
 )
@@ -2521,7 +3147,7 @@
 )
 
 ;-------------
-; Rule 51: or_neg
+; Rule or_neg
 ;-------------
 
 ; program: check_or_neg
@@ -2566,69 +3192,10 @@
   :conclusion-explicit conclusion
 )
 
-;TODO
-(program $check_xor_pos1 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_xor_pos1 CL) true)
-  )
-)
+;------------------
+; Rule implies_pos
+;------------------
 
-;TRUST
-(declare-rule xor_pos1 ((CL Bool))
-  :args (CL)
-  :requires ((($check_xor_pos1 CL) true))
-  :conclusion CL
-)
-
-;TODO
-(program $check_xor_pos2 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_xor_pos2 CL) true)
-  )
-)
-
-;TRUST
-(declare-rule xor_pos2 ((CL Bool))
-  :args (CL)
-  :requires ((($check_xor_pos2 CL) true))
-  :conclusion CL
-)
-
-;TODO
-(program $check_xor_neg1 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_xor_neg1 CL) true)
-  )
-)
-
-;TRUST
-(declare-rule xor_neg1 ((CL Bool))
-  :args (CL)
-  :requires ((($check_xor_neg1 CL) true))
-  :conclusion CL
-)
-
-;TODO
-(program $check_xor_neg2 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_xor_neg2 CL) true)
-  )
-)
-
-;TRUST
-(declare-rule xor_neg2 ((CL Bool))
-  :args (CL)
-  :requires ((($check_xor_neg2 CL) true))
-  :conclusion CL
-)
-
-;-------------
-; Rule 56: implies_pos
-;-------------
 ; rule: implies_pos
 ; conclusion-explicit: >
 ;   The conclusion should be an instance of excluded middle,
@@ -2637,9 +3204,9 @@
   :conclusion-explicit (@cl (not (=> phi1 phi2)) (not phi1) phi2)
 )
 
-;-------------
-; Rule 57: implies_neg1
-;-------------
+;-------------------
+; Rule implies_neg1
+;-------------------
 
 ; rule: implies_neg1
 ; conclusion-explicit: >
@@ -2649,9 +3216,10 @@
   :conclusion-explicit (@cl (=> phi1 phi2) phi1)
 )
 
-;-------------
-; Rule 58: implies_neg2
-;-------------
+;-------------------
+; Rule implies_neg2
+;-------------------
+
 ; rule: implies_neg2
 ; conclusion-explicit: >
 ;   The conclusion should be of the form (@cl (=>phi1 phi2) (not phi2)),
@@ -2660,9 +3228,10 @@
   :conclusion-explicit (@cl (=> phi1 phi2) (not phi2))
 )
 
-;-------------
-; Rule 59: equiv_pos1
-;-------------
+;-----------------
+; Rule equiv_pos1
+;-----------------
+
 ; rule: equiv_pos1
 ; conclusion-explicit: >
 ;   Conclusion should be equal to the clause 
@@ -2671,9 +3240,10 @@
   :conclusion-explicit (@cl (not (= phi1 phi2)) phi1 (not phi2))
 )
 
-;-------------
-; Rule 60: equiv_pos2
-;-------------
+;-----------------
+; Rule equiv_pos2
+;-----------------
+
 ; rule: equiv_pos2
 ; conclusion-explicit: >
 ;   Conclusion should be equal to the clause 
@@ -2682,39 +3252,10 @@
   :conclusion-explicit (@cl (not (= phi1 phi2)) (not phi1) phi2)
 )
 
-;TODO
-(program $check_equiv_neg1 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_equiv_neg1 CL) true)
-  )
-)
+;-----------
+; Rule ite1
+;-----------
 
-;TRUST
-(declare-rule equiv_neg1 ((CL Bool))
-  :args (CL)
-  :requires ((($check_equiv_neg1 CL) true))
-  :conclusion CL
-)
-
-;TODO
-(program $check_equiv_neg2 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_equiv_neg2 CL) true)
-  )
-)
-
-;TRUST
-(declare-rule equiv_neg2 ((CL Bool))
-  :args (CL)
-  :requires ((($check_equiv_neg2 CL) true))
-  :conclusion CL
-)
-
-;-------------
-; Rule 63: ite1
-;-------------
 ; rule: ite1
 ; premises: >
 ;   A premise of the form (@cl (ite phi1 phi2 phi3)). Note that phi2 and phi3 must be
@@ -2737,69 +3278,10 @@
   :conclusion-explicit (@cl (not phi1) phi2)
 )
 
-;TODO
-(program $check_ite_pos1 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_ite_pos1 CL) true)
-  )
-)
+;---------------
+; Rule not_ite1
+;---------------
 
-;TRUST
-(declare-rule ite_pos1 ((CL Bool))
-  :args (CL)
-  :requires ((($check_ite_pos1 CL) true))
-  :conclusion CL
-)
-
-;TODO
-(program $check_ite_pos2 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_ite_pos2 CL) true)
-  )
-)
-
-;TRUST
-(declare-rule ite_pos2 ((CL Bool))
-  :args (CL)
-  :requires ((($check_ite_pos2 CL) true))
-  :conclusion CL
-)
-
-;TODO
-(program $check_ite_neg1 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_ite_neg1 CL) true)
-  )
-)
-
-;TRUST
-(declare-rule ite_neg1 ((CL Bool))
-  :args (CL)
-  :requires ((($check_ite_neg1 CL) true))
-  :conclusion CL
-)
-
-;TODO
-(program $check_ite_neg2 ((CL Bool))
-  :signature (Bool) Bool
-  (
-   (($check_ite_neg2 CL) true)
-  )
-)
-
-;TRUST
-(declare-rule ite_neg2 ((CL Bool))
-  :args (CL)
-  :requires ((($check_ite_neg2 CL) true))
-  :conclusion CL
-)
-
-;-------------
-; Rule 69: not_ite1
-;-------------
 ; rule: not_ite1
 ; premises: >
 ;   A premise of the form (@cl (not (ite phi1 phi2 phi3))). Note that phi2 and phi3 must be
@@ -2811,9 +3293,10 @@
   :conclusion-explicit (@cl phi1 (not phi3))
 )
 
-;-------------
-; Rule 70: not_ite2
-;-------------
+;---------------
+; Rule not_ite2
+;---------------
+
 ; rule: not_ite2
 ; premises: >
 ;   A premise of the form (@cl (not (ite phi1 phi2 phi3))). Note that phi2 and phi3 must be
@@ -2841,9 +3324,9 @@
   :conclusion (@cl (= l r))
 )
 
-;-------------
-; Rule 75: implies_simplify
-;-------------
+;-----------------------
+; Rule implies_simplify
+;-----------------------
 
 ; program: check_implies_simplify
 ; args:
@@ -2859,8 +3342,8 @@
     ($check_implies_simplify (@cl (= (=> phi_1 phi_2) psy)))
 
                                         ; TODO: use proper comparison for props
-    ($cl_equal (@cl ($rewrite_implication (=> phi_1 phi_2)))
-               (@cl psy))
+    ($cl_equal_mod_commut (@cl ($rewrite_implication (=> phi_1 phi_2)))
+                          (@cl psy))
     )
    )
 )
@@ -2877,9 +3360,10 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 76: equiv_simplify
-;-------------
+;---------------------
+; Rule equiv_simplify
+;---------------------
+
 ; program: check_equiv_simplify
 ; args:
 ; - conclusion Bool: Conclusion provided to rule equiv_simplify.
@@ -2894,7 +3378,7 @@
     ($check_equiv_simplify (@cl (= (= phi_1 phi_2) psy)))
     
                                         ; TODO: use proper comparison for props
-    ($cl_equal (@cl ($rewrite_equivalence (= phi_1 phi_2))) (@cl psy))
+    ($cl_equal_mod_commut (@cl ($rewrite_equivalence (= phi_1 phi_2))) (@cl psy))
     )
    )
 )
@@ -2938,21 +3422,6 @@
 (declare-rule ite_simplify ((l Bool) (r Bool))
   :args ((@cl (= l r)))
   :requires ((($check_ite_simplify l r) true))
-  :conclusion (@cl (= l r))
-)
-
-;TODO
-(program $check_qnt_simplify ((l Bool) (r Bool))
-  :signature (Bool Bool) Bool
-  (
-   (($check_qnt_simplify l r) true)
-  )
-)
-
-;TRUST
-(declare-rule qnt_simplify ((l Bool) (r Bool))
-  :args ((@cl (= l r)))
-  :requires ((($check_qnt_simplify l r) true))
   :conclusion (@cl (= l r))
 )
 
@@ -3084,9 +3553,9 @@
   :conclusion (@cl (= l r))
 )
 
-;-------------
-; Rule 91: let
-;-------------
+;----------
+; Rule let
+;----------
 
 (program $verify_let_premises ((context Bool) (premises Bool) 
                               (A Type) (var A)
@@ -3171,9 +3640,9 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 93: distinct_elim
-;-------------
+;--------------------
+; Rule distinct_elim
+;--------------------
 
 ; program: build_distinct_list
 ; args:
@@ -3359,9 +3828,9 @@
   :conclusion-explicit conclusion
 )
 
-;-------------
-; Rule 94: la_rw_eq
-;-------------
+;---------------
+; Rule la_rw_eq
+;---------------
 
 ; TODO: other number types. Can the equality be flipped?
 ; rule: la_rw_eq
@@ -3372,9 +3841,9 @@
   :conclusion-explicit (@cl (= (= t u) (and (<= t u) (<= u t))))
 )
 
-;-------------
-; Rule 95: nary_elim
-;-------------
+;----------------
+; Rule nary_elim
+;----------------
 
 ; program: check_nary_elim
 ; args:
@@ -3430,9 +3899,9 @@
   :conclusion (@cl phi)
 )
 
-;-------------------
+;----------------
 ; Rule ite_intro
-;-------------------
+;----------------
 
 ; program: $ite_intro_check_conjuncts
 ; args:
@@ -3563,13 +4032,62 @@
   :conclusion-explicit (@cl (= t1 (and t2 conjuncts)))
 )
 
+;----------------
+; Rule and_intro
+;----------------
+
+; program: $check_and_intro
+; args:
+; - premises @VarList: @VarList of the premises invoked when applying and_intro.
+; - conclusion Bool: Conclusion of the application of and_intro
+; return: >
+;   A boolean indicating if `conclusion` is the result of the and-introduction 
+;   rule over every premise in `premises`.
+(program $check_and_intro ((premise Bool) (premises @VarList :list) 
+                           (conjuncts Bool :list) (conclusion Bool))
+         :signature (@VarList Bool) Bool
+         (
+          (
+           ($check_and_intro (@varlist (@cl premise)) (and premise))
+
+           true
+           )
+
+          (; { premises != false, conjuncts != true }
+           ($check_and_intro (@varlist (@cl premise) premises) (and premise conjuncts))
+
+           ($check_and_intro premises conjuncts)
+           )
+
+          (; { premises and conclusion have different structure than expected }
+           ($check_and_intro premises conclusion)
+
+           false
+           )
+          )
+         )
+
+; rule: and_intro
+; premises:
+; - premises @VarList: >
+;   A @VarList containing each premise invoked when instantiating the and_intro rule.
+; requires: >
+;   For the conclusion to be the result of the instantiation of the introduction
+;   rule for conjunction, over every invoked premise.
+; conclusion: A single-clause whose unique disjunct satisfies the previous side-condition.
+(declare-rule and_intro ((premises @VarList) (conclusion Bool))
+   :premise-list premises @varlist
+   :requires ((($check_and_intro premises conclusion) true))
+   :conclusion-explicit (@cl conclusion)
+)
+
 ;-------------
 ; Table 10: Rules used by cvc5, but not by veriT
 ;-------------
 
-;-------------
-; Rule 101: symm
-;-------------
+;-----------
+; Rule symm
+;-----------
 
 ; rule: symm
 ; premises: >
@@ -3581,9 +4099,9 @@
   :conclusion-explicit (@cl (= psy phi))
 )
 
-;-------------
-; Rule 34: reordering
-;-------------
+;-----------------
+; Rule reordering
+;-----------------
 
 ; program: check_reordering
 ; args:
@@ -3631,6 +4149,21 @@
   :requires ((($check_reordering premise conclusion) 
               true))
   :conclusion-explicit conclusion
+)
+
+;---------------
+; Rule not_symm
+;---------------
+
+; rule: not_symm
+; premises: >
+;   An equality of the form (@cl (not (= phi psy))), for arbitrary formulas phi 
+;   and psy.
+; conclusion-explicit: >
+;   The conclusion should have the form (@cl (not (= psy phi))).
+(declare-rule not_symm ((phi Bool) (psy Bool))
+  :premises ((@cl (not (= phi psy))))
+  :conclusion-explicit (@cl (not (= psy phi)))
 )
 
 ;-------------
