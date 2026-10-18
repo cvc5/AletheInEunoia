@@ -1002,9 +1002,10 @@
     ($f_list_equal_mod_commut_and_length
      or
      ; rhs will have an extra false, we add it to the lhs.
-     ($f_list_cons or false
-                   ($or_simplify_rec 
-                    ($remove_leading_negations_in_disjuncts lhs)))
+     ($to_nil_terminated_f_list or false
+                                ($or_simplify_rec 
+                                 ($remove_leading_negations_in_disjuncts lhs)))
+
      (or hd tl)
      )
     )
