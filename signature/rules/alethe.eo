@@ -3512,7 +3512,7 @@
      ($context_is_extended premise_context conclusion_context)
 
      ; Every variable in `rhs_vars` appear fixed in `premise_context`.
-     ($context_vars_are_fixed new_context rhs_vars)
+     ($context_vars_are_fixed premise_context rhs_vars)
 
      ; The remaining variables should be assigned to one point.
      (eo::define
