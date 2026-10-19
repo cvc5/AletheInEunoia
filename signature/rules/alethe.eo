@@ -1,6 +1,5 @@
 (include "../theories/theory.eo")
 (include "../programs/programs.eo")
-(include "../programs/arith.eo")
 
 ; Rule: assume is native
 ; Note: The hole here does not allow for args or premises.
@@ -60,7 +59,7 @@
           (
            ($remove_double_negation (not (not formula)))
 
-           formula
+           ($remove_double_negation formula)
            )
 
           (; { `formula` does not begin with a double negation }
@@ -3460,34 +3459,169 @@
   :conclusion (@cl (= l r))
 )
 
-;------------------
+;---------------
 ; Rule onepoint
-;------------------
+;---------------
+
+; program: $is_equality
+; args:
+; - formula Bool: An arbitrary formula.
+; return: >
+;   Returns true if and only if `formula` is a term of the form `(= lhs rhs)`, 
+;   for some arbitrary terms `lhs` and `rhs`.
+(program $is_equality ((A Type) (lhs A) (rhs A) (formula Bool))
+         :signature (Bool) Bool
+         (
+          (
+           ($is_equality (= lhs rhs))
+
+           true
+           )
+
+          (
+           ($is_equality formula)
+
+           false
+           )
+          )
+         )
+
+; program: $is_bound_var
+; args:
+; - term A: An arbitrary term.
+; return: >
+;   Returns true if and only if `term` is the syntactic representation of bound
+;   variables in our object language.
+(program $is_bound_var ((A Type) (var A) (term A))
+         :signature (Bool) Bool
+         (
+          (
+           ($is_bound_var (@var (@varlist var) var))
+
+           true
+           )
+
+          (
+           ($is_bound_var term)
+
+           false
+           )
+          )
+         )
+
+; program: $onepoint_get_pair_from_equality
+; args:
+; - ctx Bool: Context assumed in the premise of the `onepoint` step.
+; - eq Bool: An equality.
+; return: >
+;   A @Pair value whose first component is the variable, from some side of `eq`, that 
+;   is not fixed with respect to context `ctx`, and the second component is the 
+;   other side of the equality.
+; note : >
+;   PRE : { one side of the equality contains an object language bound variable, 
+;           that is not fixed with respect to context `ctx` }
+(program $onepoint_get_pair_from_equality ((A Type) (lhs A) (rhs A) (ctx Bool))
+         :signature (Bool Bool) @Pair
+         (
+          (
+           ($onepoint_get_pair_from_equality ctx (= lhs rhs))
+
+           ; We need to determine which variable is not fixed.
+           (eo::ite ($is_bound_var lhs)
+
+                    (eo::ite (eo::not ($context_var_is_fixed ctx lhs))
+
+                             ; NOTE: this is an ugly fix to deal with the differences in syntax
+                             ; between binding and bound occurrences of variables:
+                             ; - The first one has the form (eo::var "name" Type)
+                             ; - The second one has the form: 
+                             ;   (@var (@varlist (eo::var "name" Type)) (eo::var "name" Type))
+                             ; In this case we need to get the first syntactic form, from the
+                             ; second, so we can compare this with the result obtained from 
+                             ; `$context_get_var_subst_pairs`, outside of 
+                             ; `$onepoint_get_positive_equalities_as_pairs`.
+                             (@pair ($f_list_index @varlist ($fv lhs) 0) rhs)
+                    
+                             ; { ($context_var_is_fixed ctx lhs) }
+                             ; We assume that it must be the case that `rhs` is a bound variable,
+                             ; not fixed in `ctx`.
+                            (@pair ($f_list_index @varlist ($fv rhs) 0) lhs))
+
+                    ; { not ($is_bound_var lhs) }
+                    ; We assume that it must be the case that `rhs` is a bound variable,
+                    ; not fixed in `ctx`.
+                    (@pair ($f_list_index @varlist ($fv rhs) 0) lhs))
+           )
+          )
+         )
 
 ; program: $onepoint_get_positive_equalities_as_pairs
 ; args:
-; - lhs Bool: Body of the left-hand side quantified formula, in the conclusion of the onepoint step.
+; - ctx Bool: Context assumed in the premise of the `onepoint` step.
+; - lhs_body Bool: Body of the left-hand side quantified formula, in the conclusion of the onepoint step.
 ; return: >
-;   A @VarList containing every positive equality (= var value )that appears as 
-;   a conjunct in `lhs`, in the form of a pair (@pair var value).
+;   A @VarList of @Pairs, where each pair (@pair var value) corresponds to a 
+;   positive equality (= var value) that appears implying the conclusion in `lhs_body`.
 (program $onepoint_get_positive_equalities_as_pairs ((A Type) (B Type) (var A) (value B)
-                                                     (eqs Bool) (body Bool))
-         :signature (Bool) @VarList
+                                                     (antecedent Bool) (consequent Bool)
+                                                     (eqs Bool) (conjuncts Bool :list)
+                                                     (lhs_body Bool) (ctx Bool))
+         :signature (Bool Bool) @VarList
          (
-          (
-           ($onepoint_get_positive_equalities_as_pairs (-> (= var value) body))
+          (; { The implication is not currified }
+           ($onepoint_get_positive_equalities_as_pairs ctx (=> (and eqs conjuncts) consequent))
 
-           ($f_list_cons @varlist (@pair var value) ($onepoint_get_positive_equalities_as_pairs body))
+           (eo::define
+            
+            (
+             (eqs_normalized ($remove_double_negation eqs))
+             )
+
+            ; Check if `eqs` is a "positive equality": an equality
+            ; that appears under an even number of negations.
+            (eo::ite ($is_equality eqs_normalized)
+
+                     ($f_list_cons @varlist
+
+                                   ($onepoint_get_pair_from_equality ctx eqs_normalized)
+
+                                   ; We continue with the rest of the conclusion, in case 
+                                   ; the whole conclusion is not a "currified" implication.
+                                   ($onepoint_get_positive_equalities_as_pairs ctx (=> conjuncts consequent)))
+
+                     ; { not ($is_equality eqs_normalized) }
+                     ($onepoint_get_positive_equalities_as_pairs ctx (=> conjuncts consequent))))
            )
 
-          (
-           ($onepoint_get_positive_equalities_as_pairs (-> (and (= var value) eqs) body))
+          (; { antecedent != (and ...) } 
+           ($onepoint_get_positive_equalities_as_pairs ctx (=> antecedent consequent))
 
-           ($f_list_cons @varlist (@pair var value) ($onepoint_get_positive_equalities_as_pairs (-> eqs body)))
+           (eo::define
+            
+            (
+             (antecedent_normalized ($remove_double_negation antecedent))
+             )
+
+            ; Check if `antecedent` is a "positive equality": an equality
+            ; that appears under an even number of negations.
+            (eo::ite ($is_equality antecedent_normalized)
+
+                     ($f_list_cons @varlist
+
+                                   ($onepoint_get_pair_from_equality ctx antecedent_normalized)
+
+                                   ; We continue with the rest of the conclusion, in case 
+                                   ; the whole conclusion is not a "currified" implication.
+                                   ($onepoint_get_positive_equalities_as_pairs ctx consequent))
+
+                     ; { not ($is_equality antecedent_normalized) }
+                     ; We continue with the rest of the conclusion, in case 
+                     ; the whole conclusion is not a "currified" implication.
+                     ($onepoint_get_positive_equalities_as_pairs ctx consequent)))
            )
 
-          (; { body != (-> ...)}
-           ($onepoint_get_positive_equalities_as_pairs body)
+          (; { lhs_body != (=> ...)}
+           ($onepoint_get_positive_equalities_as_pairs ctx lhs_body)
 
            @varlist.nil
            )
@@ -3497,7 +3631,7 @@
 ; program: $check_onepoint
 ; args:
 ; - conclusion_context Bool: Context from the conclusion step.
-; - premise_context Bool: Context from the immediate premise step.
+; - premise_context Bool: Context from the premise step.
 ; - lhs Bool: The left-hand side term in the conclusion clause, of the form 𝑄𝑥1 , … , 𝑥𝑛 .𝜑
 ; - rhs Bool: The right-hand side term in the conclusion clause, of the form 𝑄𝑥𝑘1 , … , 𝑥𝑘𝑚 .𝜑'
 ; return: >
@@ -3508,6 +3642,9 @@
 ;   - 𝑥𝑘1 , … , 𝑥𝑘𝑚 are fixed in `premise_context`.
 ;   - The variables in {𝑥1 , … , 𝑥𝑛}/{𝑥𝑘1 , … , 𝑥𝑘𝑚} are assigned to some value
 ;     in `premise_context`.
+;   - The body of `rhs` results from substituting, in the body of `lhs`, each 
+;     variable in {𝑥1 , … , 𝑥𝑛}/{𝑥𝑘1 , … , 𝑥𝑘𝑚} by its assigned value in 
+;     `premise_context`.
 (program $check_onepoint ((conclusion_context Bool) (premise_context Bool)
                           (lhs_vars @VarList) (rhs_vars @VarList)
                           (lhs_body Bool) (rhs_body Bool))
@@ -3522,14 +3659,12 @@
     (eo::and
      ; `rhs_vars` is contained in `lhs_vars`.
      ($f_list_contains_f_list @varlist rhs_vars lhs_vars)
-
      ; `premise_context` must be just an extension of `conclusion_context`.
      ($context_is_extended premise_context conclusion_context)
 
      ; Every variable in `rhs_vars` appear fixed in `premise_context`.
      ($context_vars_are_fixed premise_context rhs_vars)
 
-     ; The remaining variables should be assigned to one point.
      (eo::define
 
       (
@@ -3537,28 +3672,57 @@
         ($f_list_filter @varlist @varlist.nil lhs_vars
                         ($varlist_flag_members lhs_vars rhs_vars)))
        )
+
+      (eo::define
+
+       (
+        (lhs_vars_with_onepoints ($context_get_var_subst_pairs premise_context lhs_not_fixed_vars))
+        )
      
-     ($context_get_var_subst_pairs premise_context lhs_not_fixed_vars)))
+       (eo::and
+
+        ; The remaining variables should be fixed to some values, which should
+        ; be exactly the ones defined through equalities with positive polarity,
+        ; in `lhs_body`...
+        ($f_list_equal_mod_commut_and_length
+         @varlist
+         lhs_vars_with_onepoints
+         ($onepoint_get_positive_equalities_as_pairs premise_context lhs_body))
+        
+        ; ... and `rhs_body` should be result of applying the substitution
+        ; induced by `lhs_vars_with_onepoints`, over lhs_body.
+        ($eo_is_eq ($substitution_apply lhs_body ($substitution_build_from_pairs lhs_vars_with_onepoints))
+                   rhs_body)
+        )))
+     )
     )
    )
   )
 
 ; rule: onepoint
 ; premises:
-; - onepoint nil:
+; - premise Bool: >
+;   The conclusion of the premise invoked when instantiating `onepoint`. It must have
+;   the form `(@cl (= lhs rhs))`, being `lhs` and `rhs` the bodies at each side
+;   of the conclusion clause.
+; assumption:
+; - premise_context Bool: The context of the premise invoked when instantiating `onepoint`.
+; requires: >
+;   For `conclusion_context`, `premise_context` and both sides of the conclusion 
+;   clause to satisfy the predicate `check_onepoint`.
 ; args:
-; requires:
-; conclusion:
+; - conclusion_context Bool: The context of the conclusion step of the instantiation of `onepoint`.
+; conclusion: >
+;   A clause of the form `(@cl (= (forall varlist_1 lhs) (forall varlist_2 rhs)))`,
+;   that satisfies the previous side-condition.
 (declare-rule onepoint ((conclusion_context Bool) (premise_context Bool)
                         (lhs Bool) (rhs Bool)
                         (varlist_1 @VarList) (varlist_2 @VarList))
   ; Context of the immediate premise, extends `old_context`.
   :assumption premise_context 
-  ; We already check that the body of the premise has the expected shape, 
-  ; with regard to the conclusion.
+  ; We check that the body of the premise has the expected shape with regard to the conclusion.
   :premises ((@cl (= lhs rhs)))
-  ; Context that is extended by `new_context`. Is the context of the onepoint 
-  ; conclusion step.
+  ; Context that is extended by `new_context`. It is the context of the onepoint conclusion step.
   :args (conclusion_context)
   :requires ((($check_onepoint conclusion_context premise_context
                                (forall varlist_1 lhs) (forall varlist_2 rhs))
