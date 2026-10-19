@@ -817,9 +817,38 @@
           )
          )
 
-;-------------
-; contexts
-;-------------
+;------------------------------
+; contexts and related services
+;------------------------------
+
+; TODO: remove this once we have higher-order programs
+; program: $embed_within_vars
+; args:
+; - varlist @VarList: A list of names of variables.
+; return: >
+;   A @VarList obtained by embedding each name, from `varlist` within a @var 
+;   construction (i.e., (@var (@varlist id) id) for a name id in `varlist`).
+; note: >
+;   Useful when it is required to compare a list of bounded occurrences of variables
+;   (i.e., built with `@var`) against a list of just plain names of variables.
+(program $embed_within_vars ((T Type) (id T) (tail @VarList :list))
+         :signature (@VarList) @VarList
+         (
+          (
+           ($embed_within_vars @varlist.nil)
+           
+           @varlist.nil
+           )
+
+          (
+           ($embed_within_vars (@varlist id tail))
+           
+           ($f_list_cons @varlist 
+                         (@var (@varlist id) id)
+                         ($embed_within_vars tail))
+           )
+          )
+         )
 
 ; program: context_get_substitute
 ; args:
@@ -944,9 +973,9 @@
 ;   A @VarList with the values associated with each variable from, and in the 
 ;   same order as in, "variables".
 (program $context_get_vars_substs ((A Type) (id A) (B Type)
-                                      (value B) (varlist @VarList) 
-                                      (context Bool) (and_list Bool)
-                                      (ids @VarList :list))
+                                   (value B) (varlist @VarList) 
+                                   (context Bool) (and_list Bool)
+                                   (ids @VarList :list))
          :signature (Bool @VarList) @VarList
          (
           (
@@ -968,11 +997,11 @@
 ; program: $context_var_is_fixed
 ; args:
 ; - context Bool: >
-;    A context built with @ctx, in a normalized form, where there are,
+;    A context built with `@ctx`, in a normalized form, where there are,
 ;    at most, one binding defined for a given variable.
 ; - var A: >
 ;   Variable for which we want to know if it is fixed, as indicated
-;   in "context".
+;   in "context". Must not be a bound occurrence (i.e., built with `@var`).
 ; return: >
 ;   A boolean indicating if "var" is fixed in "context".
 (program $context_var_is_fixed ((A Type) (var A) (var_2 A)
@@ -1023,7 +1052,7 @@
 
           (; { (@var (@varlist var) var) <> var_2}
            ($context_var_is_fixed (and (= var_2 any) eqs) var)
-           
+
            ($context_var_is_fixed eqs var)
            )
 
@@ -1106,7 +1135,6 @@
           )
 )
 
-; TODO: 
 ; program: $context_vars_are_defined
 ; args:
 ; - context Bool: A context, built with @ctx.
@@ -1134,15 +1162,14 @@
           )
 )
 
-;TODO
 ; program: $context_is_extended
 ; args:
 ; - new_ctx Bool: A context built with @ctx.
 ; - old_ctx Bool: A context built with @ctx.
 ; return: >
-;    Returns a boolean that indicates if new_ctx is defined just as
-;    an extension of old_ctx. We allow for new_ctx to be equal to
-;    old_ctx.
+;    Returns a boolean that indicates if `new_ctx` is defined just as
+;    an extension of `old_ctx`. We allow for `new_ctx` to be equal to
+;    `old_ctx`.
 (program $context_is_extended ((old_ctx Bool) (new_ctx Bool)
                                (varlist @VarList) (eq Bool) (and_list Bool :list))
     :signature (Bool Bool) Bool
@@ -1230,18 +1257,17 @@
           (
            ($let_get_values (_ (@let varlist body) value))
 
-           ($f_list_cons @varlist value @varlist.nil)
+           (@varlist value)
            )
 
           (
            ; { nested_func_app =/= (@let ...) }
            ($let_get_values (_ nested_func_app value))
 
-           ($varlist_reverse ($f_list_cons @varlist 
-                                         value 
-                                         ($let_get_values nested_func_app)))
+           ($f_list_concat @varlist @varlist.nil 
+                           ($let_get_values nested_func_app)
+                           (@varlist value))
            )
-          
           )
          )
 
@@ -1274,8 +1300,12 @@
 
 ; program: let_get_vars_substitutes
 ; args:
-; - let_get_vars_substitutes nil:
-; return:
+; - vars @VarList: A list of variables bound by the let construction.
+; - values @VarList: A list of values assigned to variables in `vars`, in the same order as in `vars`.
+; return: >
+;   A @VarList containing @pairs of the form (x, v), for a variable x contained 
+;   in `vars`, and value `v` contained in `values`, both in the same position, 
+;   respectively.
 (program $let_get_vars_substitutes ((B Type) (x B)
                                    (vardefs @VarList :list)
                                    (U Type) (value_x U) 
@@ -1285,10 +1315,10 @@
          (
           (
            ($let_get_vars_substitutes (@varlist x vardefs)
-                                     (@varlist value_x parameters))
+                                      (@varlist value_x parameters))
 
            ($f_list_cons @varlist 
-                        ($f_list_cons @varlist x value_x)
+                        (@pair x value_x)
                         ($let_get_vars_substitutes vardefs parameters))
            )
 
@@ -1298,7 +1328,7 @@
            @varlist.nil
            )
           )
-)
+         )
 
 ;-------------
 ; Unbounded occurrences of variables
@@ -1319,21 +1349,31 @@
           (
            ($fv (forall vars bool_body))
 
-           ; TODO: repeating stuff...
+           (eo::define
+
+            (
+             (fv_bool_body ($fv bool_body))
+             )
+
            ($f_list_filter @varlist @varlist.nil
-                           ($fv bool_body)
-                           ($varlist_flag_members ($fv bool_body) 
-                                          vars))
+                           fv_bool_body
+                           ($varlist_flag_members fv_bool_body
+                                                  vars)))
            )
 
           (
            ($fv (exists vars bool_body))
 
-           ; TODO: repeating stuff...
-           ($f_list_filter @varlist @varlist.nil
-                           ($fv bool_body)
-                           ($varlist_flag_members ($fv bool_body) 
-                                          vars))
+           (eo::define
+
+            (
+             (fv_bool_body ($fv bool_body))
+             )
+            
+            ($f_list_filter @varlist @varlist.nil
+                            fv_bool_body
+                            ($varlist_flag_members fv_bool_body
+                                                   vars)))
            )
 
           (; We consider (@var varlist x) as our representation of variables 
@@ -1344,22 +1384,28 @@
            ; binding occurrences of variables, from a given binder.
            ($fv (@var (@varlist x) x))
 
-           ($f_list_cons @varlist 
-                         ; (@var (@varlist x) x) 
-                         x
-                         @varlist.nil)
+           ($f_list_cons @varlist x @varlist.nil)
            )
 
           (
            ($fv (_ function actual_argument))
            
-           ; TODO: repeating stuff...
-           ($f_list_filter @varlist @varlist.nil 
-                           ($varlist_concat ($fv function)
-                                            ($fv actual_argument))
-                           ($flag_duplicates @varlist @varlist.nil
-                            ($varlist_concat ($fv function)
-                                             ($fv actual_argument))))
+           (eo::define
+            
+            (
+             (fv_function ($fv function))
+             (fv_actual_argument ($fv actual_argument))
+             )
+
+            (eo::define
+
+             (
+              (every_fv ($varlist_concat fv_function fv_actual_argument))
+              )
+
+             ; We remove duplicated variables.
+             ($f_list_filter @varlist @varlist.nil every_fv
+                             ($flag_duplicates @varlist @varlist.nil every_fv))))
            )
 
           (
@@ -1388,7 +1434,7 @@
            ($f_list_cons @varlist x @varlist.nil)
            )
           )
-)
+         )
 
 ;-------------
 ; Substitution
@@ -1503,7 +1549,7 @@
 ;    should be substituted by "value".
 ; return: The corresponding @Substitution.
 (program $substitution_build_from_pairs ((Vars Type) (Values Type) (var Vars) 
-                                         (value Values :list) (pairs_tail @VarList :list))
+                                         (value Values) (pairs_tail @VarList :list))
          :signature (@VarList) @Substitution
          (
           (

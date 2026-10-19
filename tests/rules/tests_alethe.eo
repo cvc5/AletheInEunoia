@@ -4415,3 +4415,176 @@
           :rule onepoint
           :premises (premise_onepoint_3)
           :args (conclusion_context_onepoint_3))
+
+
+;--------------------------
+; $verify_bind_let_premises
+;--------------------------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+
+; Silly first case: only 1 premise, the conclusion
+(step $test_$verify_bind_let_premises_1 true 
+      :rule $assert_eq 
+      :args (($verify_bind_let_premises (and (@cl (= a b)))
+                                        (@varlist a)
+                                        (@varlist b))
+
+             true))
+
+(step $test_$verify_bind_let_premises_2 true 
+      :rule $assert_eq 
+      :args (($verify_bind_let_premises (and (@cl (= a b)) (@cl (= c d)))
+                                        (@varlist a c)
+                                        (@varlist b d))
+
+             true))
+
+(step $test_$verify_bind_let_premises_3 true 
+      :rule $assert_eq 
+      :args (($verify_bind_let_premises (and (@cl (= a b)) (@cl (= c d)) (@cl (= e f)))
+                                        (@varlist a c e)
+                                        (@varlist b d f))
+
+             true))
+
+; Reflexive eqs. are omitted.
+(step $test_$verify_bind_let_premises_4 true 
+      :rule $assert_eq 
+      :args (($verify_bind_let_premises (and (@cl (= a b)) (@cl (= c d)) (@cl (= e f)))
+                                        (@varlist a c e c)
+                                        (@varlist b d f c))
+
+             true))
+
+(step $test_$verify_bind_let_premises_5 true 
+      :rule $assert_eq 
+      :args (($verify_bind_let_premises (and (@cl (= a b)) (@cl (= c d)) (@cl (= e f)))
+                                        (@varlist a c c e)
+                                        (@varlist b d c f))
+
+             true))
+
+(step $test_$verify_bind_let_premises_6 true 
+      :rule $assert_eq 
+      :args (($verify_bind_let_premises (and (@cl (= a b)) (@cl (= c d)) (@cl (= e f)))
+                                        (@varlist a c c e)
+                                        (@varlist b c d f))
+
+             true))
+
+;--------------------------
+; $check_bind_let
+;--------------------------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+(declare-const e Bool)
+(declare-const f Bool)
+(define x () (eo::var "x" Bool))
+(define y () (eo::var "y" Bool))
+
+; Silly first case: only 1 premise, the conclusion
+(step $test_$check_bind_let_1 true 
+      :rule $assert_eq 
+      :args (($check_bind_let (@ctx (@varlist x y)
+                                    (and (= (@var (@varlist y) y) (@var (@varlist y) y))
+                                         (= (@var (@varlist x) x) (@var (@varlist y) y))
+                                         (@ctx @varlist.nil true)))
+                              (@ctx @varlist.nil true)
+                              (and (@cl (= x y)))
+                              (@cl (= (_ (@let ((x Bool)) x) a)
+                                      (_ (@let ((y Bool)) y) a))))
+
+             true))
+
+(step $test_$check_bind_let_2 true 
+      :rule $assert_eq 
+      :args (($check_bind_let (@ctx ((x1 Bool) (x2 Bool) (y1 Bool) (y2 Bool))
+                                    (and (= (@var ((y1 Bool)) y1) (@var ((y1 Bool)) y1))
+                                         (= (@var ((y2 Bool)) y2) (@var ((y2 Bool)) y2))
+                                         (= (@var ((x1 Bool)) x1) (@var ((y1 Bool)) y1))
+                                         (= (@var ((x2 Bool)) x2) (@var ((y2 Bool)) y2))
+                                         (@ctx @varlist.nil true)))
+                              (@ctx @varlist.nil true)
+                              (and (@cl (= (eo::var "x2" Bool) (eo::var "y2" Bool))))
+                              (@cl (= (_ (_ (@let ((x1 Bool) (x2 Bool)) x2) a) b)
+                                      (_ (_ (@let ((y1 Bool) (y2 Bool)) y2) a) b))))
+
+             true))
+
+(step $test_$check_bind_let_3 true 
+      :rule $assert_eq 
+      :args (($check_bind_let (@ctx ((x1 Bool) (x2 Bool) (y1 Bool) (y2 Bool))
+                                    (and (= (@var ((y1 Bool)) y1) (@var ((y1 Bool)) y1))
+                                         (= (@var ((y2 Bool)) y2) (@var ((y2 Bool)) y2))
+                                         (= (@var ((x1 Bool)) x1) (@var ((y1 Bool)) y1))
+                                         (= (@var ((x2 Bool)) x2) (@var ((y2 Bool)) y2))
+                                         (@ctx @varlist.nil true)))
+                              (@ctx @varlist.nil true)
+                              (and (@cl (= (eo::var "x2" Bool) (eo::var "y2" Bool))))
+                              (@cl (= (_ (_ (@let ((x1 Bool) (x2 Bool)) x2) a) b)
+                                      (_ (_ (@let ((y1 Bool) (y2 Bool)) y2) a) b))))
+
+             true))
+
+(step $test_$check_bind_let_4 true 
+      :rule $assert_eq 
+      :args (($check_bind_let (@ctx ((x1 Bool) (x2 Bool) (y1 Bool) (y2 Bool))
+                                    (and (= (@var ((y1 Bool)) y1) (@var ((y1 Bool)) y1))
+                                         (= (@var ((y2 Bool)) y2) (@var ((y2 Bool)) y2))
+                                         (= (@var ((x1 Bool)) x1) (@var ((y1 Bool)) y1))
+                                         (= (@var ((x2 Bool)) x2) (@var ((y2 Bool)) y2))
+                                         (@ctx @varlist.nil true)))
+                              (@ctx @varlist.nil true)
+                              (and (@cl (= (eo::var "x2" Bool) (eo::var "y2" Bool))))
+                              (@cl (= (_ (_ (@let ((x1 Bool) (x2 Bool)) x2) a) b)
+                                      (_ (_ (@let ((y1 Bool) (y2 Bool)) y2) a) b))))
+
+             true))
+
+(step $test_$check_bind_let_5 true 
+      :rule $assert_eq 
+      :args (($check_bind_let (@ctx ((x1 Bool) (x2 Bool) (x3 Bool) (y1 Bool) (y2 Bool)
+                                     (y3 Bool))
+                                    (and (= (@var ((y1 Bool)) y1) (@var ((y1 Bool)) y1))
+                                         (= (@var ((y2 Bool)) y2) (@var ((y2 Bool)) y2))
+                                         (= (@var ((y3 Bool)) y3) (@var ((y3 Bool)) y3))
+                                         (= (@var ((x1 Bool)) x1) (@var ((y1 Bool)) y1))
+                                         (= (@var ((x2 Bool)) x2) (@var ((y2 Bool)) y2))
+                                         (= (@var ((x3 Bool)) x3) (@var ((y3 Bool)) y3))
+                                         (@ctx @varlist.nil true)))
+                              (@ctx @varlist.nil true)
+                              (and (@cl (= c f)) (@cl (= b e)) (@cl (= a d))
+                                   (@cl (= (eo::var "x2" Bool) (eo::var "y2" Bool))))
+                              (@cl (= (_ (_ (_ (@let ((x1 Bool) (x2 Bool) (x3 Bool)) x2) c) b) a)
+                                      (_ (_ (_ (@let ((y1 Bool) (y2 Bool) (y3 Bool)) y2) f) e) d))))
+
+             true))
+
+
+;--------------------------
+; bind_let
+;--------------------------
+
+(declare-const a Bool)
+(declare-const b Bool)
+
+(define ctx1 ( ) true)
+(assume context ctx1)
+(define ctx2 ( ) (@ctx ((x1 Bool) (x2 Bool) (y1 Bool) (y2 Bool))
+                       (and (= (@var ((y1 Bool)) y1) (@var ((y1 Bool)) y1))
+                            (= (@var ((y2 Bool)) y2) (@var ((y2 Bool)) y2))
+                            (= (@var ((x1 Bool)) x1) (@var ((y1 Bool)) y1))
+                            (= (@var ((x2 Bool)) x2) (@var ((y2 Bool)) y2)) ctx1)))
+(assume-push context ctx2)
+(step premise_1 (@cl (= (eo::var "x2" Bool) (eo::var "y2" Bool))) :rule hole)
+(step-pop $test_bind_let_1 (@cl (= (_ (_ (@let ((x1 Bool) (x2 Bool)) x2) a) b)
+                                   (_ (_ (@let ((y1 Bool) (y2 Bool)) y2) a) b))) 
+          :rule bind_let :premises ( premise_1 ) :args ( ctx1 ))
+
