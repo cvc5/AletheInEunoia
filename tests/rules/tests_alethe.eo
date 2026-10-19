@@ -3905,3 +3905,513 @@
       (@cl (= (forall (@varlist a b) (forall (@varlist c) body))
               (forall (@varlist a b c) body)))
       :rule qnt_join)
+
+;----------------------------------
+; $onepoint_get_pair_from_equality
+;----------------------------------
+
+(step $test_$onepoint_get_pair_from_equality_1 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_pair_from_equality
+              (@ctx ((x Bool) (y Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (@ctx @varlist.nil true)))
+              (= (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))
+                 (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool))))
+
+             (@pair (eo::var "y" Bool) 
+                    (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool)))))
+
+(step $test_$onepoint_get_pair_from_equality_2 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_pair_from_equality
+              (@ctx ((x Bool) (y Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (@ctx @varlist.nil true)))
+              (= (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool))
+                 (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))
+
+             (@pair (eo::var "y" Bool) 
+                    (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool)))))
+
+(step $test_$onepoint_get_pair_from_equality_3 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_pair_from_equality
+              (@ctx ((x Bool) (y Bool) (z Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( z Bool ) ) z) (@var ( ( z Bool ) ) z))
+                         (@ctx @varlist.nil true)))
+              (= (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool))
+                 (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))
+
+             (@pair (eo::var "y" Bool) 
+                    (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool)))))
+
+(step $test_$onepoint_get_pair_from_equality_4 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_pair_from_equality
+              (@ctx ((x Bool) (y Bool) (z Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( z Bool ) ) z) (@var ( ( z Bool ) ) z))
+                         (@ctx @varlist.nil true)))
+              (= (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))
+                 (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool))))
+
+             (@pair (eo::var "y" Bool) 
+                    (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool)))))
+
+(step $test_$onepoint_get_pair_from_equality_5 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_pair_from_equality
+              (@ctx ((y Bool) (z Bool)) 
+                    (and (= (@var ( ( y Bool ) ) y) true)
+                         (= (@var ( ( z Bool ) ) z) (@var ( ( z Bool ) ) z))
+                         (@ctx ((x Bool)) 
+                               (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                                    (@ctx @varlist.nil true)))))
+              (= true
+                 (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool))))
+
+             (@pair (eo::var "y" Bool) 
+                    true)))
+
+(step $test_$onepoint_get_pair_from_equality_6 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_pair_from_equality
+              (@ctx ((y Bool) (z Bool)) 
+                    (and (= (@var ( ( y Bool ) ) y) true)
+                         (= (@var ( ( z Bool ) ) z) (@var ( ( z Bool ) ) z))
+                         (@ctx ((x Bool)) 
+                               (and (= (@var ( ( x Bool ) ) x) true)
+                                    (@ctx @varlist.nil true)))))
+              (= true
+                 (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))
+
+             (@pair (eo::var "x" Bool) 
+                    true)))
+
+;--------------------------------------------
+; $onepoint_get_positive_equalities_as_pairs
+;--------------------------------------------
+
+(step $test_$onepoint_get_positive_equalities_as_pairs_1 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_positive_equalities_as_pairs 
+              (@ctx ((x Bool) (y Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (@ctx @varlist.nil true)))
+
+              (=> (= (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))
+                    (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool)))
+                 (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))
+
+             (@varlist (@pair (eo::var "y" Bool) 
+                              (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))))
+
+(step $test_$onepoint_get_positive_equalities_as_pairs_2 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_positive_equalities_as_pairs 
+              (@ctx ((x Bool) (y Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (@ctx @varlist.nil true)))
+
+              (=> (not (= (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))
+                         (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool))))
+                 (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))
+
+             @varlist.nil))
+
+(step $test_$onepoint_get_positive_equalities_as_pairs_3 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_positive_equalities_as_pairs 
+              (@ctx ((x Bool) (y Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (@ctx @varlist.nil true)))
+
+              (=> (not (not (= (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))
+                              (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool)))))
+                 (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))
+
+             (@varlist (@pair (eo::var "y" Bool) 
+                              (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))))
+
+(step $test_$onepoint_get_positive_equalities_as_pairs_4 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_positive_equalities_as_pairs 
+              (@ctx ((x Bool) (y Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (@ctx @varlist.nil true)))
+
+              (=> (not (not (not (= (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))
+                                   (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool))))))
+                 (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))
+
+             @varlist.nil))
+
+(step $test_$onepoint_get_positive_equalities_as_pairs_5 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_positive_equalities_as_pairs 
+              (@ctx ((x Bool) (y Bool) (z Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (@ctx @varlist.nil true)))
+
+              (=> (= (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))
+                    (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool)))
+                 (=> (= (@var (@varlist (eo::var "z" Bool)) (eo::var "z" Bool))
+                       (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool)))
+                    (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool)))))
+
+             (@varlist (@pair (eo::var "y" Bool) 
+                              (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool)))
+                       (@pair (eo::var "z" Bool) 
+                              (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))))
+
+(step $test_$onepoint_get_positive_equalities_as_pairs_6 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_positive_equalities_as_pairs 
+              (@ctx ((x Bool) (y Bool) (z Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (@ctx @varlist.nil true)))
+
+              (=> (not (= (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))
+                         (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool))))
+                 (=> (= (@var (@varlist (eo::var "z" Bool)) (eo::var "z" Bool))
+                       (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool)))
+                    (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool)))))
+
+             (@varlist (@pair (eo::var "z" Bool) 
+                              (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))))
+
+(step $test_$onepoint_get_positive_equalities_as_pairs_7 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_positive_equalities_as_pairs 
+              (@ctx ((x Bool) (y Bool) (z Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (@ctx @varlist.nil true)))
+
+              (=> (= (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))
+                    (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool)))
+                 (=> (not (= (@var (@varlist (eo::var "z" Bool)) (eo::var "z" Bool))
+                            (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))
+                    (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool)))))
+
+             (@varlist (@pair (eo::var "y" Bool) 
+                              (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))))
+
+(step $test_$onepoint_get_positive_equalities_as_pairs_8 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_positive_equalities_as_pairs 
+              (@ctx ((x Bool) (y Bool) (z Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (@ctx @varlist.nil true)))
+
+              (=> (not (= (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))
+                         (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool))))
+                 (=> (not (= (@var (@varlist (eo::var "z" Bool)) (eo::var "z" Bool))
+                            (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))
+                    (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool)))))
+
+             @varlist.nil))
+
+(step $test_$onepoint_get_positive_equalities_as_pairs_9 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_positive_equalities_as_pairs 
+              (@ctx ((x Bool) (y Bool) (z Bool) (w Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( w Bool ) ) w) true)
+                         (@ctx @varlist.nil true)))
+
+              (=> (and (= (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))
+                         (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool)))
+                      (= (@var (@varlist (eo::var "z" Bool)) (eo::var "z" Bool))
+                         (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool)))
+                      (= (@var (@varlist (eo::var "w" Bool)) (eo::var "w" Bool))
+                         true))
+                    (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))
+
+             (@varlist (@pair (eo::var "y" Bool) 
+                              (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool)))
+                       (@pair (eo::var "z" Bool) 
+                              (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool)))
+                       (@pair (eo::var "w" Bool) 
+                              true))))
+
+(step $test_$onepoint_get_positive_equalities_as_pairs_10 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_positive_equalities_as_pairs 
+              (@ctx ((x Bool) (y Bool) (z Bool) (w Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( w Bool ) ) w) true)
+                         (@ctx @varlist.nil true)))
+
+              (=> (and (not (= (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))
+                              (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool))))
+                      (= (@var (@varlist (eo::var "z" Bool)) (eo::var "z" Bool))
+                         (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool)))
+                      (= (@var (@varlist (eo::var "w" Bool)) (eo::var "w" Bool))
+                         true))
+                    (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))
+
+             (@varlist (@pair (eo::var "z" Bool) 
+                              (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool)))
+                       (@pair (eo::var "w" Bool) 
+                              true))))
+
+(step $test_$onepoint_get_positive_equalities_as_pairs_11 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_positive_equalities_as_pairs 
+              (@ctx ((x Bool) (y Bool) (z Bool) (w Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( w Bool ) ) w) true)
+                         (@ctx @varlist.nil true)))
+
+              (=> (and (not (= (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))
+                              (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool))))
+                      (not (= (@var (@varlist (eo::var "z" Bool)) (eo::var "z" Bool))
+                              (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))
+                      (= (@var (@varlist (eo::var "w" Bool)) (eo::var "w" Bool))
+                         true))
+                    (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))
+
+             (@varlist (@pair (eo::var "w" Bool) 
+                              true))))
+
+(step $test_$onepoint_get_positive_equalities_as_pairs_12 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_positive_equalities_as_pairs 
+              (@ctx ((x Bool) (y Bool) (z Bool) (w Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( w Bool ) ) w) true)
+                         (@ctx @varlist.nil true)))
+
+              (=> (and (not (= (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))
+                              (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool))))
+                      (not (= (@var (@varlist (eo::var "z" Bool)) (eo::var "z" Bool))
+                              (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))
+                      (not (= (@var (@varlist (eo::var "w" Bool)) (eo::var "w" Bool))
+                              true)))
+                    (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))
+
+             @varlist.nil))
+
+(step $test_$onepoint_get_positive_equalities_as_pairs_13 true 
+      :rule $assert_eq 
+      :args (($onepoint_get_positive_equalities_as_pairs 
+              (@ctx ((x Bool) (y Bool) (z Bool) (w Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( w Bool ) ) w) true)
+                         (@ctx @varlist.nil true)))
+
+              (=> (and (not (= (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))
+                              (@var (@varlist (eo::var "y" Bool)) (eo::var "y" Bool))))
+                      (= (@var (@varlist (eo::var "z" Bool)) (eo::var "z" Bool))
+                         (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool)))
+                      (not (= (@var (@varlist (eo::var "w" Bool)) (eo::var "w" Bool))
+                              true)))
+                    (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))
+
+             (@varlist (@pair (eo::var "z" Bool) 
+                              (@var (@varlist (eo::var "x" Bool)) (eo::var "x" Bool))))))
+
+;-----------------
+; $check_onepoint
+;-----------------
+
+(step $test_$check_onepoint_1 true 
+      :rule $assert_eq 
+      :args (($check_onepoint
+              (@ctx @varlist.nil true)
+
+              (@ctx ((x Bool) (y Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (@ctx @varlist.nil true)))
+
+              (forall ((x Bool) (y Bool)) (=> (= (@var ( ( x Bool ) ) x)
+                                                (@var ( ( y Bool ) ) y)) 
+                                             (@var ( ( x Bool ) ) x)))
+
+              (forall ((x Bool)) (=> (= (@var ( ( x Bool ) ) x) 
+                                       (@var ( ( x Bool ) ) x)) 
+                                    (@var ( ( x Bool ) ) x))))
+
+             true))
+
+(step $test_$check_onepoint_2 true 
+      :rule $assert_eq 
+      :args (($check_onepoint
+              (@ctx @varlist.nil true)
+
+              (@ctx ((x Bool) (y Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) true)
+                         (@ctx @varlist.nil true)))
+
+              (forall ((x Bool) (y Bool)) (=> (= true
+                                                (@var ( ( y Bool ) ) y)) 
+                                             (@var ( ( y Bool ) ) y)))
+
+              (forall ((x Bool)) (=> (= true true) true)))
+
+             true))
+
+(step $test_$check_onepoint_3 true 
+      :rule $assert_eq 
+      :args (($check_onepoint
+              (@ctx @varlist.nil true)
+
+              (@ctx ((x Bool) (y Bool) (z Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) true)
+                         (@ctx @varlist.nil true)))
+
+              (forall ((x Bool) (y Bool) (z Bool)) (=> (and (= true
+                                                              (@var ( ( y Bool ) ) y))
+                                                           (= (@var ( ( z Bool ) ) z)
+                                                              (@var ( ( x Bool ) ) x)))
+                                                      (@var ( ( z Bool ) ) z)))
+
+              (forall ((x Bool)) (=> (and (= true
+                                            true)
+                                         (= (@var ( ( x Bool ) ) x)
+                                            (@var ( ( x Bool ) ) x)))
+                                    (@var ( ( x Bool ) ) x))))
+
+             true))
+
+(step $test_$check_onepoint_4 true 
+      :rule $assert_eq 
+      :args (($check_onepoint
+              (@ctx @varlist.nil true)
+
+              (@ctx ((x Bool) (y Bool) (z Bool) (w Bool)) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) true)
+                         (= (@var ( ( w Bool ) ) w) false)
+                         (@ctx @varlist.nil true)))
+
+              (forall ((w Bool) (x Bool) (y Bool) (z Bool)) (=> (and (= true
+                                                                       (@var ( ( y Bool ) ) y))
+                                                                    (= (@var ( ( z Bool ) ) z)
+                                                                       (@var ( ( x Bool ) ) x))
+                                                                    (= (@var ( ( w Bool ) ) w)
+                                                                       false))
+                                                               (@var ( ( w Bool ) ) w)))
+
+              (forall ((x Bool)) (=> (and (= true
+                                            true)
+                                         (= (@var ( ( x Bool ) ) x)
+                                            (@var ( ( x Bool ) ) x))
+                                         (= false
+                                            false))
+                                    false)))
+
+             true))
+
+;----------
+; onepoint
+;----------
+
+(define premise_context_onepoint_1 () (@ctx ((x Bool) (y Bool)) 
+                                            (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                                                 (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                                                 (@ctx @varlist.nil true))))
+(assume-push premise_context premise_context_onepoint_1)
+(step premise_onepoint_1 (@cl (= (=> (= (@var ( ( x Bool ) ) x)
+                                       (@var ( ( y Bool ) ) y)) 
+                                    (@var ( ( x Bool ) ) x))
+                                 (=> (= (@var ( ( x Bool ) ) x) 
+                                       (@var ( ( x Bool ) ) x)) 
+                                    (@var ( ( x Bool ) ) x)))) :rule hole)
+(define conclusion_context_onepoint_1 () (@ctx @varlist.nil true))
+(step-pop $test_onepoint_1
+          (@cl (= (forall ((x Bool) (y Bool)) (=> (= (@var ( ( x Bool ) ) x)
+                                                    (@var ( ( y Bool ) ) y)) 
+                                                 (@var ( ( x Bool ) ) x)))
+
+                  (forall ((x Bool)) (=> (= (@var ( ( x Bool ) ) x) 
+                                           (@var ( ( x Bool ) ) x)) 
+                                        (@var ( ( x Bool ) ) x)))))
+          :rule onepoint
+          :premises (premise_onepoint_1)
+          :args (conclusion_context_onepoint_1))
+
+
+; Variable mapped to an arbitrary term
+(define premise_context_onepoint_2 () (@ctx ((x Bool) (y Bool)) 
+                                            (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                                                 (= (@var ( ( y Bool ) ) y) true)
+                                                 (@ctx @varlist.nil true))))
+(assume-push premise_context premise_context_onepoint_2)
+(step premise_onepoint_2 (@cl (= (=> (= true
+                                       (@var ( ( y Bool ) ) y))
+                                    (@var ( ( x Bool ) ) x))
+                                 (=> (= true
+                                       true) 
+                                    (@var ( ( x Bool ) ) x)))) :rule hole)
+(define conclusion_context_onepoint_2 () (@ctx @varlist.nil true))
+(step-pop $test_onepoint_2
+          (@cl (= (forall ((x Bool) (y Bool)) (=> (= true
+                                                    (@var ( ( y Bool ) ) y)) 
+                                                 (@var ( ( x Bool ) ) x)))
+
+                  (forall ((x Bool)) (=> (= true
+                                           true) 
+                                        (@var ( ( x Bool ) ) x)))))
+          :rule onepoint
+          :premises (premise_onepoint_2)
+          :args (conclusion_context_onepoint_2))
+
+; More quantified variables
+(define premise_context_onepoint_3 () (@ctx ((x Bool) (y Bool) (z Bool)) 
+                                            (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                                                 (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                                                 (= (@var ( ( y Bool ) ) y) true)
+                                                 (@ctx @varlist.nil true))))
+(assume-push premise_context premise_context_onepoint_3)
+(step premise_onepoint_3 (@cl (= (=> (and (= true (@var ( ( y Bool ) ) y))
+                                         (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x)))
+                                    (@var ( ( z Bool ) ) z))
+                                 (=> (and (= true true)
+                                         (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x)))
+                                    (@var ( ( x Bool ) ) x)))) :rule hole)
+(define conclusion_context_onepoint_3 () (@ctx @varlist.nil true))
+(step-pop $test_onepoint_3
+          (@cl (= (forall ((x Bool) (y Bool) (z Bool)) (=> (and (= true (@var ( ( y Bool ) ) y))
+                                                      (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x)))
+                                                 (@var ( ( z Bool ) ) z)))
+
+                  (forall ((x Bool)) (=> (and (= true true)
+                                             (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x)))
+                                        (@var ( ( x Bool ) ) x)))))
+          :rule onepoint
+          :premises (premise_onepoint_3)
+          :args (conclusion_context_onepoint_3))

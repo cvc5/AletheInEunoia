@@ -268,6 +268,164 @@
 
              (@varlist (@pair (eo::var "y" Int) 19))))
 
+;-----------------------
+; $context_var_is_fixed
+;-----------------------
+
+(step $test_$context_var_is_defined_1 true 
+      :rule $assert_eq 
+      :args (($context_var_is_fixed
+              (@ctx ( ( x Bool ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))))
+              (eo::var "x" Bool))
+
+             true))
+
+(step $test_$context_var_is_defined_2 true 
+      :rule $assert_eq 
+      :args (($context_var_is_fixed
+              (@ctx ( ( x Bool ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))))
+              (@var ( ( x Bool ) ) x))
+
+             true))
+
+(step $test_$context_var_is_defined_3 true 
+      :rule $assert_eq 
+      :args (($context_var_is_fixed
+              (@ctx ( ( x Bool ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) true)))
+              (@var ( ( x Bool ) ) x))
+
+             false))
+
+(step $test_$context_var_is_defined_4 true 
+      :rule $assert_eq 
+      :args (($context_var_is_fixed
+              (@ctx ( ( x Bool ) ( y Bool ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))))
+              (eo::var "x" Bool))
+
+             true))
+
+(step $test_$context_var_is_defined_5 true 
+      :rule $assert_eq 
+      :args (($context_var_is_fixed
+              (@ctx ( ( x Bool ) ( y Bool ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))))
+              (@var ( ( x Bool ) ) x))
+
+             true))
+
+(step $test_$context_var_is_defined_6 true 
+      :rule $assert_eq 
+      :args (($context_var_is_fixed
+              (@ctx ( ( x Bool ) ( y Bool ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) true)
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))))
+              (@var ( ( x Bool ) ) x))
+
+             false))
+
+(step $test_$context_var_is_defined_7 true 
+      :rule $assert_eq 
+      :args (($context_var_is_fixed
+              (@ctx ( ( x Bool ) ( y Bool ) ( z Bool ) ) 
+                    (and (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))))
+              (eo::var "x" Bool))
+
+             true))
+
+(step $test_$context_var_is_defined_8 true 
+      :rule $assert_eq 
+      :args (($context_var_is_fixed
+              (@ctx ( ( x Bool ) ( y Bool ) ) 
+                    (and (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))))
+              (@var ( ( x Bool ) ) x))
+
+             true))
+
+(step $test_$context_var_is_defined_9 true 
+      :rule $assert_eq 
+      :args (($context_var_is_fixed
+              (@ctx ( ( x Bool ) ( y Bool ) ) 
+                    (and (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( x Bool ) ) x) true)
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))))
+              (@var ( ( x Bool ) ) x))
+
+             false))
+
+; Nested definitions are shadowed by outer definitions
+(step $test_$context_var_is_defined_10 true 
+      :rule $assert_eq 
+      :args (($context_var_is_fixed
+              (@ctx ( ( x Bool ) ( y Bool ) ) 
+                    (and (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( x Bool ) ) x) true)
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (@ctx ( ( x Bool ) ( y Bool ) ) 
+                               (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))))))
+              (@var ( ( x Bool ) ) x))
+
+             false))
+
+(step $test_$context_var_is_defined_11 true 
+      :rule $assert_eq 
+      :args (($context_var_is_fixed
+              (@ctx ( ( x Bool ) ( y Bool ) ) 
+                    (and (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (@ctx ( ( x Bool ) ( y Bool ) ) 
+                               (and (= (@var ( ( x Bool ) ) x) true)))))
+              (@var ( ( x Bool ) ) x))
+
+             true))
+
+(step $test_$context_var_is_defined_11 true 
+      :rule $assert_eq 
+      :args (($context_var_is_fixed
+              (@ctx ( ( x Bool ) ( y Bool ) ) 
+                    (and (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (@ctx ( ( x Bool ) ( y Bool ) ) 
+                               (and (= (@var ( ( x Bool ) ) x) true)))))
+              (@var ( ( x Bool ) ) x))
+
+             false))
+
+(step $test_$context_var_is_defined_12 true 
+      :rule $assert_eq 
+      :args (($context_var_is_fixed
+              (@ctx ( ( x Bool ) ( y Bool ) ) 
+                    (and (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (@ctx ( ( x Bool ) ( y Bool ) ) 
+                               (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))))))
+              (@var ( ( x Bool ) ) x))
+
+             true))
+
+(step $test_$context_var_is_defined_13 true 
+      :rule $assert_eq 
+      :args (($context_var_is_fixed
+              (@ctx ( ( x Bool ) ( y Bool ) ) 
+                    (and (= (@var ( ( z Bool ) ) z) (@var ( ( x Bool ) ) x))
+                         (= (@var ( ( y Bool ) ) y) (@var ( ( x Bool ) ) x))
+                         (@ctx ( ( x Bool ) ( y Bool ) ) 
+                               (and (= (@var ( ( x Bool ) ) x) (@var ( ( x Bool ) ) x))))))
+              (@var ( ( x Bool ) ) x))
+
+             true))
+
+
 ;-------------------------------
 ; $substitution_build_from_pairs
 ;-------------------------------
@@ -338,3 +496,4 @@
              (@substitution (@substitute (eo::var "x" Bool) true)
                             (@substitute (eo::var "y" Int) 10)
                             (@substitute (eo::var "z" @VarList) @varlist.nil))))
+
