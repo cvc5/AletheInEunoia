@@ -1038,6 +1038,13 @@
            true
            )
 
+          (; NOTE: we allow to query the service with binding and bound occurrences of variables.
+           ($context_var_is_fixed 
+            (and (= (@var (@varlist var) var) (@var (@varlist var) var)) eqs) (@var (@varlist var) var))
+           
+           true
+           )
+
           (; { (@var (@varlist var) var) <> any}
            ($context_var_is_fixed (and (= (@var (@varlist var) var) any) eqs) var)
 
