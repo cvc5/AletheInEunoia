@@ -3163,8 +3163,8 @@
 
     ; We add a false to the lhs, and (not true) to rhs, to deal with the
     ; expansion of applications of right-assoc-nil operators.
-    ($cl_equal ($f_list_cons @cl false ($de_morgan_not_and left_disjunct))
-               ($f_list_cons @cl (not true) right_disjunct))
+    ($cl_equal_mod_commut ($f_list_cons @cl false ($de_morgan_not_and left_disjunct))
+                          ($f_list_cons @cl (not true) right_disjunct))
     )
   )
 )
