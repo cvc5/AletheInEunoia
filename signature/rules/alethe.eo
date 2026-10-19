@@ -1405,33 +1405,6 @@
 ; Rule bind
 ;-----------
 
-; TODO: remove this once we have higher-order programs
-; program: $embed_within_vars
-; args:
-; - varlist @VarList: A list of names of variables.
-; return: >
-;   A @VarList obtained by embedding each name within varlist
-;   within a @var construction (i.e., (@var (@varlist id) id) for a name id in 
-;   varlist).
-(program $embed_within_vars ((T Type) (id T) (tail @VarList :list))
-         :signature (@VarList) @VarList
-         (
-          (
-           ($embed_within_vars @varlist.nil)
-           
-           @varlist.nil
-           )
-
-          (
-           ($embed_within_vars (@varlist id tail))
-           
-           ($f_list_cons @varlist 
-                         (@var (@varlist id) id)
-                         ($embed_within_vars tail))
-           )
-          )
-)
-
 ; NOTE: Rules like `bind` can have multiple forms: without and with
 ; @var.  In the first case the bind rule is
 ;                @var xs. φ = @var ys. φ'
@@ -3806,17 +3779,13 @@
   :signature (Bool Bool @VarList) Bool
   (
    (
-    ($verify_let_premises context premises 
-                         ($f_list_cons @varlist 
-                                      ($f_list_cons @varlist var value) 
-                                      tl))
+    ($verify_let_premises context premises (@varlist (@pair var value) tl))
 
     (eo::or ($f_list_contains_elem 
              and 
              (@cl (= value ($context_get_substitute context var)))
              premises)
-            ($verify_let_premises context premises tl)
-            )
+            ($verify_let_premises context premises tl))
     )
 
    (
@@ -3856,11 +3825,10 @@
 
     (eo::and 
      ; There should be a conclusion of the form (@cl (= lhs rhs))
-     ; TODO: this must be the just the conclusion of the previous step
-     ($f_list_contains_elem and (@cl (= ($let_get_body let_def) rhs)) premises)
+     ($eo_is_eq ($f_list_index and premises 0) (@cl (= ($let_get_body let_def) rhs)))
      ($verify_let_premises context premises 
-                          ($let_get_vars_substitutes ($let_get_vars let_def)
-                                                    ($let_get_values let_def)))
+                           ($let_get_vars_substitutes ($let_get_vars let_def)
+                                                      ($let_get_values let_def)))
      )
     )
    )
@@ -3879,6 +3847,177 @@
   :assumption ctx
   :premise-list premises and
   :requires ((($check_let_elim ctx premises conclusion) true))
+  :conclusion-explicit conclusion
+)
+
+;---------------
+; Rule bind_let
+;---------------
+
+; program: $verify_bind_let_premises
+; args:
+; - premises Bool: And-list of premises of the `bind_let` sep.
+; - lhs_vals @VarList: >
+;   Values assigned in the left-hand side let and its body,from the given conclusion.
+; - rhs_vals @VarList: >
+;   Values assigned in the reft-hand side let and its body,from the given conclusion.
+; return: >
+;   True if and only if: 1) the first formula in `premises`is an equality 
+;   between the bodies of the let constructions in the concusion of the `bind_let` 
+;   step; 2) the following formulas in `premises` are equalties between a value
+;   from `lhs_vals` and from `rhs_vals`, in the order in whch they appear. 
+;   Reflexive eq. pairs can be omitted.
+(program $verify_bind_let_premises ((premises Bool) (tail_premises Bool :list) 
+                                    (A Type) (conclusion_lhs A) (conclusion_rhs A)
+                                    (refl_term A) (conclusion Bool)
+                                    (lhs A) (lhs_vals @VarList :list)
+                                    (rhs A) (rhs_vals @VarList :list))
+  :signature (Bool @VarList @VarList) Bool
+  (
+   (; Last step of the closed sub-proof should be an equality between the bodies
+    ; of the lets.
+    ($verify_bind_let_premises (and (@cl (= conclusion_lhs conclusion_rhs))
+                                    tail_premises)
+                               (@varlist conclusion_lhs lhs_vals)
+                               (@varlist conclusion_rhs rhs_vals))
+
+    ($verify_bind_let_premises tail_premises lhs_vals rhs_vals)
+    )
+
+   (; { lhs != conclusion_lhs, rhs != conclusion_rhs }
+    ($verify_bind_let_premises (and (@cl (= lhs rhs)) tail_premises)
+                               (@varlist lhs lhs_vals)
+                               (@varlist rhs rhs_vals))
+
+    ($verify_bind_let_premises tail_premises
+                               lhs_vals
+                               rhs_vals)
+    )
+
+   (; Premises might be omitted for the cases when both values are syntactically 
+    ; equal.
+    ($verify_bind_let_premises premises
+                               (@varlist refl_term lhs_vals)
+                               (@varlist refl_term rhs_vals))
+
+    ($verify_bind_let_premises premises
+                               lhs_vals
+                               rhs_vals)
+    )
+
+   (
+    ($verify_bind_let_premises true @varlist.nil @varlist.nil)
+    
+    true
+    )
+   )
+  )
+
+; program: check_bind_let
+; args:
+; - previous_context Bool: >
+;   Context of the last step of the subproof being closed. Context
+;   Γ, y1, ..., yn, 𝑥1 ↦ y1, ... , 𝑥𝑛 ↦ y𝑛 in the doc below.
+; - current_context Bool: >
+;   Context of the step that invokes the `bind_let` rule. Context Γ the doc below.
+; - premises Bool: And-list containing premises passed to rule bind_let.
+; - conclusion Bool: Conclusion given to rule let_elim.
+; return: >
+;    A boolean indicating if the given conclusion has the form
+;    (let 𝑥1 = 𝑡1, … , 𝑥𝑛 = 𝑡𝑛 in 𝑢) ≈ (let y1 = s1, … , y𝑛 = s𝑛 in 𝑢')
+;    And the premises are of the form:
+;    𝑖1. Γ ⊳ 𝑡1 ≈ 𝑠1 (… )
+;     ...
+;    𝑖𝑛. Γ ⊳ 𝑡𝑛 ≈ 𝑠𝑛 (… )
+;    𝑗. Γ, y1, ..., yn, 𝑥1 ↦ y1, ... , 𝑥𝑛 ↦ y𝑛 ⊳ 𝑢 ≈ 𝑢′ (… )
+(program $check_bind_let ((previous_context Bool) (current_context Bool) (premises Bool) 
+                          (A Type) (lhs_let A) (rhs_let A))
+         :signature (Bool Bool Bool Bool) Bool
+         (
+          (
+           ($check_bind_let previous_context current_context
+                            premises
+                            (@cl (= lhs_let
+                                    rhs_let)))
+
+           (eo::define
+
+            (
+             (vars_lhs_let ($let_get_vars lhs_let))
+             (vars_rhs_let ($let_get_vars rhs_let))
+             )
+
+            (eo::and 
+             ; Every variable bound in the rhs_let_def let appear fixed in `previous_context.
+             ($context_vars_are_fixed previous_context vars_rhs_let)
+             
+             ; Vars in lhs_vars are substituted by rhs_vars in `previous_context`.
+             ; Note: we need to embed each var in rhs_vars within a @var construction,
+             ; since that is how they will appear within a context.
+             ($f_list_equal_mod_commut_and_length 
+              @varlist 
+              ($embed_within_vars vars_rhs_let)
+              ($context_get_vars_substs previous_context vars_lhs_let))
+
+             ; rhs_vars should not appear free in lhs_let
+             (eo::define 
+              (
+               (lhs_free_vars ($fv lhs_let))
+               )
+
+              (eo::not ($f_list_contains_f_list @varlist lhs_free_vars vars_rhs_let))
+              )
+
+             ; `rhs_vars` should not appear in `current_context`.
+             (eo::not ($context_vars_are_defined current_context vars_rhs_let))
+
+             ; `previous_context` must be just an extension of `current_context`.
+             ($context_is_extended previous_context current_context)
+
+             ; `vars_lhs_let` should not appear in `current_context`.
+             ; TODO: check the actual necessity of this.
+             (eo::not ($context_vars_are_defined current_context vars_lhs_let))
+
+             ; Verify that the premises are actual proofs of equivalences between values
+             ; assigned in the lhs and rhs let.
+             (eo::define
+
+              (
+               (lhs_body ($let_get_body lhs_let))
+               (rhs_body ($let_get_body rhs_let))
+               )
+              ($verify_bind_let_premises premises
+
+                                         ($f_list_concat @varlist @varlist.nil 
+                                                         ($let_get_values lhs_let)
+                                                         (@varlist lhs_body))
+                                         
+                                         ($f_list_concat @varlist @varlist.nil 
+                                                         ($let_get_values rhs_let)
+                                                         (@varlist rhs_body)))
+              )
+             )
+            )
+           )
+          )
+         )
+
+; rule: bind_let
+; assumption:
+; - previous_context: Context from the previous last step of the subproof being closed by `bind_let`.
+; premise-list: And-list of the premises invoked by the rule.
+; args:
+; - current_context: Context of the current `bind_let` step.
+; requires: >
+;    For the given conclusion to be a proper variable renaming of a let, under 
+;    the provided premises and context, as specified by predicate `$check_bind_let`.
+; conclusion-explicit: A conclusion satisfying the previous side-condition.
+(declare-rule bind_let ((current_context Bool) (previous_context Bool) (premises Bool) 
+                        (conclusion Bool))
+  :assumption previous_context
+  :premise-list premises and
+  :args (current_context)
+  :requires ((($check_bind_let previous_context current_context premises conclusion) true))
   :conclusion-explicit conclusion
 )
 
