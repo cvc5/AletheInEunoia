@@ -4685,3 +4685,193 @@
                                    (_ (_ (@let ((y1 Bool) (y2 Bool)) y2) a) b))) 
           :rule bind_let :premises ( premise_1 ) :args ( ctx1 ))
 
+;---------------------------
+; Rule let and services
+;---------------------------
+
+;--------------------------
+; $verify_let_premises
+;--------------------------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+(declare-const e Bool)
+(declare-const f Bool)
+(declare-const g Bool)
+(declare-const h Bool)
+(declare-const i Bool)
+(declare-const j Bool)
+(define x () (eo::var "x" Bool))
+(define y () (eo::var "y" Bool))
+(define z () (eo::var "z" Bool))
+(define w () (eo::var "w" Bool))
+
+(step $test_$verify_let_premises_1 true 
+      :rule $assert_eq 
+      :args (($verify_let_premises 
+              (@ctx (@varlist x)
+                    (and (= (@var (@varlist x) x) b)
+                         (@ctx @varlist.nil true)))
+              (and (@cl (= c d)) (@cl (= a b)))
+              (@cl (= c d))
+              (@varlist (@pair x a)))
+             true))
+
+(step $test_$verify_let_premises_2 true 
+      :rule $assert_eq 
+      :args (($verify_let_premises 
+              (@ctx (@varlist x y)
+                    (and (= (@var (@varlist x) x) b)
+                         (= (@var (@varlist y) y) f)
+                         (@ctx @varlist.nil true)))
+              (and (@cl (= c d)) (@cl (= a b)) (@cl (= e f)))
+              (@cl (= c d))
+              (@varlist (@pair x a) (@pair y e)))
+             true))
+
+(step $test_$verify_let_premises_3 true 
+      :rule $assert_eq 
+      :args (($verify_let_premises 
+              (@ctx (@varlist x y)
+                    (and (= (@var (@varlist x) x) b)
+                         (= (@var (@varlist y) y) f)
+                         (= (@var (@varlist z) z) h)
+                         (@ctx @varlist.nil true)))
+              (and (@cl (= c d)) (@cl (= a b)) (@cl (= e f)) (@cl (= g h)))
+              (@cl (= c d))
+              (@varlist (@pair x a) (@pair y e) (@pair z g)))
+             true))
+
+(step $test_$verify_let_premises_4 true 
+      :rule $assert_eq 
+      :args (($verify_let_premises 
+              (@ctx (@varlist x y)
+                    (and (= (@var (@varlist x) x) b)
+                         (= (@var (@varlist y) y) f)
+                         (= (@var (@varlist z) z) h)
+                         (= (@var (@varlist w) w) j)
+                         (@ctx @varlist.nil true)))
+              (and (@cl (= c d)) (@cl (= a b)) (@cl (= e f)) (@cl (= g h)) (@cl (= i j)))
+              (@cl (= c d))
+              (@varlist (@pair x a) (@pair y e) (@pair z g) (@pair w i)))
+             true))
+
+;----------------
+; $check_let_elim
+;----------------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+(declare-const e Bool)
+(declare-const f Bool)
+(declare-const g Bool)
+(declare-const h Bool)
+(define x () (eo::var "x" Bool))
+(define y () (eo::var "y" Bool))
+(define z () (eo::var "z" Bool))
+
+(step $test_$check_let_elim_1 true 
+      :rule $assert_eq 
+      :args (($check_let_elim 
+              (@ctx (@varlist x)
+                    (and (= (@var (@varlist x) x) b)
+                         (@ctx @varlist.nil true)))
+              (@ctx @varlist.nil true)
+              (and (@cl (= a b)) (@cl (= c d)))
+              (@cl (= (_ (@let ((x Bool)) c) a) d)))
+
+             true))
+
+(step $test_$check_let_elim_2 true 
+      :rule $assert_eq 
+      :args (($check_let_elim 
+              (@ctx (@varlist x y)
+                    (and (= (@var (@varlist x) x) b)
+                         (= (@var (@varlist y) y) f)
+                         (@ctx @varlist.nil true)))
+              (@ctx @varlist.nil true)
+              (and (@cl (= a b)) (@cl (= e f)) (@cl (= c d)) )
+              (@cl (= (_ (_ (@let ((x Bool) (y Bool)) c) a) e) d)))
+
+             true))
+
+(step $test_$check_let_elim_3 true 
+      :rule $assert_eq 
+      :args (($check_let_elim 
+              (@ctx (@varlist x y z)
+                    (and (= (@var (@varlist x) x) b)
+                         (= (@var (@varlist y) y) f)
+                         (= (@var (@varlist z) z) h)
+                         (@ctx @varlist.nil true)))
+              (@ctx @varlist.nil true)
+              (and (@cl (= a b)) (@cl (= e f)) (@cl (= g h))  (@cl (= c d)))
+              (@cl (= (_ (_ (_ (@let ((x Bool) (y Bool) (z Bool)) c) a) e) g) d)))
+
+             true))
+
+;----------
+; let_elim
+;----------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+(declare-const e Bool)
+(declare-const f Bool)
+(declare-const g Bool)
+(declare-const h Bool)
+(define x () (eo::var "x" Bool))
+(define y () (eo::var "y" Bool))
+(define z () (eo::var "z" Bool))
+
+; Single let variable.
+(define ctx1 ( ) true)
+(assume context ctx1)
+(define ctx2 ( ) (@ctx (@varlist x)
+                       (and (= (@var (@varlist x) x) b)
+                            ctx1)))
+(assume-push context ctx2)
+(step premise_1 (@cl (= a b)) :rule hole)
+(step premise_2 (@cl (= c d)) :rule hole)
+(step-pop $test_let_1 
+          (@cl (= (_ (@let ((x Bool)) c) a) d))
+          :rule let_elim :premises ( premise_1 premise_2 ) :args ( ctx1 ))
+
+
+; 2 let variables.
+(define ctx1 ( ) true)
+(assume context ctx1)
+(define ctx2 ( ) (@ctx (@varlist x y)
+                       (and (= (@var (@varlist x) x) b)
+                            (= (@var (@varlist y) y) f)
+                            ctx1)))
+(assume-push context ctx2)
+(step premise_1 (@cl (= a b)) :rule hole)
+(step premise_2 (@cl (= e f)) :rule hole)
+(step premise_3 (@cl (= c d)) :rule hole)
+(step-pop $test_let_2
+          (@cl (= (_ (_ (@let ((x Bool) (y Bool)) c) a) e) d))
+          :rule let_elim :premises ( premise_1 premise_2 premise_3 ) :args ( ctx1 ))
+
+; 3 let variables.
+(define ctx1 ( ) true)
+(assume context ctx1)
+(define ctx2 ( ) (@ctx (@varlist x y)
+                    (and (= (@var (@varlist x) x) b)
+                         (= (@var (@varlist y) y) f)
+                         (= (@var (@varlist z) z) h)
+                         (@ctx @varlist.nil true))))
+(assume-push context ctx2)
+(step premise_1 (@cl (= a b)) :rule hole)
+(step premise_2 (@cl (= e f)) :rule hole)
+(step premise_3 (@cl (= g h)) :rule hole)
+(step premise_4 (@cl (= c d)) :rule hole)
+(step-pop $test_let_2
+          (@cl (= (_ (_ (_ (@let ((x Bool) (y Bool) (z Bool)) c) a) e) g) d))
+          :rule let_elim :premises ( premise_1 premise_2 premise_3 premise_4 ) :args ( ctx1 ))
+
