@@ -941,63 +941,63 @@
 (step $test_$bool_simplify_small_step_1 true 
       :rule $assert_eq 
       :args (($bool_simplify_small_step (not (=> a b)))
-             ($f_list_cons and a (not b))))
+             (and a (not b))))
 
 ; Second case of $bool_simplify_small_step
 (step $test_$bool_simplify_small_step_2 true 
       :rule $assert_eq 
-      :args (($bool_simplify_small_step (not ($f_list_cons or a b)))
-             ($f_list_cons and (not a) (not b))))
+      :args (($bool_simplify_small_step (not (or a b)))
+             (and (not a) (not b))))
 
 (step $test_$bool_simplify_small_step_2b true 
       :rule $assert_eq 
-      :args (($bool_simplify_small_step (not ($f_list_cons or a ($f_list_cons or b c))))
-             ($f_list_cons and (not a) (not ($f_list_cons or b c)))))
+      :args (($bool_simplify_small_step (not (or a (or b c))))
+             (and (not a) (not (or b c)))))
 
 (step $test_$bool_simplify_small_step_2c true 
       :rule $assert_eq 
-      :args (($bool_simplify_small_step (not ($f_list_cons or a ($f_list_cons or b ($f_list_cons or c d)))))
-             ($f_list_cons and (not a) (not ($f_list_cons or b ($f_list_cons or c d))))))
+      :args (($bool_simplify_small_step (not (or a (or b (or c d)))))
+             (and (not a) (not (or b (or c d))))))
 
 ; Third case of $bool_simplify_small_step
 (step $test_$bool_simplify_small_step_3 true 
       :rule $assert_eq 
-      :args (($bool_simplify_small_step (not ($f_list_cons and a b)))
-             ($f_list_cons or (not a) (not b))))
+      :args (($bool_simplify_small_step (not (and a b)))
+             (or (not a) (not b))))
 
 (step $test_$bool_simplify_small_step_3b true 
       :rule $assert_eq 
-      :args (($bool_simplify_small_step (not ($f_list_cons and a ($f_list_cons and b c))))
-             ($f_list_cons or (not a) (not ($f_list_cons and b c)))))
+      :args (($bool_simplify_small_step (not (and a (and b c))))
+             (or (not a) (not (and b c)))))
 
 (step $test_$bool_simplify_small_step_3c true 
       :rule $assert_eq 
-      :args (($bool_simplify_small_step (not ($f_list_cons and ($f_list_cons and a b) ($f_list_cons and c d))))
-             ($f_list_cons or (not ($f_list_cons and a b)) (not ($f_list_cons and c d)))))
+      :args (($bool_simplify_small_step (not (and (and a b) (and c d))))
+             (or (not (and a b)) (not (and c d)))))
 
 ; Fourth case of $bool_simplify_small_step
 (step $test_$bool_simplify_small_step_4 true 
       :rule $assert_eq 
       :args (($bool_simplify_small_step (=> a (=> b c)))
-             (=> ($f_list_cons and a b) c)))
+             (=> (and a b) c)))
 
 ; Fifth case of $bool_simplify_small_step
 (step $test_$bool_simplify_small_step_5 true 
       :rule $assert_eq 
       :args (($bool_simplify_small_step (=> (=> a b) b))
-             ($f_list_cons or a b)))
+             (or a b)))
 
 ; Sixth case of $bool_simplify_small_step
 (step $test_$bool_simplify_small_step_6 true 
       :rule $assert_eq 
-      :args (($bool_simplify_small_step ($f_list_cons and a (=> a b)))
-             ($f_list_cons and a b)))
+      :args (($bool_simplify_small_step (and a (=> a b)))
+             (and a b)))
 
 ; Seventh case of $bool_simplify_small_step
 (step $test_$bool_simplify_small_step_7 true 
       :rule $assert_eq 
-      :args (($bool_simplify_small_step ($f_list_cons and (=> a b) a))
-             ($f_list_cons and a b)))
+      :args (($bool_simplify_small_step (and (=> a b) a))
+             (and a b)))
 
 
 
@@ -1014,13 +1014,13 @@
 (step $test_$bool_simplify_rec_1 true 
       :rule $assert_eq 
       :args (($bool_simplify_rec (not (=> a b)))
-             ($f_list_cons and a (not b))))
+             (and a (not b))))
 
 ; Second case of $bool_simplify_rec
 (step $test_$bool_simplify_rec_2 true 
       :rule $assert_eq 
-      :args (($bool_simplify_rec (not ($f_list_cons or a b)))
-             ($f_list_cons and (not a) (not b))))
+      :args (($bool_simplify_rec (not (or a b)))
+             (and (not a) (not b))))
 
 (step $test_$bool_simplify_rec_2b true 
       :rule $assert_eq 
@@ -1035,8 +1035,8 @@
 ; Third case of $bool_simplify_rec
 (step $test_$bool_simplify_rec_3 true 
       :rule $assert_eq 
-      :args (($bool_simplify_rec (not ($f_list_cons and a b)))
-             ($f_list_cons or (not a) (not b))))
+      :args (($bool_simplify_rec (not (and a b)))
+             (or (not a) (not b))))
 
 (step $test_$bool_simplify_rec_3b true 
       :rule $assert_eq 
@@ -1052,25 +1052,25 @@
 (step $test_$bool_simplify_rec_4 true 
       :rule $assert_eq 
       :args (($bool_simplify_rec (=> a (=> b c)))
-             (=> ($f_list_cons and a b) c)))
+             (=> (and a b) c)))
 
 ; Fifth case of $bool_simplify_rec
 (step $test_$bool_simplify_rec_5 true 
       :rule $assert_eq 
       :args (($bool_simplify_rec (=> (=> a b) b))
-             ($f_list_cons or a b)))
+             (or a b)))
 
 ; Sixth case of $bool_simplify_rec
 (step $test_$bool_simplify_rec_6 true 
       :rule $assert_eq 
-      :args (($bool_simplify_rec ($f_list_cons and a (=> a b)))
-             ($f_list_cons and a b)))
+      :args (($bool_simplify_rec (and a (=> a b)))
+             (and a b)))
 
 ; Seventh case of $bool_simplify_rec
 (step $test_$bool_simplify_rec_7 true 
       :rule $assert_eq 
-      :args (($bool_simplify_rec ($f_list_cons and (=> a b) a))
-             ($f_list_cons and a b)))
+      :args (($bool_simplify_rec (and (=> a b) a))
+             (and a b)))
 
 ;-------------
 ; bool_simplify
@@ -1086,67 +1086,72 @@
 
 ; First case
 (step $test_$bool_simplify_1
-      (@cl (= (not (=> a b)) ($f_list_cons and a (not b))))
+      (@cl (= (not (=> a b)) (and a (not b))))
       :rule bool_simplify)
 
 ; Second case
 (step $test_$bool_simplify_2
-      (@cl (= (not ($f_list_cons or a b)) ($f_list_cons and (not a) (not b))))
+      (@cl (= (not (or a b)) (and (not a) (not b))))
       :rule bool_simplify)
 
 ; Third case
 (step $test_$bool_simplify_3
-      (@cl (= (not ($f_list_cons and a b)) ($f_list_cons or (not a) (not b))))
+      (@cl (= (not (and a b)) (or (not a) (not b))))
       :rule bool_simplify)
 
 (step $test_$bool_simplify_3b
-      (@cl (= (not ($f_list_cons and a ($f_list_cons and b c)))
-              ($f_list_cons or (not a) ($f_list_cons or (not b) (not c)))))
+      (@cl (= (not (and a (and b c)))
+              (or (not a) (or (not b) (not c)))))
       :rule bool_simplify)
 
 (step $test_$bool_simplify_3c
-      (@cl (= (not ($f_list_cons and a 
-                                 ($f_list_cons and b ($f_list_cons and c d))))
-              ($f_list_cons or 
+      (@cl (= (not (and a 
+                                 (and b (and c d))))
+              (or 
                             (not a) 
-                            ($f_list_cons or 
+                            (or 
                                           (not b) 
-                                          ($f_list_cons or (not c) (not d))))))
+                                          (or (not c) (not d))))))
       :rule bool_simplify)
 
 ; Fourth case
 (step $test_$bool_simplify_4
-      (@cl (= (=> a (=> b c)) (=> ($f_list_cons and a b) c)))
+      (@cl (= (=> a (=> b c)) (=> (and a b) c)))
       :rule bool_simplify)
 
 ; Fifth case
 (step $test_$bool_simplify_5
-      (@cl (= (=> (=> a b) b) ($f_list_cons or a b)))
+      (@cl (= (=> (=> a b) b) (or a b)))
       :rule bool_simplify)
 
 ; Sixth case
 (step $test_$bool_simplify_6
-      (@cl (= ($f_list_cons and a (=> a b)) ($f_list_cons and a b)))
+      (@cl (= (and a (=> a b)) (and a b)))
       :rule bool_simplify)
 
 (step $test_$bool_simplify_6
-      (@cl (= ($f_list_cons and a (=> a b)) ($f_list_cons and a b)))
+      (@cl (= (and a (=> a b)) (and a b)))
       :rule bool_simplify)
 
 ; Seventh case
 (step $test_$bool_simplify_7
-      (@cl (= ($f_list_cons and (=> a b) a) ($f_list_cons and a b)))
+      (@cl (= (and (=> a b) a) (and a b)))
       :rule bool_simplify)
 
 ; Misc.
 (step $test_$bool_simplify_misc_1
       (@cl (= (=> (p a) 
-                 (=> ($f_list_cons or (= a b) e) 
+                 (=> (or (= a b) e) 
                     (p c))) 
 
-              (=> ($f_list_cons and (p a) 
-                      ($f_list_cons or (= a b) e)) 
+              (=> (and (p a) 
+                      (or (= a b) e)) 
                  (p c))))
+      :rule bool_simplify)
+
+(step $test_$bool_simplify_misc_2 
+      (@cl (= (=> a (=> b c))
+              (=> (and a b) c)))
       :rule bool_simplify)
 
 ;----------------------

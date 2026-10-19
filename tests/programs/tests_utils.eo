@@ -1,0 +1,164 @@
+(include "../../signature/programs/utils.eo")
+(include "../unit_test_services.eo")
+
+; Unit tests for utils.eo programs.
+
+;-----------------------
+; $less_or_equal_strings
+;-----------------------
+(declare-const a Bool)
+
+(step $test_$less_or_equal_strings_1 true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "a" 0 "b" 0 0) 
+             true))
+
+(step $test_$less_or_equal_strings_1b true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "b" 0 "a" 0 0) 
+             false))
+
+(step $test_$less_or_equal_strings_2 true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "aa" 1 "ab" 1 0) 
+             true))
+
+(step $test_$less_or_equal_strings_2b true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "ab" 1 "aa" 1 0) 
+             false))
+
+(step $test_$less_or_equal_strings_3 true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "aaa" 2 "aab" 2 0) 
+             true))
+
+(step $test_$less_or_equal_strings_3b true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "aab" 2 "aaa" 2 0) 
+             false))
+
+(step $test_$less_or_equal_strings_3c true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "aba" 2 "aab" 2 0) 
+             false))
+
+(step $test_$less_or_equal_strings_3e true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "aab" 2 "aba" 2 0) 
+             true))
+
+(step $test_$less_or_equal_strings_4 true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "aaaa" 3 "aaab" 3 0) 
+             true))
+
+(step $test_$less_or_equal_strings_4b true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "aaab" 3 "aaaa" 3 0) 
+             false))
+
+(step $test_$less_or_equal_strings_4c true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "aaaz" 3 "aabc" 3 0) 
+             true))
+
+(step $test_$less_or_equal_strings_4d true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "aabc" 3 "aaaz" 3 0) 
+             false))
+
+(step $test_$less_or_equal_strings_5 true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "a" 0 "aaaz" 3 0) 
+             true))
+
+(step $test_$less_or_equal_strings_6 true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "a" 0 "aaaa" 3 0) 
+             true))
+
+(step $test_$less_or_equal_strings_7 true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "aa" 0 "aaaa" 3 0) 
+             true))
+
+(step $test_$less_or_equal_strings_8 true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "ab" 1 "aaaa" 3 0) 
+             false))
+
+(step $test_$less_or_equal_strings_9 true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "aab" 2 "aaaa" 3 0) 
+             false))
+
+(step $test_$less_or_equal_strings_10 true 
+      :rule $assert_eq
+      :args (($less_or_equal_strings "aaa" 2 "aaab" 3 0) 
+             true))
+
+
+;-----------------------
+; $less_or_equal_atoms
+;-----------------------
+(declare-const a Bool)
+(declare-const aa Bool)
+(declare-const ab Bool)
+(declare-const aaa Bool)
+(declare-const aab Bool)
+(declare-const aba Bool)
+(declare-const aaaa Bool)
+(declare-const aaab Bool)
+(declare-const b Bool)
+
+(step $test_$less_or_equal_atoms_1 true 
+      :rule $assert_eq
+      :args (($less_or_equal_atoms a b) 
+             true))
+
+(step $test_$less_or_equal_atoms_1b true 
+      :rule $assert_eq
+      :args (($less_or_equal_atoms b a) 
+             false))
+
+(step $test_$less_or_equal_atoms_2 true 
+      :rule $assert_eq
+      :args (($less_or_equal_atoms aa ab) 
+             true))
+
+(step $test_$less_or_equal_atoms_2b true 
+      :rule $assert_eq
+      :args (($less_or_equal_atoms ab aa) 
+             false))
+
+(step $test_$less_or_equal_atoms_3 true 
+      :rule $assert_eq
+      :args (($less_or_equal_atoms aaa aab) 
+             true))
+
+(step $test_$less_or_equal_atoms_3b true 
+      :rule $assert_eq
+      :args (($less_or_equal_atoms aab aaa) 
+             false))
+
+(step $test_$less_or_equal_atoms_3c true 
+      :rule $assert_eq
+      :args (($less_or_equal_atoms aba aab) 
+             false))
+
+(step $test_$less_or_equal_atoms_3e true 
+      :rule $assert_eq
+      :args (($less_or_equal_atoms aab aba) 
+             true))
+
+(step $test_$less_or_equal_atoms_4 true 
+      :rule $assert_eq
+      :args (($less_or_equal_atoms aaaa aaab) 
+             true))
+
+(step $test_$less_or_equal_atoms_4b true 
+      :rule $assert_eq
+      :args (($less_or_equal_atoms aaab aaaa) 
+             false))
+
