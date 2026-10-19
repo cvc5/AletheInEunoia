@@ -2,7 +2,745 @@
 (include "../unit_test_services.eo")
 
 
-; Unit tests for rules that introduce tautologies.
+; Unit tests for rules in `alethe.eo`.
+
+;------------------------------------------
+; $negative_normal_form
+;------------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+; Atomic props.
+(step $test_$negative_normal_form_1 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (not (not a)) true)
+
+             a))
+
+(step $test_$negative_normal_form_2 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (not a) true)
+
+             (not a)))
+
+; Non-atomic
+; and
+(step $test_$negative_normal_form_3 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (not ($f_list_cons and a b)) true)
+
+             ($f_list_cons or (not a) (not b))))
+
+(step $test_$negative_normal_form_4 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (not ($f_list_cons and a b)) false)
+
+             ($f_list_cons and a b)))
+
+; or
+(step $test_$negative_normal_form_5 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (not ($f_list_cons or a b)) true)
+
+             ($f_list_cons and (not a) (not b))))
+
+(step $test_$negative_normal_form_6 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (not ($f_list_cons or a b)) false)
+
+             ($f_list_cons or a b)))
+
+; =>
+(step $test_$negative_normal_form_7 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (not (=> a b)) true)
+
+             ($f_list_cons and a (not b))))
+
+(step $test_$negative_normal_form_8 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (=> a b) true)
+
+             ($f_list_cons or (not a) b)))
+
+(step $test_$negative_normal_form_9 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (not (=> a b)) false)
+
+             ($f_list_cons or (not a) b)))
+
+; ite
+(step $test_$negative_normal_form_10 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (ite a b c) true)
+
+             ($f_list_cons and 
+                           ($f_list_cons or (not a) b)
+                           ($f_list_cons or a c))))
+
+(step $test_$negative_normal_form_11 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (ite a b c) false)
+
+             ($f_list_cons or
+                           ($f_list_cons and a (not b))
+                           ($f_list_cons and (not a) (not c)))))
+
+; forall
+(step $test_$negative_normal_form_12 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (forall (@varlist (eo::var "x" Int)) a) true)
+
+             (forall (@varlist (eo::var "x" Int)) a)))
+
+(step $test_$negative_normal_form_13 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (forall (@varlist (eo::var "x" Int)) a) false)
+
+             (exists (@varlist (eo::var "x" Int)) (not a))))
+
+; exists
+(step $test_$negative_normal_form_14 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (exists (@varlist (eo::var "x" Int)) a) true)
+
+             (exists (@varlist (eo::var "x" Int)) a)))
+
+(step $test_$negative_normal_form_15 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form (exists (@varlist (eo::var "x" Int)) a) false)
+
+             (forall (@varlist (eo::var "x" Int)) (not a))))
+
+; Misc.
+(step $test_$negative_normal_form_16 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form a true)
+
+             a))
+
+(step $test_$negative_normal_form_17 true 
+      :rule $assert_eq 
+      :args (($negative_normal_form a false)
+
+             (not a)))
+
+
+;------------------------------------------
+; $small_step_prenex_normal_form
+;------------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+; Atomic props.
+(step $test_$small_step_prenex_normal_form_1 true 
+      :rule $assert_eq 
+      :args (($small_step_prenex_normal_form a)
+
+             a))
+
+(step $test_$small_step_prenex_normal_form_2 true 
+      :rule $assert_eq 
+      :args (($small_step_prenex_normal_form (not a))
+
+             (not a)))
+
+; or
+(step $test_$small_step_prenex_normal_form_3 true 
+      :rule $assert_eq 
+      :args (($small_step_prenex_normal_form (or a b))
+
+             (or a b)))
+
+(step $test_$small_step_prenex_normal_form_4 true 
+      :rule $assert_eq 
+      :args (($small_step_prenex_normal_form (or (forall (@varlist (eo::var "x" Int)) a) b))
+
+             (forall (@varlist (eo::var "x" Int)) (or  a b))))
+
+(step $test_$small_step_prenex_normal_form_5 true 
+      :rule $assert_eq 
+      :args (($small_step_prenex_normal_form ($f_list_cons or b (forall (@varlist (eo::var "x" Int)) a)))
+
+             (forall (@varlist (eo::var "x" Int)) ($f_list_cons or b a))))
+
+; and
+(step $test_$small_step_prenex_normal_form_7 true 
+      :rule $assert_eq 
+      :args (($small_step_prenex_normal_form (and a b))
+
+             (and a b)))
+
+(step $test_$small_step_prenex_normal_form_8 true 
+      :rule $assert_eq 
+      :args (($small_step_prenex_normal_form (and (forall (@varlist (eo::var "x" Int)) a) b))
+
+             (forall (@varlist (eo::var "x" Int)) (and  a b))))
+
+(step $test_$small_step_prenex_normal_form_9 true 
+      :rule $assert_eq 
+      :args (($small_step_prenex_normal_form 
+              ($f_list_cons and b (forall (@varlist (eo::var "x" Int)) a)))
+
+             (forall (@varlist (eo::var "x" Int)) 
+                     ($f_list_cons and b a))))
+
+;------------------------------------------
+; $prenex_normal_form
+;------------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+; Atomic props.
+(step $test_$prenex_normal_form_1 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form a)
+
+             a))
+
+(step $test_$prenex_normal_form_2 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (not a))
+
+             (not a)))
+
+; or
+(step $test_$prenex_normal_form_3 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (or a b))
+
+             (or a b)))
+
+(step $test_$prenex_normal_form_4 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (or (forall (@varlist (eo::var "x" Int)) a) b))
+
+             (forall (@varlist (eo::var "x" Int)) (or  a b))))
+
+(step $test_$prenex_normal_form_5 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (or b (forall (@varlist (eo::var "x" Int)) a)))
+
+             (forall (@varlist (eo::var "x" Int)) (or b a))))
+
+(step $test_$prenex_normal_form_6 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form ($f_list_cons or a
+                                                ($f_list_cons or 
+                                                              b 
+                                                              (forall (@varlist (eo::var "x" Int)) c))))
+
+             (forall (@varlist (eo::var "x" Int)) 
+                     ($f_list_cons or a ($f_list_cons or b c)))))
+
+; and
+(step $test_$prenex_normal_form_7 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (and a b))
+
+             (and a b)))
+
+(step $test_$prenex_normal_form_8 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (and (forall (@varlist (eo::var "x" Int)) a) b))
+
+             (forall (@varlist (eo::var "x" Int)) (and  a b))))
+
+(step $test_$prenex_normal_form_9 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (and b (forall (@varlist (eo::var "x" Int)) a)))
+
+             (forall (@varlist (eo::var "x" Int)) (and b a))))
+
+(step $test_$prenex_normal_form_10 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form ($f_list_cons and a
+                                                ($f_list_cons and 
+                                                              b 
+                                                              (forall (@varlist (eo::var "x" Int)) c))))
+
+             (forall (@varlist (eo::var "x" Int)) 
+                     ($f_list_cons and a ($f_list_cons and b c)))))
+
+; forall
+(step $test_$prenex_normal_form_11 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (forall (@varlist (eo::var "x" Int))
+                                          ($f_list_cons or 
+                                                        a
+                                                        (forall (@varlist (eo::var "y" Int)) b))))
+             (forall (@varlist (eo::var "x" Int))
+                     (forall (@varlist (eo::var "y" Int))
+                                          ($f_list_cons or a b)))))
+
+(step $test_$prenex_normal_form_12 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form 
+              (forall (@varlist (eo::var "x" Int))
+                      ($f_list_cons or 
+                                    a
+                                    ($f_list_cons and
+                                                  b
+                                                  (forall (@varlist (eo::var "y" Int)) c)))))
+             (forall (@varlist (eo::var "x" Int))
+                     (forall (@varlist (eo::var "y" Int))
+                                          ($f_list_cons or 
+                                                        a 
+                                                        ($f_list_cons and b c))))))
+
+; exists
+(step $test_$prenex_normal_form_13 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form (exists (@varlist (eo::var "x" Int))
+                                          ($f_list_cons or 
+                                                        a
+                                                        (exists (@varlist (eo::var "y" Int)) b))))
+             (exists (@varlist (eo::var "x" Int))
+                     (exists (@varlist (eo::var "y" Int))
+                                          ($f_list_cons or a b)))))
+
+(step $test_$prenex_normal_form_14 true 
+      :rule $assert_eq 
+      :args (($prenex_normal_form 
+              (exists (@varlist (eo::var "x" Int))
+                      ($f_list_cons or 
+                                    a
+                                    ($f_list_cons and
+                                                  b
+                                                  (exists (@varlist (eo::var "y" Int)) c)))))
+             (exists (@varlist (eo::var "x" Int))
+                     (exists (@varlist (eo::var "y" Int))
+                                          ($f_list_cons or 
+                                                        a 
+                                                        ($f_list_cons and b c))))))
+
+;------------------------------------------
+; $small_step_conjunctive_normal_form
+;------------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+; Atomic props.
+(step $test_$small_step_conjunctive_normal_form_1 true 
+      :rule $assert_eq 
+      :args (($small_step_conjunctive_normal_form a)
+
+             a))
+
+(step $test_$small_step_conjunctive_normal_form_2 true 
+      :rule $assert_eq 
+      :args (($small_step_conjunctive_normal_form (not a))
+
+             (not a)))
+
+; or
+(step $test_$small_step_conjunctive_normal_form_3 true 
+      :rule $assert_eq 
+      :args (($small_step_conjunctive_normal_form (or a b))
+
+             (or a b)))
+
+(step $test_$small_step_conjunctive_normal_form_4 true 
+      :rule $assert_eq 
+      :args (($small_step_conjunctive_normal_form (or a (or b c)))
+
+             (or a (or b c))))
+
+(step $test_$small_step_conjunctive_normal_form_5 true 
+      :rule $assert_eq 
+      :args (($small_step_conjunctive_normal_form 
+              ($f_list_cons or a ($f_list_cons and b c)))
+
+             ($f_list_cons and ($f_list_cons or a b) ($f_list_cons or a c))))
+
+(step $test_$small_step_conjunctive_normal_form_5 true 
+      :rule $assert_eq 
+      :args (($small_step_conjunctive_normal_form 
+              ($f_list_cons or ($f_list_cons and b c) a))
+
+             ($f_list_cons and ($f_list_cons or b a) ($f_list_cons or c a))))
+
+; and
+(step $test_$small_step_conjunctive_normal_form_6 true 
+      :rule $assert_eq 
+      :args (($small_step_conjunctive_normal_form (and a b))
+
+             (and a b)))
+
+(step $test_$small_step_conjunctive_normal_form_7 true 
+      :rule $assert_eq 
+      :args (($small_step_conjunctive_normal_form (and a (or b c)))
+
+             (and a (or b c))))
+
+;------------------------------------------
+; $rec_conjunctive_normal_form
+;------------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+(declare-const e Bool)
+
+; Atomic props.
+(step $test_$rec_conjunctive_normal_form_1 true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form a)
+
+             a))
+
+(step $test_$rec_conjunctive_normal_form_2 true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form (not a))
+
+             (not a)))
+
+; or
+(step $test_$rec_conjunctive_normal_form_3 true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form (or a b))
+
+             (or a b)))
+
+(step $test_$rec_conjunctive_normal_form_4 true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form (or a (or b c)))
+
+             (or a (or b c))))
+
+(step $test_$rec_conjunctive_normal_form_5 true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form 
+              ($f_list_cons or a ($f_list_cons and b c)))
+
+             ($f_list_cons and ($f_list_cons or a b) ($f_list_cons or a c))))
+
+(step $test_$rec_conjunctive_normal_form_5a true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form 
+              ($f_list_cons or 
+                            a 
+                            ($f_list_cons and 
+                                          ($f_list_cons and b c)
+                                          ($f_list_cons and d e))))
+
+             ($f_list_cons and 
+                           ($f_list_cons and 
+                                         ($f_list_cons or a b) 
+                                         ($f_list_cons or a c)) 
+                           ($f_list_cons and 
+                                         ($f_list_cons or a d) 
+                                         ($f_list_cons or a e)))))
+
+; and
+(step $test_$rec_conjunctive_normal_form_6 true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form (and a b))
+
+             (and a b)))
+
+(step $test_$rec_conjunctive_normal_form_7 true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form (and a (or b c)))
+
+             (and a (or b c))))
+
+(step $test_$rec_conjunctive_normal_form_8 true 
+      :rule $assert_eq 
+      :args (($rec_conjunctive_normal_form 
+              ($f_list_cons and
+                            a 
+                            ($f_list_cons or
+                                          ($f_list_cons and b c)
+                                          ($f_list_cons and d e))))
+
+             ($f_list_cons and 
+                           a
+                           ($f_list_cons and 
+                                         ($f_list_cons and
+                                                       ($f_list_cons or b d)
+                                                       ($f_list_cons or c d))
+                                         ($f_list_cons and
+                                                       ($f_list_cons or b e)
+                                                       ($f_list_cons or c e))))))
+
+;------------------------------------------
+; $conjunctive_normal_form
+;------------------------------------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+(declare-const e Bool)
+(declare-const U Type)
+(declare-const f1 U)
+(declare-const f2 U)
+(declare-const f3 U)
+(declare-const f4 U)
+(declare-const p (-> U Bool))
+
+; Atomic props.
+(step $test_$conjunctive_normal_form_1 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form (forall @varlist.nil a))
+
+             (forall @varlist.nil a)))
+
+(step $test_$conjunctive_normal_form_2 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form (not a))
+
+             (not a)))
+
+; or
+(step $test_$conjunctive_normal_form_3 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form (or a b))
+
+             (or a b)))
+
+(step $test_$conjunctive_normal_form_4 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form (or a (or b c)))
+
+             (or a (or b c))))
+
+(step $test_$conjunctive_normal_form_5 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form 
+              ($f_list_cons or a ($f_list_cons and b c)))
+
+             ($f_list_cons and ($f_list_cons or a b) ($f_list_cons or a c))))
+
+(step $test_$conjunctive_normal_form_5a true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form 
+              ($f_list_cons or 
+                            a 
+                            ($f_list_cons and 
+                                          ($f_list_cons and b c)
+                                          ($f_list_cons and d e))))
+
+             ($f_list_cons and 
+                           ($f_list_cons or a b)
+                           ($f_list_cons and 
+                                         ($f_list_cons or a c)
+                                         ($f_list_cons and 
+                                                       ($f_list_cons or a d) 
+                                                       ($f_list_cons or a e))))))
+
+; and
+(step $test_$conjunctive_normal_form_6 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form (and a b))
+
+             (and a b)))
+
+(step $test_$conjunctive_normal_form_7 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form (and a (or b c)))
+
+             (and a (or b c))))
+
+(step $test_$conjunctive_normal_form_8 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form 
+              ($f_list_cons and
+                            a 
+                            ($f_list_cons or
+                                          ($f_list_cons and b c)
+                                          ($f_list_cons and d e))))
+
+             ($f_list_cons and 
+                           a
+                           ($f_list_cons and 
+                                         ($f_list_cons or b d)
+                                         ($f_list_cons and
+                                                       ($f_list_cons or c d)
+                                                       ($f_list_cons and
+                                                                     ($f_list_cons or b e)
+                                                                     ($f_list_cons or c e)))))))
+
+; quantifiers
+(step $test_$conjunctive_normal_form_9 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form
+              (forall (@varlist (eo::var "x" Int))
+                      ($f_list_cons and
+                                    a 
+                                    ($f_list_cons or
+                                                  ($f_list_cons and b c)
+                                                  ($f_list_cons and d e)))))
+
+             (forall (@varlist (eo::var "x" Int))
+                     ($f_list_cons and 
+                                   a
+                                   ($f_list_cons and 
+                                                 ($f_list_cons or b d)
+                                                 ($f_list_cons and
+                                                               ($f_list_cons or c d)
+                                                               ($f_list_cons and
+                                                                             ($f_list_cons or b e)
+                                                                             ($f_list_cons or c e))))))))
+
+(step $test_$conjunctive_normal_form_10 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form
+              (exists (@varlist (eo::var "x" Int))
+                      ($f_list_cons and
+                                    a 
+                                    ($f_list_cons or
+                                                  ($f_list_cons and b c)
+                                                  ($f_list_cons and d e)))))
+
+             (exists (@varlist (eo::var "x" Int))
+                     ($f_list_cons and 
+                                   a
+                                   ($f_list_cons and 
+                                                 ($f_list_cons or b d)
+                                                 ($f_list_cons and
+                                                               ($f_list_cons or c d)
+                                                 ($f_list_cons and
+                                                               ($f_list_cons or b e)
+                                                               ($f_list_cons or c e))))))))
+
+; Misc.
+(step $test_$conjunctive_normal_form_11 true 
+      :rule $assert_eq 
+      :args (($conjunctive_normal_form
+              ($prenex_normal_form 
+               ($negative_normal_form 
+                ($f_list_cons
+                 and 
+                 (p f1)
+                 ($f_list_cons and
+                     ($f_list_cons or (= f1 f2) 
+                         ($f_list_cons 
+                          and 
+                          (not (= f4 (@var ( ( veriT_vr1 U ) ) veriT_vr1)))
+                          ($f_list_cons and
+                                        (not (= f2 (@var ( ( veriT_vr1 U ) ) veriT_vr1))) 
+                                        (not (= f2 f4)))))
+                     (not (= f1 f2)))) true)))
+
+             ($f_list_cons 
+              and 
+              (p f1) 
+              ($f_list_cons 
+               and
+               ($f_list_cons 
+                 or 
+                 (= f1 f2)
+                 (not (= f4 (@var ( ( veriT_vr1 U ) ) veriT_vr1))))
+               ($f_list_cons 
+                and 
+                ($f_list_cons 
+                  or 
+                  (= f1 f2)
+                  (not (= f2 (@var ( ( veriT_vr1 U ) ) veriT_vr1))))
+                ($f_list_cons 
+                 and
+                 ($f_list_cons 
+                  or 
+                  (= f1 f2)
+                  (not (= f2 f4)))
+                 (not (= f1 f2))))))))
+
+;-----------------
+; qnt_cnf
+;-----------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const U Type)
+(declare-const f1 U)
+(declare-const f2 U)
+(declare-const f3 U)
+(declare-const f4 U)
+(declare-const p (-> U Bool))
+
+; Adapted from VeriT certificates
+(step $test_qnt_cnf_1 
+      (@cl 
+       ($f_list_cons or 
+        (not 
+         (forall ( ( veriT_vr1 U ) ) 
+                 ($f_list_cons
+                 and 
+                 (p f1)
+                 (= f1 f2))))
+
+           (forall ( ( veriT_vr1 U ) ) (p f1)))) 
+      :rule qnt_cnf)
+
+(step $test_qnt_cnf_2
+      (@cl 
+       ($f_list_cons or 
+        (not 
+         (forall ( ( veriT_vr1 U ) ) 
+                 ($f_list_cons
+                 and 
+                 (p f1)
+                 ($f_list_cons and
+                               (= f1 f2) 
+                               (not (= f4 (@var ( ( veriT_vr1 U ) ) veriT_vr1)))))))
+
+           (forall ( ( veriT_vr1 U ) ) (not (= f4 (@var ( ( veriT_vr1 U ) ) veriT_vr1)))))) 
+      :rule qnt_cnf)
+
+(step $test_qnt_cnf_3 
+      (@cl 
+       ($f_list_cons or 
+        (not 
+         (forall ( ( veriT_vr1 U ) ) 
+                 ($f_list_cons
+                 and 
+                 (p f1)
+                 ($f_list_cons and
+                               (= f1 f2) 
+                               ($f_list_cons 
+                                and 
+                                (not (= f4 (@var ( ( veriT_vr1 U ) ) veriT_vr1)))
+                                (not (= f2 (@var ( ( veriT_vr1 U ) ) veriT_vr1))))))))
+
+           (forall ( ( veriT_vr1 U ) ) (= f1 f2)))) 
+      :rule qnt_cnf)
+
+(step $test_qnt_cnf_4 
+      (@cl 
+       ($f_list_cons or 
+        (not 
+         (forall ( ( veriT_vr1 U ) ) 
+                 ($f_list_cons
+                 and 
+                 (p f1)
+                 ($f_list_cons and
+                     ($f_list_cons or (= f1 f2) 
+                         ($f_list_cons 
+                          and 
+                          (not (= f4 (@var ( ( veriT_vr1 U ) ) veriT_vr1)))
+                          ($f_list_cons and
+                                        (not (= f2 (@var ( ( veriT_vr1 U ) ) veriT_vr1))) 
+                                        (not (= f2 f4)))))
+                     (not (= f1 f2))))))
+
+           (forall ( ( veriT_vr1 U ) ) 
+                   ($f_list_cons
+                     or 
+                     (= f1 f2) 
+                     (not (= f2 (@var ( ( veriT_vr1 U ) ) veriT_vr1)))))))
+      :rule qnt_cnf)
 
 ;------------------------------------------
 ; $ite_intro_check_conjuncts
@@ -420,4 +1158,1044 @@
       (@cl (= (and true c c d) (and c d c true)))
       :rule shuffle)
 
+;-----------------
+; not_equiv1
+;-----------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
 
+; Taken from VeriT certificates
+(assume premise_not_equiv1_1 (@cl (not (= a b))))
+
+(step $test_not_equiv1_1 
+      (@cl a b)
+      :rule not_equiv1
+      :premises (premise_not_equiv1_1))
+
+(assume premise_not_equiv1_2 (@cl (not (= (or a true) b))))
+
+(step $test_not_equiv1_2
+      (@cl (or a true) b)
+      :rule not_equiv1
+      :premises (premise_not_equiv1_2))
+
+(assume premise_not_equiv1_3 (@cl (not (= (or a true) (and b false)))))
+
+(step $test_not_equiv1_3
+      (@cl (or a true) (and b false))
+      :rule not_equiv1
+      :premises (premise_not_equiv1_3))
+
+;-----------------
+; not_equiv2
+;-----------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+; Taken from VeriT certificates
+(assume premise_not_equiv2_1 (@cl (not (= a b))))
+
+(step $test_not_equiv2_1 
+      (@cl (not a) (not b))
+      :rule not_equiv2
+      :premises (premise_not_equiv2_1))
+
+(assume premise_not_equiv2_2 (@cl (not (= (or a true) b))))
+
+(step $test_not_equiv2_2
+      (@cl (not (or a true)) (not b))
+      :rule not_equiv2
+      :premises (premise_not_equiv2_2))
+
+(assume premise_not_equiv2_3 (@cl (not (= (or a true) (and b false)))))
+
+(step $test_not_equiv2_3
+      (@cl (not (or a true)) (not (and b false)))
+      :rule not_equiv2
+      :premises (premise_not_equiv2_3))
+
+;-----------------
+; not_symm
+;-----------------
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+
+; Taken from VeriT certificates
+(assume premise_not_symm_1 (@cl (not (= a b))))
+
+(step $test_not_symm_1 
+      (@cl (not (= b a)))
+      :rule not_symm
+      :premises (premise_not_symm_1))
+
+(assume premise_not_symm_2 (@cl (not (= (or a true) b))))
+
+(step $test_not_symm_2
+      (@cl (not (= b (or a true))))
+      :rule not_symm
+      :premises (premise_not_symm_2))
+
+(assume premise_not_symm_3 (@cl (not (= (or a true) (and b false)))))
+
+(step $test_not_symm_3
+      (@cl (not (= (and b false) (or a true))))
+      :rule not_symm
+      :premises (premise_not_symm_3))
+
+;----------
+; and_intro
+;----------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+
+(assume premise_and_intro_1_lhs (@cl a))
+(assume premise_and_intro_1_rhs (@cl b))
+(step $test_and_intro_1
+      (@cl (and a b))
+      :rule and_intro
+      :premises (premise_and_intro_1_lhs premise_and_intro_1_rhs))
+
+(assume premise_and_intro_2_lhs (@cl (or a b)))
+(assume premise_and_intro_2_rhs (@cl c))
+(step $test_and_intro_2
+      (@cl (and (or a b) c))
+      :rule and_intro
+      :premises (premise_and_intro_2_lhs premise_and_intro_2_rhs))
+
+(assume premise_and_intro_3_lhs (@cl (or a b)))
+(assume premise_and_intro_3_rhs (@cl (=> c d)))
+(step $test_and_intro_3
+      (@cl (and (or a b) (=> c d)))
+      :rule and_intro
+      :premises (premise_and_intro_3_lhs premise_and_intro_3_rhs))
+
+(assume premise_and_intro_4_lhs (@cl (xor true (or a b))))
+(assume premise_and_intro_4_rhs (@cl (=> c d)))
+(step $test_and_intro_4
+      (@cl (and (xor true (or a b)) (=> c d)))
+      :rule and_intro
+      :premises (premise_and_intro_4_lhs premise_and_intro_4_rhs))
+
+(assume premise_and_intro_5_lhs (@cl (and true (or a b))))
+(assume premise_and_intro_5_rhs (@cl (=> c d)))
+(step $test_and_intro_5
+      (@cl (and (and true (or a b)) (=> c d)))
+      :rule and_intro
+      :premises (premise_and_intro_5_lhs premise_and_intro_5_rhs))
+
+(assume premise_and_intro_6_1 (@cl (and true (or a b))))
+(assume premise_and_intro_6_2 (@cl (=> c d)))
+(assume premise_and_intro_6_3 (@cl d))
+(step $test_and_intro_6
+      (@cl (and (and true (or a b)) (=> c d) d))
+      :rule and_intro
+      :premises (premise_and_intro_6_1 premise_and_intro_6_2 premise_and_intro_6_3))
+
+
+(assume premise_and_intro_7_1 (@cl (and true (or a b))))
+(assume premise_and_intro_7_2 (@cl (=> c d)))
+(assume premise_and_intro_7_3 (@cl d))
+(assume premise_and_intro_7_4 (@cl (xor a b)))
+(step $test_and_intro_7
+      (@cl (and (and true (or a b)) (=> c d) d (xor a b)))
+      :rule and_intro
+      :premises (premise_and_intro_7_1 premise_and_intro_7_2 premise_and_intro_7_3
+                 premise_and_intro_7_4))
+
+
+(assume premise_and_intro_8_1 (@cl (and true (or a b))))
+(assume premise_and_intro_8_2 (@cl (=> c d)))
+(assume premise_and_intro_8_3 (@cl d))
+(assume premise_and_intro_8_4 (@cl (xor a b)))
+(assume premise_and_intro_8_5 (@cl (distinct a b c d)))
+(step $test_and_intro_8
+      (@cl (and (and true (or a b)) (=> c d) d (xor a b) (distinct a b c d)))
+      :rule and_intro
+      :premises (premise_and_intro_8_1 premise_and_intro_8_2 premise_and_intro_8_3
+                 premise_and_intro_8_4 premise_and_intro_8_5))
+
+;-------------------------
+; $normalize_single_clause
+;-------------------------
+
+(declare-const p Bool)
+(declare-const q Bool)
+(declare-const r Bool)
+
+
+(step $test_$normalize_single_clause_1 true 
+      :rule $assert_eq 
+      :args (($normalize_single_clause 
+              (@cl (not (not p)) (not q)))
+
+             (@cl p (not q))))
+
+(step $test_$normalize_single_clause_2 true 
+      :rule $assert_eq 
+      :args (($normalize_single_clause 
+              (@cl (not q) (not (not p))))
+
+             (@cl (not q) p)))
+
+(step $test_$normalize_single_clause_3 true 
+      :rule $assert_eq 
+      :args (($normalize_single_clause 
+              (@cl (not q) (not (not p)) (not (not r))))
+
+             (@cl (not q) p r)))
+
+(step $test_$normalize_single_clause_4 true 
+      :rule $assert_eq 
+      :args (($normalize_single_clause 
+              (@cl (not (not p)) (not q) (not (not r))))
+
+             (@cl p (not q) r)))
+
+;-------------------------
+; $normalize_clauses
+;-------------------------
+
+(declare-const p Bool)
+(declare-const q Bool)
+(declare-const r Bool)
+
+
+(step $test_$normalize_clauses_1 true 
+      :rule $assert_eq 
+      :args (($normalize_clauses 
+              (and (@cl (not (not p)) (not q))
+                   (@cl (not (not q)) r)))
+
+             (and (@cl p (not q))
+                  (@cl q r))))
+
+(step $test_$normalize_clauses_2 true 
+      :rule $assert_eq 
+      :args (($normalize_clauses 
+              (and (@cl (not (not p)) (not q))
+                   (@cl (not (not q)) r)
+                   (@cl q r)))
+
+             (and (@cl p (not q))
+                  (@cl q r)
+                  (@cl q r))))
+
+(step $test_$normalize_clauses_3 true 
+      :rule $assert_eq 
+      :args (($normalize_clauses 
+              (and (@cl (not (not p)) (not q))
+                   (@cl (not (not q)) r)
+                   (@cl (not (not q)) (not r))))
+
+             (and (@cl p (not q))
+                  (@cl q r)
+                  (@cl q (not r)))))
+
+(step $test_$normalize_clauses_4 true 
+      :rule $assert_eq 
+      :args (($normalize_clauses 
+              (and (@cl (not (not p)) (not q))
+                   (@cl (not (not q)) r)
+                   (@cl (not (not q)) (not r))
+                   (@cl p)))
+
+             (and (@cl p (not q))
+                  (@cl q r)
+                  (@cl q (not r))
+                  (@cl p))))
+
+;-------------------------
+; $remove_pivot_from_clause
+;-------------------------
+
+(declare-const p Bool)
+(declare-const q Bool)
+(declare-const r Bool)
+
+
+(step $test_$remove_pivot_from_clause_1 true 
+      :rule $assert_eq 
+      :args (($remove_pivot_from_clause 
+              (not (not p))
+              (@cl (not (not p)) (not q)))
+
+             (@cl (not q))))
+
+(step $test_$remove_pivot_from_clause_2 true 
+      :rule $assert_eq 
+      :args (($remove_pivot_from_clause 
+              (not (not p))
+              (@cl r (not (not p)) (not q)))
+
+             (@cl r (not q))))
+
+(step $test_$remove_pivot_from_clause_3 true 
+      :rule $assert_eq 
+      :args (($remove_pivot_from_clause 
+              (not (not p))
+              (@cl (not (not p))))
+
+             @empty_cl))
+
+(step $test_$remove_pivot_from_clause_4 true 
+      :rule $assert_eq 
+      :args (($remove_pivot_from_clause 
+              (not (not p))
+              (@cl q r (not (not p))))
+
+             (@cl q r)))
+
+(step $test_$remove_pivot_from_clause_5 true 
+      :rule $assert_eq 
+      :args (($remove_pivot_from_clause 
+              p
+              (@cl q r p (not (not p))))
+
+             (@cl q r (not (not p)))))
+
+;------------------------------------
+; $find_and_remove_pivot_from_clauses
+;------------------------------------
+
+(declare-const p Bool)
+(declare-const q Bool)
+(declare-const r Bool)
+
+
+(step $test_$find_and_remove_pivot_from_clauses_1 true 
+      :rule $assert_eq 
+      :args (($find_and_remove_pivot_from_clauses
+              p
+              (and (@cl p (not q))
+                   (@cl q r)))
+
+             (@cl (not q))))
+
+(step $test_$find_and_remove_pivot_from_clauses_2 true 
+      :rule $assert_eq 
+      :args (($find_and_remove_pivot_from_clauses
+              p
+              (and (@cl p r)
+                   (@cl p (not q))
+                   (@cl q r)))
+
+             (@cl r)))
+
+(step $test_$find_and_remove_pivot_from_clauses_3 true 
+      :rule $assert_eq 
+      :args (($find_and_remove_pivot_from_clauses
+              p
+              (and (@cl (not (not q)) (not r))
+                   (@cl p r)
+                   (@cl p (not q))
+                   (@cl q r)))
+
+             (@cl r)))
+
+(step $test_$find_and_remove_pivot_from_clauses_4 true 
+      :rule $assert_eq 
+      :args (($find_and_remove_pivot_from_clauses
+              p
+              (and (@cl r q)
+                   (@cl (not (not q)) (not r))
+                   (@cl p r)
+                   (@cl p (not q))
+                   (@cl q r)))
+
+             (@cl r)))
+
+;------------------------------------------
+; $check_resolution_with_normalized_clauses
+;------------------------------------------
+
+(step $test_$check_resolution_with_normalized_clauses_1b true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) r)
+                   (@cl p (not q))
+                   (@cl q r))
+              true
+              true
+              (@varlist p true)
+              (@cl r (not q)))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_2 true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) r)
+                   (@cl p (not q))
+                   (@cl q r))
+              true
+              true
+              (@varlist p false)
+              (@cl r (not q)))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_3 true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) r)
+                   (@cl p (not q))
+                   (@cl q r))
+              true
+              true
+              (@varlist q false)
+              (@cl p r))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_4 true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) r)
+                   (@cl (not r) p)
+                   (@cl p (not q))
+                   (@cl q r))
+              true
+              true
+              (@varlist q false)
+              (@cl p r))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_5 true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) r)
+                   (@cl (not r) p)
+                   (@cl p (not q))
+                   (@cl q r))
+              true
+              true
+              (@varlist q true)
+              (@cl p r))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_6 true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) r) ; (@cl r (not r))
+                   (@cl (not r) p)
+                   (@cl p (not q))
+                   (@cl q r))
+              true
+              true
+              (@varlist p false)
+              (@cl r (not r)))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_6b true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl r q)
+                   (@cl (not r) p)
+                   (@cl r (not q)))
+              true
+              true
+              (@varlist r false)
+              (@cl p q))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_6b true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) r)
+                   (@cl (not r) p) 
+                   (@cl p (not q))
+                   (@cl q r))
+              true
+              true
+              (@varlist p false r false)
+              (@cl r (not p)))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_6c true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) r) ; cl r (not r)
+                   (@cl (not r) p) ; cl not r p
+                   (@cl p (not q))
+                   (@cl q r))
+              true
+              true
+              (@varlist p false r true)
+              (@cl (not p) p))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_6d true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) r)
+                   (@cl (not r) p)
+                   (@cl p (not q))
+                   (@cl q r))
+              true
+              true
+              (@varlist p false r true)
+              (@cl (not r) p))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_7 true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) (not q) (not r))
+                   (@cl (not (and p q)) p)
+                   (@cl (not (and p q)) q))
+              true
+              true
+              (@varlist p false)
+              (@cl (not q) (not r) (not (and p q))))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_8 true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) (not q) (not r))
+                   (@cl (not (and p q)) p)
+                   (@cl (not (and p q)) q))
+              true
+              true
+              (@varlist p false q false)
+              (@cl (not r) (not (and p q)) (not (and p q))))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_9 true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) (not q))
+                   (@cl (not (and p q)) q)
+                   (@cl (not (and p q)) p))
+              true
+              true
+              (@varlist p false)
+              (@cl (not q) (not (and p q))))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_10 true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) (not q))
+                   (@cl (not (and p q)) q)
+                   (@cl (not (and p q)) p))
+              true
+              true
+              (@varlist p false q false)
+              (@cl (not q) (not (and p q))))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_11 true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) (not q))
+                   (@cl (not (and p q)) q)
+                   (@cl (not q) p))
+              true
+              true
+              (@varlist q false)
+              (@cl (not p) (not (and p q))))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_12 true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not q) p)
+                   (@cl (not p) (not q))
+                   (@cl (not (and p q)) q))
+              true
+              true
+              (@varlist q false)
+              (@cl p (not (and p q))))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_12b true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not q) p)
+                   (@cl (not p) (not q))
+                   (@cl (not (and p q)) q))
+              true
+              true
+              (@varlist q false)
+              (@cl (not p) (not (and p q))))
+
+             true))
+
+
+
+(step $test_$check_resolution_with_normalized_clauses_13 true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) r)
+                   (@cl (not r) p)
+                   (@cl p (not q))
+                   (@cl q r))
+              true
+              true
+              (@varlist p true r false)
+              (@cl p (not q)))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_13b true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) r)
+                   (@cl (not r) p)
+                   (@cl p (not q))
+                   (@cl q r))
+              true
+              true
+              (@varlist p true r false)
+              (@cl p (not p)))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_13c true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) r) 
+                   (@cl (not r) p) ; cl p q
+                   (@cl p (not q))
+                   (@cl q r))
+              true
+              true
+              (@varlist p true r false)
+              (@cl p q))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_13d true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) r) ; cl (not r) r
+                   (@cl (not r) p) ; cl p q
+                   (@cl p (not q))
+                   (@cl q r))
+              true
+              true
+              (@varlist p true r false)
+              (@cl r (not p)))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_13e true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) r)
+                   (@cl (not r) p)
+                   (@cl p (not q))
+                   (@cl q r))
+              true
+              true
+              (@varlist p true r false)
+              (@cl r (not r)))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_13f true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) r)
+                   (@cl (not r) p)
+                   (@cl p (not q))
+                   (@cl q r))
+              true
+              true
+              (@varlist p true r false)
+              (@cl r q))
+
+             true))
+
+(step $test_$check_resolution_with_normalized_clauses_13g true 
+      :rule $assert_eq 
+      :args (($check_resolution_with_normalized_clauses
+              (and (@cl (not p) r)
+                   (@cl (not r) p)
+                   (@cl p (not q))
+                   (@cl q r))
+              true
+              true
+              (@varlist p true r false)
+              (@cl r (not q)))
+
+             true))
+
+;------------------------------------------
+; $check_resolution
+;------------------------------------------
+
+(step $test_$check_resolution_1 true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not p) r)
+                   (@cl p (not q))
+                   (@cl q r))
+              (@varlist p true)
+              (@cl r (not q)))
+
+             true))
+
+(step $test_$check_resolution_2 true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not p) r)
+                   (@cl p (not q))
+                   (@cl q r))
+              (@varlist p false)
+              (@cl r (not q)))
+
+             true))
+
+(step $test_$check_resolution_3 true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not p) r)
+                   (@cl p (not q))
+                   (@cl q r))
+              (@varlist q false)
+              (@cl p r))
+
+             true))
+
+(step $test_$check_resolution_4 true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not p) r)
+                   (@cl (not r) p)
+                   (@cl p (not q))
+                   (@cl q r))
+              (@varlist q false)
+              (@cl p r))
+
+             true))
+
+(step $test_$check_resolution_5 true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not p) r)
+                   (@cl (not r) p)
+                   (@cl p (not q))
+                   (@cl q r))
+              (@varlist q true)
+              (@cl p r))
+
+             true))
+
+(step $test_$check_resolution_6 true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not p) r) ; cl r (not r)
+                   (@cl (not r) p) ; r q
+                   (@cl p (not q))
+                   (@cl q r))
+              (@varlist p false r false)
+              (@cl r q))
+
+             true))
+
+(step $test_$check_resolution_7 true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not p) (not q) (not r))
+                   (@cl (not (and p q)) p)
+                   (@cl (not (and p q)) q))
+              (@varlist p false)
+              (@cl (not q) (not r) (not (and p q))))
+
+             true))
+
+(step $test_$check_resolution_8 true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not p) (not q) (not r))
+                   (@cl (not (and p q)) p)
+                   (@cl (not (and p q)) q))
+              (@varlist p false q false)
+              (@cl (not r) (not (and p q)) (not (and p q))))
+
+             true))
+
+(step $test_$check_resolution_9 true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not p) (not q))
+                   (@cl (not (and p q)) q)
+                   (@cl (not (and p q)) p))
+              (@varlist p false)
+              (@cl (not q) (not (and p q))))
+
+             true))
+
+(step $test_$check_resolution_10 true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not p) (not q))
+                   (@cl (not (and p q)) q)
+                   (@cl (not (and p q)) p))
+              (@varlist p false q false)
+              (@cl (not q) (not (and p q))))
+
+             true))
+
+(step $test_$check_resolution_11 true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not p) (not q))
+                   (@cl (not (and p q)) q)
+                   (@cl (not q) p))
+              (@varlist q false)
+              (@cl (not p) (not (and p q))))
+
+             true))
+
+(step $test_$check_resolution_12 true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not p) (not q))
+                   (@cl (not (and p q)) q)
+                   (@cl (not q) p))
+              (@varlist q false)
+              (@cl (not p) (not (and p q))))
+
+             true))
+
+(step $test_$check_resolution_12b true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not p) (not q))
+                   (@cl (not (and p q)) q)
+                   (@cl (not q) p))
+              (@varlist q false)
+              (@cl p (not (and p q))))
+
+             true))
+
+; Misc.
+; Tests from actual proof certificates
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const p Bool)
+(declare-const q Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+(declare-const e Bool)
+(declare-const f Bool)
+(declare-const g Bool)
+(declare-const h Bool)
+(declare-const i Bool)
+(declare-const j Bool)
+(declare-const k Bool)
+(declare-const l Bool)
+(declare-const m Bool)
+(declare-const n Bool)
+(declare-const o Bool)
+(declare-const r Bool)
+
+(step $test_$check_resolution_13 true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not a) (not b) (not p) (not q)
+                        (not c) (not d) (not e) (not f)
+                        (not g) (not h) (not i) (not j)
+                        (not k) (not l) (not m) (not n)
+                        (not o) (not r))
+                   (@cl (not (and p q)) q)
+                   (@cl (not (and p q)) p))
+              (@varlist p false)
+              (@cl (not a) (not b) (not q)
+                   (not c) (not d) (not e) (not f)
+                   (not g) (not h) (not i) (not j)
+                   (not k) (not l) (not m) (not n)
+                   (not o) (not r)
+                   (not (and p q))))
+             true))
+
+(step $test_$check_resolution_13b true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not a) (not b) (not p) (not q)
+                        (not c) (not d) (not e) (not f)
+                        (not g) (not h) (not i) (not j)
+                        (not k) (not l) (not m) (not n)
+                        (not o) (not r))
+                   (@cl (not (and p q)) q)
+                   (@cl (not (and p q)) p))
+              (@varlist q false)
+              (@cl (not a) (not b) (not p)
+                   (not c) (not d) (not e) (not f)
+                   (not g) (not h) (not i) (not j)
+                   (not k) (not l) (not m) (not n)
+                   (not o) (not r)
+                   (not (and p q))))
+             true))
+
+(step $test_$check_resolution_13c true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not a) (not b) (not p) (not q)
+                        (not c) (not d) (not e) (not f)
+                        (not g) (not h) (not i) (not j)
+                        (not k) (not l) (not m) (not n)
+                        (not o) (not r))
+                   (@cl (not (and p q)) q)
+                   (@cl (not (and p q)) p))
+              (@varlist q false p false)
+              (@cl (not a) (not b)
+                   (not c) (not d) (not e) (not f)
+                   (not g) (not h) (not i) (not j)
+                   (not k) (not l) (not m) (not n)
+                   (not o) (not r)
+                   (not (and p q))))
+             true))
+
+(declare-const p Bool)
+(declare-const q Bool)
+(declare-const r Bool)
+(declare-const s Bool)
+
+(step $test_$check_resolution_14 true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not p) (not q) (not r) s)
+                   (@cl (not (and p q)) q)
+                   (@cl (not (and p q)) p)
+                   (@cl (and s r) (and p q))
+                   (@cl (not (and s r)) s))
+              (@varlist q false)
+              (@cl (not p) (not r) s (not (and p q))))
+             true))
+
+(step $test_$check_resolution_14b true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not p) (not q) (not r) s)
+                   (@cl (not (and p q)) q)
+                   (@cl (not (and p q)) p)
+                   (@cl (and s r) (and p q))
+                   (@cl (not (and s r)) s))
+              (@varlist q false p false)
+              (@cl (not r) s (not (and p q)) (not (and p q))))
+             true))
+
+(step $test_$check_resolution_14c true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not p) (not q) (not r) s)
+                   (@cl (not (and p q)) q)
+                   (@cl (not (and p q)) p)
+                   (@cl (and s r) (and p q))
+                   (@cl (not (and s r)) s))
+              (@varlist q false p false (and p q) false)
+              (@cl (not r) s (not (and p q)) (not (and p q))))
+             true))
+
+(step $test_$check_resolution_14d true 
+      :rule $assert_eq 
+      :args (($check_resolution
+              (and (@cl (not p) (not q) (not r) s)
+                   (@cl (not (and p q)) q)
+                   (@cl (not (and p q)) p)
+                   (@cl (and s r) (and p q))
+                   (@cl (not (and s r)) s))
+              (@varlist q false 
+                        p false
+                        (and p q) false
+                        (and s r) true)
+              (@cl (not r) s))
+             true))
+
+;------------------------------------------
+; resolution
+;------------------------------------------
+
+(assume premise_resolution_1_1 (@cl (not p) r))
+(assume premise_resolution_1_2 (@cl p (not q)))
+(assume premise_resolution_1_3 (@cl q r))
+
+(step $test_resolution_1
+      (@cl r (not q))
+      :rule resolution
+      :premises (premise_resolution_1_1 premise_resolution_1_2 premise_resolution_1_3)
+      :args ((@varlist p true)))
+
+
+(declare-const p Bool)
+(declare-const q Bool)
+(declare-const r Bool)
+(declare-const s Bool)
+
+(assume premise_resolution_2_1 (@cl (not p) (not q) (not r) s))
+(assume premise_resolution_2_2 (@cl (not (and p q)) q))
+(assume premise_resolution_2_3 (@cl (not (and p q)) p))
+(assume premise_resolution_2_4 (@cl (and s r) (and p q)))
+(assume premise_resolution_2_5 (@cl (not (and s r)) s))
+
+(step $test_resolution_2 
+      (@cl (not r) s)
+      :rule resolution 
+      :premises (premise_resolution_2_1 premise_resolution_2_2 premise_resolution_2_3 
+                 premise_resolution_2_4 premise_resolution_2_5)
+      :args ((@varlist q false 
+                       p false
+                       (and p q) false
+                       (and s r) true)))
+
+; Example from VeriT certificate.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+(assume premise_resolution_3_1 (@cl (= c (= b a))))
+(assume premise_resolution_3_2 (@cl (not (= c (= b a)))
+                       (= c (= a b))))
+(step $test_resolution_3
+      (@cl (= c (= a b)))
+      :rule resolution :premises (premise_resolution_3_1 premise_resolution_3_2) 
+      :args ((@varlist (= c (= b a)) true)))
+
+; Example from VeriT certificate.
+(declare-const a Bool)
+(declare-const b Bool)
+
+(assume premise_resolution_4_1 (@cl (not (not (not a))) a))
+(assume premise_resolution_4_2 (@cl (not (not a)) (not (not b))))
+(step $test_resolution_4 
+      (@cl a (not (not b))) 
+      :rule resolution 
+      :premises ( premise_resolution_4_1 premise_resolution_4_2 ) 
+      :args ( (@varlist (not (not a)) false) ))
+
+; Example from VeriT certificate.
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(assume premise_resolution_5_1 (@cl (not (not (and (not (= a b)) (= a c))))))
+(assume premise_resolution_5_2 (@cl (not (not (not (and (not (= a b)) (= a c))))) 
+                       (not (not (and (not (= b a)) (= a c))))))
+(step $test_resolution_5 
+      (@cl (not (not (and (not (= b a)) (= a c)))))
+      :rule resolution
+      :premises ( premise_resolution_5_1 premise_resolution_5_2 ) 
+      :args ( (@varlist (not (not (and (not (= a b)) (= a c)))) true) ))
