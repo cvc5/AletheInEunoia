@@ -1,4 +1,5 @@
 (include "../theories/theory.eo")
+(include "./arith.eo")
 (include "./lists.eo")
 (include "./trees.eo")
 
@@ -993,34 +994,29 @@
            ($context_var_is_fixed and_list var)
            )
 
-          (
-           ($context_var_is_fixed 
-            (and (= (@var (@varlist var) var) (@var (@varlist var) var))) var)
-
-           true
-           )
-
-          (; { (@var (@varlist var) var) <> any}
-           ($context_var_is_fixed (and (= (@var (@varlist var) var) any)) var)
-
-           false
-           )
-
-          (; { (@var (@varlist var) var) <> var_2}
-           ($context_var_is_fixed (and (= var_2 any)) var)
-
-           false
-           )
-
-          (
+          (; We consider the first matching occurrence: outer definitions
+           ; shadow nested ones.
            ($context_var_is_fixed 
             (and (= (@var (@varlist var) var) (@var (@varlist var) var)) eqs) var)
            
            true
            )
 
+          (; NOTE: we allow to query the service with binding and bound occurrences of variables.
+           ($context_var_is_fixed 
+            (and (= (@var (@varlist var) var) (@var (@varlist var) var)) eqs) (@var (@varlist var) var))
+           
+           true
+           )
+
           (; { (@var (@varlist var) var) <> any}
            ($context_var_is_fixed (and (= (@var (@varlist var) var) any) eqs) var)
+
+           false
+           )
+
+          (; { (@var (@varlist var) var) <> any}
+           ($context_var_is_fixed (and (= (@var (@varlist var) var) any) eqs) (@var (@varlist var) var))
 
            false
            )
@@ -1033,12 +1029,12 @@
 
           (; This is the last "element" of our representation of 
            ; contexts.
-           ($context_var_is_fixed (and true) var)
+           ($context_var_is_fixed true var)
 
            false
            )
           )
-)
+         )
 
 ; TODO: re-implement this as a map once programs are first-class values
 ; program: $context_vars_are_fixed
@@ -1421,6 +1417,15 @@
 
            true
            )
+          
+          (; NOTE: we allow to query the service with the representation of 
+           ; bound occurrences of object language variables.
+           ($substitution_contains_substitute 
+            (@substitution (@substitute (@var (@varlist var) var) value) substitutions)
+            var)
+
+           true
+           )
 
           (; {var2 <> var}
            ; Assuming that var is actually mentioned in the substitution.
@@ -1585,6 +1590,14 @@
            value
            )
 
+          (; NOTE: we allow to query the service with binding and bound occurrences of variables.
+           ($substitution_get_value 
+            (@substitution (@substitute (@var (@varlist var) var) value) substitutions)
+            var)
+
+           value
+           )
+
           (; {var2 <> var}
            ; Assuming that var is actually mentioned in the substitution.
            ($substitution_get_value 
@@ -1632,7 +1645,7 @@
 
            (eo::ite ($substitution_contains_substitute substitution x)
 
-                    ($substitution_apply x substitution)
+                    ($substitution_get_value substitution x)
 
                     (@var (@varlist x) x))
            )
