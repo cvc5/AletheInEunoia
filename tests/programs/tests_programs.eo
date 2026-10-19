@@ -65,3 +65,276 @@
                                              ($f_list_cons or c c)))
 
              ($f_list_cons and a ($f_list_cons and b ($f_list_cons or c c)))))
+
+;-----------------
+; $de_morgan_not_and
+;-----------------
+
+(declare-const a Bool)
+(declare-const b Bool)
+
+(step $test_$de_morgan_not_and_1 true 
+      :rule $assert_eq 
+      :args (($de_morgan_not_and ($f_list_cons and a b))
+
+             ($f_list_cons  @cl (not a) (not b))))
+
+(step $test_$de_morgan_not_and_2 true 
+      :rule $assert_eq 
+      :args (($de_morgan_not_and (and a b))
+
+             ($f_list_cons @cl 
+                           (not a) 
+                           ($f_list_cons @cl (not b) (not true)))))
+
+(step $test_$de_morgan_not_and_3 true 
+      :rule $assert_eq 
+      :args (($de_morgan_not_and (and a b c))
+
+             ($f_list_cons @cl 
+                           (not a) 
+                           ($f_list_cons 
+                            @cl (not b) ($f_list_cons @cl (not c) (not true))))))
+
+(step $test_$de_morgan_not_and_4 true 
+      :rule $assert_eq 
+      :args (($de_morgan_not_and (and a b c false))
+
+             ($f_list_cons @cl (not a) 
+                           ($f_list_cons @cl (not b) 
+                                         ($f_list_cons @cl (not c) 
+                                                       ($f_list_cons @cl (not false) 
+                                                                     (not true)))))))
+
+;---------------------------
+; Contexts and substitutions
+;---------------------------
+
+;-----------------------
+; $context_get_variables
+;-----------------------
+
+(step $test_$context_get_variables_1 true 
+      :rule $assert_eq 
+      :args (($context_get_variables (@ctx @varlist.nil true))
+
+             @varlist.nil))
+
+(step $test_$context_get_variables_2 true 
+      :rule $assert_eq 
+      :args (($context_get_variables (@ctx ( ( x Bool ) ) (and (= (@var ( ( x Bool ) ) x) true))))
+
+             (@varlist (eo::var "x" Bool))))
+
+(step $test_$context_get_variables_3 true 
+      :rule $assert_eq 
+      :args (($context_get_variables (@ctx ( ( x Bool ) ( y Int ) ) 
+                                           (and (= (@var ( ( x Bool ) ) x) true)
+                                                (= (@var ( ( y Int ) ) y) 19))))
+
+             (@varlist (eo::var "x" Bool) (eo::var "y" Int))))
+
+(step $test_$context_get_variables_4 true 
+      :rule $assert_eq 
+      :args (($context_get_variables (@ctx ( ( x Bool ) ( y Int ) ( z @VarList )) 
+                                           (and (= (@var ( ( x Bool ) ) x) true)
+                                                (= (@var ( ( y Int ) ) y) 19)
+                                                (= (@var ( ( z @VarList ) ) z) @varlist.nil))))
+
+             (@varlist (eo::var "x" Bool) (eo::var "y" Int) (eo::var "z" @VarList))))
+
+(step $test_$context_get_variables_5 true 
+      :rule $assert_eq 
+      :args (($context_get_variables (@ctx ( ( x Bool ) ( y Int ) ( z @VarList ) (u @Substitution)) 
+                                           (and (= (@var ( ( x Bool ) ) x) true)
+                                                (= (@var ( ( y Int ) ) y) 19)
+                                                (= (@var ( ( z @VarList ) ) z) @varlist.nil)
+                                                (= (@var ( ( u @Substitution ) ) u) @substitution.nil))))
+
+             (@varlist (eo::var "x" Bool) (eo::var "y" Int) 
+                       (eo::var "z" @VarList) (eo::var "u" @Substitution))))
+
+;-----------------------------
+; $context_get_var_subst_pairs
+;-----------------------------
+
+(step $test_$context_get_var_subst_pairs_1 true 
+      :rule $assert_eq 
+      :args (($context_get_var_subst_pairs (@ctx @varlist.nil true) @varlist.nil)
+
+             @varlist.nil))
+
+(step $test_$context_get_var_subst_pairs_2 true 
+      :rule $assert_eq 
+      :args (($context_get_var_subst_pairs 
+              (@ctx ( ( x Bool ) ) (and (= (@var ( ( x Bool ) ) x) true)))
+              (@varlist (eo::var "x" Bool)))
+
+             (@varlist (@pair (eo::var "x" Bool) true))))
+
+(step $test_$context_get_var_subst_pairs_2b true 
+      :rule $assert_eq 
+      :args (($context_get_var_subst_pairs 
+              (@ctx ( ( x Bool ) ) (and (= (@var ( ( x Bool ) ) x) true)))
+              @varlist.nil)
+
+             @varlist.nil))
+
+(step $test_$context_get_var_subst_pairs_3 true 
+      :rule $assert_eq 
+      :args (($context_get_var_subst_pairs 
+              (@ctx ( ( x Bool ) ( y Int ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) true)
+                         (= (@var ( ( y Int ) ) y) 19)))
+              (@varlist (eo::var "x" Bool) (eo::var "y" Int)))
+
+             (@varlist (@pair (eo::var "x" Bool) true)
+                       (@pair (eo::var "y" Int) 19))))
+
+(step $test_$context_get_var_subst_pairs_3b true 
+      :rule $assert_eq 
+      :args (($context_get_var_subst_pairs 
+              (@ctx ( ( x Bool ) ( y Int ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) true)
+                         (= (@var ( ( y Int ) ) y) 19)))
+              (@varlist (eo::var "x" Bool)))
+
+             (@varlist (@pair (eo::var "x" Bool) true))))
+
+(step $test_$context_get_var_subst_pairs_3c true 
+      :rule $assert_eq 
+      :args (($context_get_var_subst_pairs 
+              (@ctx ( ( x Bool ) ( y Int ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) true)
+                         (= (@var ( ( y Int ) ) y) 19)))
+              (@varlist (eo::var "y" Int)))
+
+             (@varlist (@pair (eo::var "y" Int) 19))))
+
+(step $test_$context_get_var_subst_pairs_3d true 
+      :rule $assert_eq 
+      :args (($context_get_var_subst_pairs 
+              (@ctx ( ( x Bool ) ( y Int ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) true)
+                         (= (@var ( ( y Int ) ) y) 19)))
+              @varlist.nil)
+
+             @varlist.nil))
+
+(step $test_$context_get_var_subst_pairs_4 true 
+      :rule $assert_eq 
+      :args (($context_get_var_subst_pairs 
+              (@ctx ( ( x Bool ) ( y Int ) ( z @VarList ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) true)
+                         (= (@var ( ( y Int ) ) y) 19)
+                         (= (@var ( ( z @VarList ) ) z) @varlist.nil)))
+              (@varlist (eo::var "x" Bool) (eo::var "y" Int) (eo::var "z" @VarList)))
+
+             (@varlist (@pair (eo::var "x" Bool) true)
+                       (@pair (eo::var "y" Int) 19)
+                       (@pair (eo::var "z" @VarList) @varlist.nil))))
+
+(step $test_$context_get_var_subst_pairs_4b true 
+      :rule $assert_eq 
+      :args (($context_get_var_subst_pairs 
+              (@ctx ( ( x Bool ) ( y Int ) ( z @VarList ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) true)
+                         (= (@var ( ( y Int ) ) y) 19)
+                         (= (@var ( ( z @VarList ) ) z) @varlist.nil)))
+              (@varlist (eo::var "y" Int) (eo::var "z" @VarList)))
+
+             (@varlist (@pair (eo::var "y" Int) 19)
+                       (@pair (eo::var "z" @VarList) @varlist.nil))))
+
+(step $test_$context_get_var_subst_pairs_4c true 
+      :rule $assert_eq 
+      :args (($context_get_var_subst_pairs 
+              (@ctx ( ( x Bool ) ( y Int ) ( z @VarList ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) true)
+                         (= (@var ( ( y Int ) ) y) 19)
+                         (= (@var ( ( z @VarList ) ) z) @varlist.nil)))
+              (@varlist (eo::var "z" @VarList)))
+
+             (@varlist (@pair (eo::var "z" @VarList) @varlist.nil))))
+
+(step $test_$context_get_var_subst_pairs_4d true 
+      :rule $assert_eq 
+      :args (($context_get_var_subst_pairs 
+              (@ctx ( ( x Bool ) ( y Int ) ( z @VarList ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) true)
+                         (= (@var ( ( y Int ) ) y) 19)
+                         (= (@var ( ( z @VarList ) ) z) @varlist.nil)))
+              (@varlist (eo::var "y" Int)))
+
+             (@varlist (@pair (eo::var "y" Int) 19))))
+
+;-------------------------------
+; $substitution_build_from_pairs
+;-------------------------------
+
+(step $test_$substitution_build_from_pairs_1 true 
+      :rule $assert_eq 
+      :args (($substitution_build_from_pairs @varlist.nil)
+
+             @substitution.nil))
+
+(step $test_$substitution_build_from_pairs_2 true 
+      :rule $assert_eq 
+      :args (($substitution_build_from_pairs (@varlist (@pair (eo::var "y" Int) 19)))
+
+             (@substitution (@substitute (eo::var "y" Int) 19))))
+
+(step $test_$substitution_build_from_pairs_3 true 
+      :rule $assert_eq 
+      :args (($substitution_build_from_pairs (@varlist (@pair (eo::var "y" Int) 19)
+                                                       (@pair (eo::var "x" Bool) true)))
+
+             (@substitution (@substitute (eo::var "y" Int) 19)
+                            (@substitute (eo::var "x" Bool) true))))
+
+(step $test_$substitution_build_from_pairs_4 true 
+      :rule $assert_eq 
+      :args (($substitution_build_from_pairs (@varlist (@pair (eo::var "y" Int) 19)
+                                                       (@pair (eo::var "x" Bool) true)
+                                                       (@pair (eo::var "z" @VarList) @varlist.nil)))
+
+             (@substitution (@substitute (eo::var "y" Int) 19)
+                            (@substitute (eo::var "x" Bool) true)
+                            (@substitute (eo::var "z" @VarList) @varlist.nil))))
+
+;---------------------------------
+; $substitution_build_from_context
+;---------------------------------
+
+(step $test_$substitution_build_from_context_1 true 
+      :rule $assert_eq 
+      :args (($substitution_build_from_context (@ctx @varlist.nil true))
+
+             @substitution.nil))
+
+(step $test_$substitution_build_from_context_2 true 
+      :rule $assert_eq 
+      :args (($substitution_build_from_context (@ctx ( ( x Bool ) ) 
+                                                     (and (= (@var ( ( x Bool ) ) x) true))))
+
+             (@substitution (@substitute (eo::var "x" Bool) true))))
+
+(step $test_$substitution_build_from_context_3 true 
+      :rule $assert_eq 
+      :args (($substitution_build_from_context (@ctx ( ( x Bool ) ( y Int )) 
+                                                     (and (= (@var ( ( x Bool ) ) x) true)
+                                                          (= (@var ( ( y Int ) ) y) 10))))
+
+             (@substitution (@substitute (eo::var "x" Bool) true)
+                            (@substitute (eo::var "y" Int) 10))))
+
+(step $test_$substitution_build_from_context_4 true 
+      :rule $assert_eq 
+      :args (($substitution_build_from_context (@ctx ( ( x Bool ) ( y Int ) ( z @VarList )) 
+                                                     (and (= (@var ( ( x Bool ) ) x) true)
+                                                          (= (@var ( ( y Int ) ) y) 10)
+                                                          (= (@var ( ( z @VarList ) ) z) @varlist.nil))))
+
+             (@substitution (@substitute (eo::var "x" Bool) true)
+                            (@substitute (eo::var "y" Int) 10)
+                            (@substitute (eo::var "z" @VarList) @varlist.nil))))

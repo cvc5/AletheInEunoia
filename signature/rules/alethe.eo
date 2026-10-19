@@ -1602,22 +1602,14 @@
           (
            ($check_sko_ex_build_skolem_vars choice_body (@varlist x))
 
-           ($f_list_cons @varlist 
-                         ($f_list_cons @varlist 
-                                       x
-                                       (@varlist (choice (@varlist x) x choice_body)
-                                                 @varlist.nil))
-                         @varlist.nil)
+           (@varlist (@pair x (choice (@varlist x) x choice_body)))
            )
 
           (; { tail != @varlist.nil }
            ($check_sko_ex_build_skolem_vars choice_body (@varlist x tail))
 
            ($f_list_cons @varlist 
-                         ($f_list_cons @varlist 
-                                       x
-                                       (@varlist (choice (@varlist x) x (exists tail choice_body)) 
-                                                 @varlist.nil))
+                         (@pair x (choice (@varlist x) x (exists tail choice_body)))
                          ($check_sko_ex_build_skolem_vars choice_body tail))
            )
 
@@ -1811,7 +1803,7 @@
 ;    alpha-conversion) to the right-hand side.
 ; conclusion:
 (declare-rule refl ((context Bool) (t1 Bool) (t2 Bool))
-  :premises (context)
+  :args (context)
   :requires ((($check_refl context (@cl (= t1 t2))) true))
   :conclusion-explicit (@cl (= t1 t2))
 )

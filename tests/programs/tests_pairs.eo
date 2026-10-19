@@ -1,0 +1,63 @@
+(include "../../signature/theories/theory.eo")
+(include "../../signature/programs/pairs.eo")
+(include "../unit_test_services.eo")
+
+; Tests for pairs-related services.
+
+;----------
+; $pair_fst
+;----------
+
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+
+(step $test_$pair_fst_1 true 
+      :rule $assert_eq 
+      :args (($pair_fst (@pair 1 true))
+             
+             1))
+
+(step $test_$pair_fst_2 true 
+      :rule $assert_eq 
+      :args (($pair_fst (@pair (@varlist 1 true) @substitution.nil))
+             
+             (@varlist 1 true)))
+
+(step $test_$pair_fst_3 true 
+      :rule $assert_eq 
+      :args (($pair_fst (@pair a b))
+             
+             a))
+
+;----------
+; $pair_snd
+;----------
+
+; Some constants to build terms, for testing purposes.
+(declare-const a Bool)
+(declare-const b Bool)
+
+(step $test_$pair_snd_1 true 
+      :rule $assert_eq 
+      :args (($pair_snd (@pair 1 true))
+             
+             true))
+
+(step $test_$pair_snd_2 true 
+      :rule $assert_eq 
+      :args (($pair_snd (@pair (@varlist 1 true) @substitution.nil))
+             
+             @substitution.nil))
+
+(step $test_$pair_snd_3 true 
+      :rule $assert_eq 
+      :args (($pair_snd (@pair a b))
+             
+             b))
+
+(step $test_$pair_snd_4 true 
+      :rule $assert_eq 
+      :args (($pair_snd (@pair (eo::var "y" Int) 19))
+             
+             19))

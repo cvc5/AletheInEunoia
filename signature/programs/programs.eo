@@ -885,10 +885,8 @@
            ($context_get_var_subst_pairs context (@varlist id ids))
            
            ($f_list_cons @varlist 
-                        ($f_list_cons @varlist id
-                                      ($f_list_cons @varlist 
-                                                    ($context_get_substitute context id) @varlist.nil))
-                        ($context_get_var_subst_pairs context ids))
+                         (@pair id ($context_get_substitute context id))
+                         ($context_get_var_subst_pairs context ids))
            )
 
           (
@@ -1400,7 +1398,8 @@
 ; Substitution
 ;-------------
 
-; Manipulation/application of substitutions.
+; Manipulation/application of substitutions. Requires the pairs and lists 
+; libraries.
 
 ; program: $substitution_contains_substitute
 ; args:
@@ -1459,6 +1458,7 @@
 
                  substitutions
                  
+                 ; { not ($substitution_contains_substitute substitutions var) }
                  ($f_list_cons @substitution
                                (@substitute var value) substitutions)
                  )
@@ -1489,7 +1489,7 @@
            ($substitution_extend ($substitution_build vars_tail values_tail) var value)
            )
           )
-)
+         )
 
 ; program: $substitution_build_from_pairs
 ; args:
@@ -1508,7 +1508,7 @@
            )
 
           (
-           ($substitution_build_from_pairs (@varlist (@varlist var value) pairs_tail))
+           ($substitution_build_from_pairs (@varlist (@pair var value) pairs_tail))
 
            ($substitution_extend ($substitution_build_from_pairs pairs_tail) var value)
            )

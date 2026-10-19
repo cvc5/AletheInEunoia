@@ -201,6 +201,13 @@
 (declare-const @substitution (-> @Substitute @Substitution @Substitution)
                :right-assoc-nil @substitution.nil)
 
+;-------
+; Pairs
+;-------
+(declare-const @Pair Type)
+(declare-parameterized-const @pair ((A Type :implicit) 
+                                    (B Type :implicit))
+                             (-> A B @Pair))
 ;--------
 ; Strings
 ;--------

@@ -396,9 +396,9 @@
                               @varlist.nil 
                               (@varlist (@varlist x1))
                               (@varlist (@varlist false))
-                              @varlist)
+                              @pair)
              
-             (@varlist (@varlist ($f_list_cons @varlist x1 false)))))
+             (@varlist (@varlist (@pair x1 false)))))
 
 (step $test_$f_list_map_zip_2 true 
       :rule $assert_eq 
@@ -408,10 +408,10 @@
                                         (@varlist x1))
                               (@varlist (@varlist false)
                                         (@varlist true))
-                              @varlist)
+                              @pair)
              
-             (@varlist (@varlist ($f_list_cons @varlist x1 false))
-                       (@varlist ($f_list_cons @varlist x1 true)))))
+             (@varlist (@varlist (@pair x1 false))
+                       (@varlist (@pair x1 true)))))
 
 (step $test_$f_list_map_zip_3 true 
       :rule $assert_eq 
@@ -425,16 +425,16 @@
                                         (@varlist true false)
                                         (@varlist false true)
                                         (@varlist true true))
-                              @varlist)
+                              @pair)
              
-             (@varlist (@varlist ($f_list_cons @varlist x1 false)
-                                 ($f_list_cons @varlist x2 false))
-                       (@varlist ($f_list_cons @varlist x1 true)
-                                 ($f_list_cons @varlist x2 false))
-                       (@varlist ($f_list_cons @varlist x1 false)
-                                 ($f_list_cons @varlist x2 true))
-                       (@varlist ($f_list_cons @varlist x1 true)
-                                 ($f_list_cons @varlist x2 true)))))
+             (@varlist (@varlist (@pair x1 false)
+                                 (@pair x2 false))
+                       (@varlist (@pair x1 true)
+                                 (@pair x2 false))
+                       (@varlist (@pair x1 false)
+                                 (@pair x2 true))
+                       (@varlist (@pair x1 true)
+                                 (@pair x2 true)))))
 
 (step $test_$f_list_map_zip_4 true 
       :rule $assert_eq 
