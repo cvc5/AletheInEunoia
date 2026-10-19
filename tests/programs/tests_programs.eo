@@ -18,6 +18,36 @@
       :args (($varlist_concat ($f_list_cons @varlist 1 @varlist.nil) @varlist.nil)
              ($f_list_cons @varlist 1 @varlist.nil)))
 
+;---------------------------------
+; $varlist_zip
+;---------------------------------
+
+(step $test_$varlist_zip_1 true 
+      :rule $assert_eq 
+      :args (($varlist_zip @varlist.nil @varlist.nil)
+             @varlist.nil))
+
+(step $test_$varlist_zip_2 true 
+      :rule $assert_eq 
+      :args (($varlist_zip (@varlist (eo::var "x" Bool)) (@varlist true))
+              (@varlist (@pair (eo::var "x" Bool) true))))
+
+(step $test_$varlist_zip_3 true 
+      :rule $assert_eq 
+      :args (($varlist_zip (@varlist (eo::var "x" Bool) (eo::var "y" Int)) 
+                           (@varlist true 1))
+              (@varlist (@pair (eo::var "x" Bool) true)
+                        (@pair (eo::var "y" Int) 1))))
+
+(step $test_$varlist_zip_4 true 
+      :rule $assert_eq 
+      :args (($varlist_zip (@varlist (eo::var "x" Bool) (eo::var "y" Int) (eo::var "z" Bool)) 
+                           (@varlist true 1 false))
+              (@varlist (@pair (eo::var "x" Bool) true)
+                        (@pair (eo::var "y" Int) 1)
+                        (@pair (eo::var "z" Bool) false))))
+
+
 ;-------------
 ; $flat_and_or
 ;-------------
@@ -144,10 +174,38 @@
              (@varlist a b c)))
 
 ;----------------
+; $let_get_vars
+;----------------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+
+(step $test_$let_get_vars_1 true 
+      :rule $assert_eq 
+      :args (($let_get_vars (_ (@let ((x Bool)) x) a))
+
+             (@varlist (eo::var "x" Bool))))
+
+(step $test_$let_get_vars_2 true 
+      :rule $assert_eq 
+      :args (($let_get_vars (_ (_ (@let ((x1 Bool) (x2 Bool)) x2) a) b))
+
+             (@varlist (eo::var "x1" Bool) (eo::var "x2" Bool))))
+
+(step $test_$let_get_vars_3 true 
+      :rule $assert_eq 
+      :args (($let_get_vars (_ (_ (_ (@let ((x1 Bool) (x2 Bool) (x3 Int)) x2) a) b) c))
+
+             (@varlist (eo::var "x1" Bool) (eo::var "x2" Bool) (eo::var "x3" Int))))
+
+;----------------
 ; $let_get_body
 ;----------------
 
 (declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
 
 
 (step $test_$let_get_body_1 true 
@@ -329,6 +387,83 @@
               (@varlist (eo::var "y" Int)))
 
              (@varlist (@pair (eo::var "y" Int) 19))))
+
+;-----------------------------
+; $context_get_substitute
+;-----------------------------
+
+(step $test_$context_get_substitute_1 true 
+      :rule $assert_eq 
+      :args (($context_get_substitute 
+              (@ctx ( ( x Bool ) ) (and (= (@var ( ( x Bool ) ) x) true)))
+              (eo::var "x" Bool))
+
+             true))
+
+(step $test_$context_get_substitute_2 true 
+      :rule $assert_eq 
+      :args (($context_get_substitute 
+              (@ctx ( ( x Bool ) ( y Int ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) true)
+                         (= (@var ( ( y Int ) ) y) 19)))
+              (eo::var "x" Bool))
+
+             true))
+
+(step $test_$context_get_substitute_3 true
+      :rule $assert_eq 
+      :args (($context_get_substitute 
+              (@ctx ( ( x Bool ) ( y Int ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) true)
+                         (= (@var ( ( y Int ) ) y) 19)))
+              (eo::var "y" Int))
+
+             19))
+
+(step $test_$context_get_substitute_4 true 
+      :rule $assert_eq 
+      :args (($context_get_substitute 
+              (@ctx ( ( x Bool ) ( y Int ) ( z @VarList ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) true)
+                         (= (@var ( ( y Int ) ) y) 19)
+                         (= (@var ( ( z @VarList ) ) z) @varlist.nil)))
+              (eo::var "x" Bool))
+
+             true))
+
+(step $test_$context_get_substitute_4b true 
+      :rule $assert_eq 
+      :args (($context_get_substitute 
+              (@ctx ( ( x Bool ) ( y Int ) ( z @VarList ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) true)
+                         (= (@var ( ( y Int ) ) y) 19)
+                         (= (@var ( ( z @VarList ) ) z) @varlist.nil)))
+              (eo::var "y" Int))
+
+             19))
+
+(step $test_$context_get_substitute_4c true 
+      :rule $assert_eq 
+      :args (($context_get_substitute 
+              (@ctx ( ( x Bool ) ( y Int ) ( z @VarList ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) true)
+                         (= (@var ( ( y Int ) ) y) 19)
+                         (= (@var ( ( z @VarList ) ) z) @varlist.nil)))
+              (eo::var "z" @VarList))
+
+             @varlist.nil))
+
+(step $test_$context_get_substitute_4d true 
+      :rule $assert_eq 
+      :args (($context_get_substitute 
+              (@ctx ( ( x Bool ) ( y Int ) ( z @VarList ) ) 
+                    (and (= (@var ( ( x Bool ) ) x) true)
+                         (= (@var ( ( y Int ) ) y) 19)
+                         (= (@var ( ( z @VarList ) ) z) @varlist.nil)))
+              (eo::var "y" Int))
+
+             19))
+
 
 ;-----------------------
 ; $context_var_is_fixed
