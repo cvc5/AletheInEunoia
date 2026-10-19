@@ -193,10 +193,11 @@
 
 ; program: $varlist_zip
 ; args:
-; - list_1 @VarList: Some @VarList.
-; - list_2 @VarList: Some @VarList.
+; - list_1 @VarList: Some `@VarList`.
+; - list_2 @VarList: Some `@VarList`.
 ; return:
-;  The zip of the received @VarLists, as another @VarList.
+;  The zip of the received `@VarList`s, as another `@VarList` of `@pair`s.
+; note: PRE : { `list_1` and `list_2` have the same length }
 (program $varlist_zip ((A Type) (hd_1 A) (tl_1 A :list) (hd_2 A) (tl_2 A :list))
          :signature (@VarList @VarList) @VarList
 
@@ -205,7 +206,7 @@
            ($varlist_zip (@varlist hd_1 tl_1) (@varlist hd_2 tl_2))
 
            ($f_list_cons @varlist
-                         ($f_list_cons @varlist hd_1 (@varlist hd_2 @varlist.nil))
+                         (@pair hd_1 hd_2)
                          ($varlist_zip tl_1 tl_2))
            )
 
@@ -215,7 +216,7 @@
            @varlist.nil
            )
           )
-)
+         )
 
 ; TODO: implement this as a higher-order program, once it becomes feasible
 ; program: $varlist_flag_members
