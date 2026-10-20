@@ -3480,7 +3480,7 @@
 ;   of qnt_join.
 ; return: >
 ;   A boolean indicating if variables in `rhs_varlist` can be obtained by removing
-;   duplicates from ($varlist_concat `lhs_varlist_1` `lhs_varlist_2`); and, also,
+;   duplicates from `($varlist_concat lhs_varlist_1 lhs_varlist_2)`; and, also,
 ;   if `quantifier` is a universal or existential quantification. 
 (program $check_qnt_join ((lhs_varlist_1 @VarList) (lhs_varlist_2 @VarList) (rhs_varlist @VarList)
                           (quantifier (-> @VarList Bool Bool)))
