@@ -621,7 +621,7 @@
 ;   The result from applying the following equivalence-preserving 
 ;   transformation, until a fixed-point is reached:
 ;   - 𝜑1 ∧ ⋯  ∧ 𝜑𝑛 ⇒ 𝜑1' ∧ ⋯  ∧ 𝜑m′ where, in the right-hand side, a repeated 
-;     literal was removed, and 1 <= m <= n.
+;     literal was removed, and `1 <= m <= n`.
 ; note: PRE : { $remove_leading_negations_in_conjuncts `formula` = `formula`}
 (program $and_simplify_rec_remove_repeated ((conjunct Bool) (conjuncts Bool :list))
   :signature (Bool) Bool
