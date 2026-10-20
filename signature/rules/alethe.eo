@@ -2836,15 +2836,16 @@
 ; Rule shuffle
 ;-----------------
 
-; rule: shuffle
-; requires: >
-;   For conclusion to be an implication of the form, either:
-;   - (𝑡1 > 0 ∧ 𝑡2 ⋈ 𝑡3) → 𝑡1 ∗ 𝑡2 ⋈ 𝑡1 ∗ 𝑡3, with ⋈ ∈ {<, >, ≤, ≥, ≈}.
-;   - (𝑡1 > 0 ∧ ¬(𝑡; - lhs A: >
-;   Conclusion provided to the rule. 
-; return: >
-;   A boolean indicating if `conclusion` is equivalent to `premise`, but built 
-;   with @cl.
+; program: $check_shuffle
+; args:
+; - lhs A: >
+;   Left-hand side term, from the conclusion in the `shuffle` step, 
+;   representing the application of one of the following operators: +, ∗, ∧ or ∨.
+; - rhs A: >
+;   Right-hand side term, from the conclusion in the `shuffle` step, 
+;   representing the application of one of the following operators: +, ∗, ∧ or ∨.
+; return: A boolean indicating if `lhs` and `rhs` are equal modulo commutativity.
+; note: PRE : { the root operator in `lhs` is the same as in `rhs` }
 (program $check_shuffle ((A Type) (term_l A) (terms_l A :list)
                          (term_r A) (terms_r A :list))
 
@@ -2872,6 +2873,13 @@
     ($check_shuffle (or term_l terms_l) (or term_r terms_r))
 
     ($f_list_equal_mod_commut or (or term_l terms_l) (or term_r terms_r))
+    )
+
+   (; { either the terms are built with different operators, or at least one
+    ;   of them is not built with +, ∗, ∧ or ∨ }
+    ($check_shuffle term_l term_r)
+
+    false
     )
   )
 )
