@@ -9,6 +9,27 @@
 ; Arith theory-related concepts and routines
 ;-------------------------------------------
 
+; program: $int_exp
+; args:
+; - base Int: Base of the operation.
+; - exp Int: Exponent of the operation.
+; return: The result of `base`^`exp`.
+(program $int_exp ((base Int) (exp Int))
+         :signature (Int Int) Int
+         (
+          (
+           ($int_exp base 0)
+           
+           1
+           )
+
+          (; { exp != 0}
+           ($int_exp base exp)
+           
+           (eo::mul base ($int_exp base (eo::add exp (eo::neg 1))))
+           )
+          )
+         )
 
 ; program: $is_numeric_literal
 ; args:
