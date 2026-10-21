@@ -936,6 +936,229 @@
                    (ite b (= c (ite b c d)) (= d (ite b c d)))))) :rule ite_intro)
 
 ;-----------------
+; $check_shuffle
+;-----------------
+
+; Some constants to build terms, for testing purposes.
+(declare-const a Int)
+(declare-const b Int)
+(declare-const d Bool)
+(declare-const e Bool)
+
+
+; +
+(step $test_$check_shuffle_1 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (+ 1 2) (+ 2 1))
+
+             true))
+
+(step $test_$check_shuffle_2 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (+ a b) (+ b a a))
+
+             false))
+
+(step $test_$check_shuffle_3 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (+ a 2) (+ a 2 2))
+
+             false))
+
+(step $test_$check_shuffle_4 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (+ a b 3) (+ 3 b a))
+
+             true))
+
+(step $test_$check_shuffle_5 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (+ a 2 2 3) (+ 3 2 a))
+
+             false))
+
+(step $test_$check_shuffle_6 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (+ a b 2 3) (+ b 3 2 a))
+
+             true))
+
+; *
+(step $test_$check_shuffle_8 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (* a 2) (* 2 a))
+
+             true))
+
+(step $test_$check_shuffle_9 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (* a b) (* b a a))
+
+             false))
+
+(step $test_$check_shuffle_10 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (* a 2) (* a 2 2))
+
+             false))
+
+(step $test_$check_shuffle_11 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (* a 2 3) (* 3 2 a))
+
+             true))
+
+(step $test_$check_shuffle_12 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (* 1 b b 3) (* 3 b 1))
+
+             false))
+
+(step $test_$check_shuffle_13 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (* a b 2 3) (* b 3 2 a))
+
+             true))
+
+; or
+(step $test_$check_shuffle_14 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (or true c) (or c true))
+
+             true))
+
+(step $test_$check_shuffle_15 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (or true c) (or c true true))
+
+             false))
+
+(step $test_$check_shuffle_16 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (or true c) (or true c c))
+
+             false))
+
+(step $test_$check_shuffle_17 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (or true c d) (or d c true))
+
+             true))
+
+(step $test_$check_shuffle_18 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (or true c c d) (or d c true))
+
+             false))
+
+(step $test_$check_shuffle_19 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (or true c c d) (or c d c true))
+
+             true))
+
+; and
+(step $test_$check_shuffle_20 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (and true c) (and c true))
+
+             true))
+
+(step $test_$check_shuffle_21 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (and true c) (and c true true))
+
+             false))
+
+(step $test_$check_shuffle_22 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (and true c) (and true c c))
+
+             false))
+
+(step $test_$check_shuffle_23 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (and true c d) (and d c true))
+
+             true))
+
+(step $test_$check_shuffle_24 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (and true c c d) (and d c true))
+
+             false))
+
+(step $test_$check_shuffle_25 true 
+      :rule $assert_eq 
+      :args (($check_shuffle (and true c c d) (and c d c true))
+
+             true))
+
+
+;-----------------
+; shuffle
+;-----------------
+
+; Some constants to build terms, for testing purposes.
+(declare-const a Int)
+(declare-const b Int)
+(declare-const d Bool)
+(declare-const e Bool)
+
+
+; +
+(step $test_$check_shuffle_1 
+      (@cl (= (+ 1 2) (+ 2 1)))
+      :rule shuffle)
+
+(step $test_$check_shuffle_4 
+      (@cl (= (+ a b 3) (+ 3 b a)))
+      :rule shuffle)
+
+(step $test_$check_shuffle_6 
+      (@cl (= (+ a b 2 3) (+ b 3 2 a)))
+      :rule shuffle)
+
+; *
+(step $test_$check_shuffle_8 
+      (@cl (= (* a 2) (* 2 a)))
+      :rule shuffle)
+
+(step $test_$check_shuffle_11 
+      (@cl (= (* a 2 3) (* 3 2 a)))
+      :rule shuffle)
+
+(step $test_$check_shuffle_13 
+      (@cl (= (* a b 2 3) (* b 3 2 a)))
+      :rule shuffle)
+
+; or
+(step $test_$check_shuffle_14 
+      (@cl (= (or true c) (or c true)))
+      :rule shuffle)
+
+(step $test_$check_shuffle_17 
+      (@cl (= (or true c d) (or d c true)))
+      :rule shuffle)
+
+(step $test_$check_shuffle_19 
+      (@cl (= (or true c c d) (or c d c true)))
+      :rule shuffle)
+
+; and
+(step $test_$check_shuffle_20 
+      (@cl (= (and true c) (and c true)))
+      :rule shuffle)
+
+(step $test_$check_shuffle_23 
+      (@cl (= (and true c d) (and d c true)))
+      :rule shuffle)
+
+(step $test_$check_shuffle_25 
+      (@cl (= (and true c c d) (and c d c true)))
+      :rule shuffle)
+
+;-----------------
 ; not_equiv1
 ;-----------------
 ; Some constants to build terms, for testing purposes.
