@@ -1,0 +1,795 @@
+(include "../../signature/programs/logic.eo")
+(include "../../signature/programs/lists.eo")
+(include "../unit_test_services.eo")
+
+; Unit tests for logic.eo programs.
+
+;---------------------------------
+; $formula_is_an_atom
+;---------------------------------
+(declare-const a Bool)
+
+(step $test_$formula_is_an_atom_1 true 
+      :rule $assert_eq
+      :args (($formula_is_an_atom a) 
+             true))
+
+(step $test_$formula_is_an_atom_1b true 
+      :rule $assert_eq
+      :args (($formula_is_an_atom false) 
+             false))
+
+(step $test_$formula_is_an_atom_1c true 
+      :rule $assert_eq
+      :args (($formula_is_an_atom true) 
+             false))
+
+(step $test_$formula_is_an_atom_2 true 
+      :rule $assert_eq
+      :args (($formula_is_an_atom (not a)) 
+             false))
+
+(step $test_$formula_is_an_atom_3 true 
+      :rule $assert_eq
+      :args (($formula_is_an_atom (or a a)) 
+             false))
+
+(step $test_$formula_is_an_atom_4 true 
+      :rule $assert_eq
+      :args (($formula_is_an_atom (and a a)) 
+             false))
+
+(step $test_$formula_is_an_atom_5 true 
+      :rule $assert_eq
+      :args (($formula_is_an_atom (xor a a)) 
+             false))
+
+(step $test_$formula_is_an_atom_6 true 
+      :rule $assert_eq
+      :args (($formula_is_an_atom (=> a a)) 
+             false))
+
+;---------------------------------
+; $less_or_equal_formulas
+;---------------------------------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const p00 Bool)
+(declare-const p11 Bool)
+
+(step $test_$less_or_equal_formulas_1 true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas a (not a)) 
+             true))
+
+(step $test_$less_or_equal_formulas_1b true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (not a) a) 
+             false))
+
+(step $test_$less_or_equal_formulas_1c true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas a b) 
+             true))
+
+(step $test_$less_or_equal_formulas_1d true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas b c) 
+             true))
+
+(step $test_$less_or_equal_formulas_1e true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas c b) 
+             false))
+
+(step $test_$less_or_equal_formulas_1f true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas p00 p11) 
+             true))
+
+(step $test_$less_or_equal_formulas_1g true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas p11 p00) 
+             false))
+
+(step $test_$less_or_equal_formulas_2 true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas b (or a a)) 
+             true))
+
+(step $test_$less_or_equal_formulas_2b true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (or a a) b) 
+             false))
+
+(step $test_$less_or_equal_formulas_3 true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas a (and a a)) 
+             true))
+
+(step $test_$less_or_equal_formulas_3b true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (and a a) a) 
+             false))
+
+(step $test_$less_or_equal_formulas_4 true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas a (=> a a)) 
+             true))
+
+(step $test_$less_or_equal_formulas_4b true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (=> a a) a) 
+             false))
+
+(step $test_$less_or_equal_formulas_5 true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas a (xor a a)) 
+             true))
+
+(step $test_$less_or_equal_formulas_5b true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (xor a a) a) 
+             false))
+
+(step $test_$less_or_equal_formulas_6 true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (xor a a) (xor a a)) 
+             true))
+
+(step $test_$less_or_equal_formulas_7 true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (xor a a) (xor a (not a))) 
+             true))
+
+(step $test_$less_or_equal_formulas_7b true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (xor a (not a)) (xor a a)) 
+             false))
+
+(step $test_$less_or_equal_formulas_8 true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (xor (not a) (not a)) 
+                                      (xor (not a) (or a a))) 
+             true))
+
+(step $test_$less_or_equal_formulas_8b true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (xor (not a) (or a a)) 
+                                      (xor (not a) (not a))) 
+             false))
+
+(step $test_$less_or_equal_formulas_9 true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (and a a)
+                                      (or a a)) 
+             true))
+
+(step $test_$less_or_equal_formulas_9b true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (or a a)
+                                      (and a a))
+             false))
+
+(step $test_$less_or_equal_formulas_10 true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (or a a) 
+                                      (xor a a)) 
+             true))
+
+(step $test_$less_or_equal_formulas_10b true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (xor a a)
+                                      (or a a)) 
+             false))
+
+(step $test_$less_or_equal_formulas_11 true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (xor a a) 
+                                      (=> a a)) 
+             false))
+
+(step $test_$less_or_equal_formulas_11b true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (=> a a)
+                                      (xor a a)) 
+             true))
+
+(step $test_$less_or_equal_formulas_12 true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (not a) 
+                                      (or a a)) 
+             true))
+
+(step $test_$less_or_equal_formulas_12b true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (or a a)
+                                      (not a)) 
+             false))
+
+(step $test_$less_or_equal_formulas_12b true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (or p00 p11)
+                                      (or p11 p00)) 
+             true))
+
+(step $test_$less_or_equal_formulas_13 true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (not a) 
+                                      (and a a)) 
+             true))
+
+(step $test_$less_or_equal_formulas_13b true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (and a a)
+                                      (not a)) 
+             false))
+
+(step $test_$less_or_equal_formulas_14 true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (not a) 
+                                      (xor a a)) 
+             true))
+
+(step $test_$less_or_equal_formulas_14b true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (or a a)
+                                      (xor a)) 
+             false))
+
+(step $test_$less_or_equal_formulas_15 true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (not a) 
+                                      (=> a a)) 
+             true))
+
+(step $test_$less_or_equal_formulas_15b true 
+      :rule $assert_eq
+      :args (($less_or_equal_formulas (=> a a)
+                                      (not a)) 
+             false))
+
+;------------------------
+; $get_lesser_formula
+;------------------------
+(declare-const a Bool)
+
+(step $test_$get_lesser_formula_1 true 
+      :rule $assert_eq
+      :args (($get_lesser_formula or ($f_list_cons or a (not a)))
+             a))
+
+(step $test_$get_lesser_formula_2 true 
+      :rule $assert_eq
+      :args (($get_lesser_formula or ($f_list_cons or 
+                                                   a 
+                                                   ($f_list_cons or 
+                                                                 (not a)
+                                                                 (and a a))))
+             a))
+
+(step $test_$get_lesser_formula_3 true 
+      :rule $assert_eq
+      :args (($get_lesser_formula or ($f_list_cons or 
+                                                   a 
+                                                   ($f_list_cons or 
+                                                                 (not a)
+                                                                 ($f_list_cons or 
+                                                                               (=> a a)
+                                                                               (=> a a)))))
+             a))
+
+(step $test_$get_lesser_formula_4 true 
+      :rule $assert_eq
+      :args (($get_lesser_formula or ($f_list_cons or 
+                                                   (not a)
+                                                   ($f_list_cons or 
+                                                                 (not a)
+                                                                 ($f_list_cons or 
+                                                                               (=> a a)
+                                                                               (=> a a)))))
+             (not a)))
+
+(step $test_$get_lesser_formula_5 true 
+      :rule $assert_eq
+      :args (($get_lesser_formula or ($f_list_cons or 
+                                                   (=> a a)
+                                                   ($f_list_cons or 
+                                                                 (not a)
+                                                                 ($f_list_cons or 
+                                                                               (not a)
+                                                                               (=> a a)))))
+             (not a)))
+
+(step $test_$get_lesser_formula_6 true 
+      :rule $assert_eq
+      :args (($get_lesser_formula or ($f_list_cons or 
+                                                   (=> a a)
+                                                   ($f_list_cons or 
+                                                                 (not a)
+                                                                 ($f_list_cons or 
+                                                                               (=> a a)
+                                                                               (not a)))))
+             (not a)))
+
+(step $test_$get_lesser_formula_7 true 
+      :rule $assert_eq
+      :args (($get_lesser_formula and ($f_list_cons or 
+                                                   (=> a a)
+                                                   ($f_list_cons or 
+                                                                 (not a)
+                                                                 ($f_list_cons or 
+                                                                               (=> a a)
+                                                                               (not a)))))
+             ($f_list_cons or 
+                           (=> a a)
+                           ($f_list_cons or 
+                                         (not a)
+                                         ($f_list_cons or 
+                                                       (=> a a)
+                                                       (not a))))))
+
+
+;----------------------------------------
+; $normalize_formula_modulo_commutativity
+;----------------------------------------
+(declare-const a Bool)
+(declare-const b Bool)
+
+(step $test_$normalize_formula_modulo_commutativity_1 true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity ($f_list_cons or 
+                                                                    (=> b a)
+                                                                    (not a)))
+             ($f_list_cons or (not a) (=> b a))))
+
+(step $test_$normalize_formula_modulo_commutativity_2 true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity ($f_list_cons =>
+                                                                    (=> b b)
+                                                                    (not a)))
+             ($f_list_cons =>
+                           (=> b b)
+                           (not a))))
+
+(step $test_$normalize_formula_modulo_commutativity_3 true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity ($f_list_cons and
+                                                                    (=> a a)
+                                                                    (not a)))
+             ($f_list_cons and
+                           (not a)
+                           (=> a a))))
+
+(step $test_$normalize_formula_modulo_commutativity_4 true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity ($f_list_cons and
+                                                                    (=> b a)
+                                                                    (not a)))
+             ($f_list_cons and
+                           (not a)
+                           (=> b a))))
+
+(step $test_$normalize_formula_modulo_commutativity_5 true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity ($f_list_cons and
+                                                                    (not a)
+                                                                    (=> b a)))
+             ($f_list_cons and
+                           (not a)
+                           (=> b a))))
+
+(step $test_$normalize_formula_modulo_commutativity_6 true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity ($f_list_cons and
+                                                                    (not a)
+                                                                    ($f_list_cons and
+                                                                                  (=> b a)
+                                                                                  a)))
+             ($f_list_cons and
+                           a
+                           ($f_list_cons and
+                                         (not a)
+                                         (=> b a)))))
+
+(step $test_$normalize_formula_modulo_commutativity_7 true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity ($f_list_cons and
+                                                                    (not a)
+                                                                    ($f_list_cons and
+                                                                                  ($f_list_cons or (not a) b)
+                                                                                  a)))
+             ($f_list_cons and
+                           a
+                           ($f_list_cons and
+                                         (not a)
+                                         ($f_list_cons or b (not a))))))
+
+(step $test_$normalize_formula_modulo_commutativity_8 true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity (not (=> a (not a))))
+             (not (=> a (not a)))))
+
+(step $test_$normalize_formula_modulo_commutativity_9 true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity (not (=> a (not ($f_list_cons or (not a) a)))))
+             (not (=> a (not ($f_list_cons or (not a) a))))))
+
+(step $test_$normalize_formula_modulo_commutativity_9b true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity
+              (or (and (not a) a)
+                  (and b)))
+              ($f_list_cons or 
+                            false
+                            ($f_list_cons or 
+                                          (and a (not a))
+                                          (and b)))))
+
+(step $test_$normalize_formula_modulo_commutativity_9c true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity
+              (or (and a (not a))
+                  (and b)))
+              ($f_list_cons or 
+                            false
+                            ($f_list_cons or 
+                                          (and a (not a))
+                                          (and b)))))
+
+; Testing normal forms that should be equal.
+(step $test_$normalize_formula_modulo_commutativity_10 true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity (or a (not a)))
+             ($normalize_formula_modulo_commutativity (or (not a) a))))
+
+(step $test_$normalize_formula_modulo_commutativity_10b true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity (or b (not a)))
+             ($normalize_formula_modulo_commutativity (or (not a) b))))
+
+(step $test_$normalize_formula_modulo_commutativity_11 true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity (and a (not a)))
+             ($normalize_formula_modulo_commutativity (and (not a) a))))
+
+(step $test_$normalize_formula_modulo_commutativity_12 true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity (and a (not a) (or (=> a a) (not a))))
+             ($normalize_formula_modulo_commutativity (and a (or (not a) (=> a a)) (not a)))))
+
+(step $test_$normalize_formula_modulo_commutativity_13 true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity (and (and (not a) (xor a b)) 
+                                                           (not a) 
+                                                           (or (=> a a) (not a))))
+             ($normalize_formula_modulo_commutativity (and (or (not a) (=> a a)) 
+                                                           (and (not a) (xor a b))
+                                                           (not a)))))
+
+(step $test_$normalize_formula_modulo_commutativity_14 true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity (and (and (not a) (xor a b)) 
+                                                           (not a) 
+                                                           (or (=> a b) (not a))
+                                                           a
+                                                           b))
+             ($normalize_formula_modulo_commutativity (and (or (not a) (=> a b)) 
+                                                           (and (not a) (xor a b))
+                                                           (not a)
+                                                           b
+                                                           a))))
+
+; Test from actual VeriT certificates
+
+(declare-const p00 Bool)  ; (= e0 (op e0 e0))
+(declare-const p11 Bool)  ; (= e0 (op e1 e1))
+(declare-const p22 Bool)  ; (= e0 (op e2 e2))
+(declare-const p33 Bool)  ; (= e0 (op e3 e3))
+(declare-const p44 Bool)  ; (= e0 (op e4 e4))
+(declare-const q01 Bool)  ; (= e1 (op e0 e1))
+(declare-const q02 Bool)  ; (= e2 (op e0 e2))
+(declare-const q03 Bool)  ; (= e3 (op e0 e3))
+(declare-const q04 Bool)  ; (= e4 (op e0 e4))
+(declare-const r00 Bool)  ; (= (op e0 e0) e1)  i.e. (= e1 (op e0 e0))
+(declare-const r11 Bool)  ; (= e1 (op e1 e1))
+(declare-const r22 Bool)  ; (= e1 (op e2 e2))
+(declare-const r33 Bool)  ; (= e1 (op e3 e3))
+(declare-const r44 Bool)  ; (= e1 (op e4 e4))
+(declare-const s10 Bool)  ; (= e0 (op e1 e0))
+(declare-const s12 Bool)  ; (= e2 (op e1 e2))
+(declare-const s13 Bool)  ; (= e3 (op e1 e3))
+(declare-const s14 Bool)  ; (= e4 (op e1 e4))
+(declare-const t00 Bool)  ; (= (op e0 e0) e2)  i.e. (= e2 (op e0 e0))
+(declare-const t11 Bool)  ; (= e2 (op e1 e1))
+(declare-const t22 Bool)  ; (= e2 (op e2 e2))
+(declare-const t33 Bool)  ; (= e2 (op e3 e3))
+(declare-const t44 Bool)  ; (= e2 (op e4 e4))
+(declare-const u20 Bool)  ; (= e0 (op e2 e0))
+(declare-const u21 Bool)  ; (= e1 (op e2 e1))
+(declare-const u23 Bool)  ; (= e3 (op e2 e3))
+(declare-const u24 Bool)  ; (= e4 (op e2 e4))
+(declare-const v00 Bool)  ; (= (op e0 e0) e3)  i.e. (= e3 (op e0 e0))
+(declare-const v11 Bool)  ; (= e3 (op e1 e1))
+(declare-const v22 Bool)  ; (= e3 (op e2 e2))
+(declare-const v33 Bool)  ; (= e3 (op e3 e3))
+(declare-const v44 Bool)  ; (= e3 (op e4 e4))
+(declare-const w30 Bool)  ; (= e0 (op e3 e0))
+(declare-const w31 Bool)  ; (= e1 (op e3 e1))
+(declare-const w32 Bool)  ; (= e2 (op e3 e2))
+(declare-const w34 Bool)  ; (= e4 (op e3 e4))
+(declare-const x00 Bool)  ; (= (op e0 e0) e4)  i.e. (= e4 (op e0 e0))
+(declare-const x11 Bool)  ; (= e4 (op e1 e1))
+(declare-const x22 Bool)  ; (= e4 (op e2 e2))
+(declare-const x33 Bool)  ; (= e4 (op e3 e3))
+(declare-const x44 Bool)  ; (= e4 (op e4 e4))
+(declare-const y40 Bool)  ; (= e0 (op e4 e0))
+(declare-const y41 Bool)  ; (= e1 (op e4 e1))
+(declare-const y42 Bool)  ; (= e2 (op e4 e2))
+(declare-const y43 Bool)  ; (= e3 (op e4 e3))
+
+(step $test_$normalize_formula_modulo_commutativity_15 true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity
+              (or
+               (and
+                (not p00) (not p11) (not p22) (not p33) (not p44)
+                (not q01) (not q02) (not q03) (not q04)
+                )
+               (and
+                (not r00) (not r11) (not r22) (not r33) (not r44)
+                (not s10) (not s12) (not s13) (not s14))
+               (and
+                (not t00) (not t11) (not t22) (not t33) (not t44)
+                (not u20) (not u21) (not u23) (not u24))
+               (and
+                (not v00) (not v11) (not v22) (not v33) (not v44)
+                (not w30) (not w31) (not w32) (not w34))
+               (and
+                (not x00) (not x11) (not x22) (not x33) (not x44)
+                (not y40) (not y41) (not y42) (not y43))
+               ))
+
+             ($normalize_formula_modulo_commutativity
+              (or
+               (and
+                (not p11) (not p00) (not p22) (not p33) (not p44)
+                (not q01) (not q02) (not q03) (not q04)
+                )
+               (and
+                (not r00) (not r11) (not r22) (not r33) (not r44)
+                (not s10) (not s12) (not s13) (not s14))
+               (and
+                (not t00) (not t11) (not t22) (not t33) (not t44)
+                (not u20) (not u21) (not u23) (not u24))
+               (and
+                (not v00) (not v11) (not v22) (not v33) (not v44)
+                (not w30) (not w31) (not w32) (not w34))
+               (and
+                (not x00) (not x11) (not x22) (not x33) (not x44)
+                (not y40) (not y41) (not y42) (not y43))
+               ))))
+
+; VeriT example
+
+(declare-const p00 Bool)  ; (= e0 (op e0 e0))
+(declare-const p01 Bool)  ; (= e0 (op e0 e1))
+(declare-const p02 Bool)  ; (= e0 (op e0 e2))
+(declare-const p03 Bool)  ; (= e0 (op e0 e3))
+(declare-const p04 Bool)  ; (= e0 (op e0 e4))
+(declare-const p05 Bool)  ; (= e0 (op e0 e5))
+(declare-const p10 Bool)  ; (= e0 (op e1 e0))
+(declare-const p11 Bool)  ; (= e0 (op e1 e1))
+(declare-const p12 Bool)  ; (= e0 (op e1 e2))
+(declare-const p13 Bool)  ; (= e0 (op e1 e3))
+(declare-const p14 Bool)  ; (= e0 (op e1 e4))
+(declare-const p15 Bool)  ; (= e0 (op e1 e5))
+(declare-const p20 Bool)  ; (= e0 (op e2 e0))
+(declare-const p21 Bool)  ; (= e0 (op e2 e1))
+(declare-const p22 Bool)  ; (= e0 (op e2 e2))
+(declare-const p23 Bool)  ; (= e0 (op e2 e3))
+(declare-const p24 Bool)  ; (= e0 (op e2 e4))
+(declare-const p25 Bool)  ; (= e0 (op e2 e5))
+(declare-const p30 Bool)  ; (= e0 (op e3 e0))
+(declare-const p31 Bool)  ; (= e0 (op e3 e1))
+(declare-const p32 Bool)  ; (= e0 (op e3 e2))
+(declare-const p33 Bool)  ; (= e0 (op e3 e3))
+(declare-const p34 Bool)  ; (= e0 (op e3 e4))
+(declare-const p35 Bool)  ; (= e0 (op e3 e5))
+(declare-const p40 Bool)  ; (= e0 (op e4 e0))
+(declare-const p41 Bool)  ; (= e0 (op e4 e1))
+(declare-const p42 Bool)  ; (= e0 (op e4 e2))
+(declare-const p43 Bool)  ; (= e0 (op e4 e3))
+(declare-const p44 Bool)  ; (= e0 (op e4 e4))
+(declare-const p45 Bool)  ; (= e0 (op e4 e5))
+(declare-const p50 Bool)  ; (= e0 (op e5 e0))
+(declare-const p51 Bool)  ; (= e0 (op e5 e1))
+(declare-const p52 Bool)  ; (= e0 (op e5 e2))
+(declare-const p53 Bool)  ; (= e0 (op e5 e3))
+(declare-const p54 Bool)  ; (= e0 (op e5 e4))
+(declare-const p55 Bool)  ; (= e0 (op e5 e5))
+(declare-const r100 Bool) ; (= e1 (op e0 e0))
+(declare-const r200 Bool) ; (= e2 (op e0 e0))
+(declare-const r300 Bool) ; (= e3 (op e0 e0))
+(declare-const r400 Bool) ; (= e4 (op e0 e0))
+(declare-const r500 Bool) ; (= e5 (op e0 e0))
+(declare-const s11 Bool)  ; (= e1 (op e1 e0))
+(declare-const s21 Bool)  ; (= e2 (op e1 e0))
+(declare-const s31 Bool)  ; (= e3 (op e1 e0))
+(declare-const s41 Bool)  ; (= e4 (op e1 e0))
+(declare-const s51 Bool)  ; (= e5 (op e1 e0))
+(declare-const s12 Bool)  ; (= e1 (op e2 e0))
+(declare-const s22 Bool)  ; (= e2 (op e2 e0))
+(declare-const s32 Bool)  ; (= e3 (op e2 e0))
+(declare-const s42 Bool)  ; (= e4 (op e2 e0))
+(declare-const s52 Bool)  ; (= e5 (op e2 e0))
+(declare-const s13 Bool)  ; (= e1 (op e3 e0))
+(declare-const s23 Bool)  ; (= e2 (op e3 e0))
+(declare-const s33 Bool)  ; (= e3 (op e3 e0))
+(declare-const s43 Bool)  ; (= e4 (op e3 e0))
+(declare-const s53 Bool)  ; (= e5 (op e3 e0))
+(declare-const s14 Bool)  ; (= e1 (op e4 e0))
+(declare-const s24 Bool)  ; (= e2 (op e4 e0))
+(declare-const s34 Bool)  ; (= e3 (op e4 e0))
+(declare-const s44 Bool)  ; (= e4 (op e4 e0))
+(declare-const s54 Bool)  ; (= e5 (op e4 e0))
+(declare-const s15 Bool)  ; (= e1 (op e5 e0))
+(declare-const s25 Bool)  ; (= e2 (op e5 e0))
+(declare-const s35 Bool)  ; (= e3 (op e5 e0))
+(declare-const s45 Bool)  ; (= e4 (op e5 e0))
+(declare-const s55 Bool)  ; (= e5 (op e5 e0))
+
+(step $test_$normalize_formula_modulo_commutativity_16 true 
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity
+              (or
+               (and p00 (not p00)
+                    )
+               (and p01 (not r100) p10
+                    )
+               (and p02 ;; (not r200) p20
+                    )
+               (and p03 ;; (not r300) p30
+                    )
+               (and p04 ;; (not r400) p40
+                    )
+               (and p05 ;; (not r500) p50
+                    )
+               (and p10 ;; (not p10) p01
+                    )
+               (and ;; (not s11)
+                    p11)
+               (and p12 (not s21) p21)
+               (and p13 (not s31) p31)
+               (and p14 (not s41) p41)
+               (and p15 (not s51) p51)
+               (and p20 (not p20) p02)
+               (and p21 (not s12) p12)
+               (and (not s22) p22)
+               (and p23 (not s32) p32)
+               (and p24 (not s42) p42)
+               (and p25 (not s52) p52)
+               (and p30 (not p30) p03)
+               (and p31 (not s13) p13)
+               (and p32 (not s23) p23)
+               (and (not s33) p33)
+               (and p34 (not s43) p43)
+               (and p35 (not s53) p53)
+               (and p40 (not p40) p04)
+               (and p41 (not s14) p14)
+               (and p42 (not s24) p24)
+               (and p43 (not s34) p34)
+               (and (not s44) p44)
+               (and p45 (not s54) p54)
+               (and p50 (not p50) p05)
+               (and p51 (not s15) p15)
+               (and p52 (not s25) p25)
+               (and p53 (not s35) p35)
+               (and p54 (not s45) p45)
+               (and (not s55) p55)
+               ))
+
+             ($normalize_formula_modulo_commutativity
+              (or
+               (and (not p00) p00)
+               (and p01 (not r100) p10)
+               (and p02 ;; (not r200) p20
+                    )
+               (and p03 ;; (not r300) p30
+                    )
+               (and p04 ;; (not r400) p40
+                    )
+               (and p05 ;; (not r500) p50
+                    )
+               (and p10 ;; (not p10) p01
+                    )
+               (and ;; (not s11) 
+                    p11)
+               (and p12 (not s21) p21)
+               (and p13 (not s31) p31)
+               (and p14 (not s41) p41)
+               (and p15 (not s51) p51)
+               (and p20 (not p20) p02)
+               (and p21 (not s12) p12)
+               (and (not s22) p22)
+               (and p23 (not s32) p32)
+               (and p24 (not s42) p42)
+               (and p25 (not s52) p52)
+               (and p30 (not p30) p03)
+               (and p31 (not s13) p13)
+               (and p32 (not s23) p23)
+               (and (not s33) p33)
+               (and p34 (not s43) p43)
+               (and p35 (not s53) p53)
+               (and p40 (not p40) p04)
+               (and p41 (not s14) p14)
+               (and p42 (not s24) p24)
+               (and p43 (not s34) p34)
+               (and (not s44) p44)
+               (and p45 (not s54) p54)
+               (and p50 (not p50) p05)
+               (and p51 (not s15) p15)
+               (and p52 (not s25) p25)
+               (and p53 (not s35) p35)
+               (and p54 (not s45) p45)
+               (and (not s55) p55)
+               ))
+             ))
+
+; Another Verit example.
+(declare-const U Type)
+(declare-const p10 (-> U U Bool))
+(declare-const p9 (-> U Bool))
+(declare-const f16 (-> U U U U))
+(declare-const p3 (-> U Bool))
+(declare-const f2 (-> U U U))
+(declare-const p4 (-> U Bool))
+(declare-const f7 (-> U U))
+(declare-const p1 (-> U U Bool))
+(declare-const f12 (-> U U))
+(declare-const c18 U)
+(declare-const p14 (-> U U U Bool))
+(declare-const f17 (-> U U U U))
+(declare-const f13 (-> U U U U))
+(declare-const f6 (-> U U))
+(declare-const f5 (-> U U))
+(declare-const f11 (-> U U))
+(declare-const p15 (-> U U Bool))
+(declare-const c8 U)
+(declare-const c_0 U)
+(declare-const c_1 U)
+
+(step $test_$normalize_formula_modulo_commutativity_17 true
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity
+               (or (not (= (f5 c_0) (f5 c_0)))
+                   (not (= (f5 c_1) (f5 c_1)))))
+              ($normalize_formula_modulo_commutativity
+               (or (not (= (f5 c_1) (f5 c_1)))
+                   (not (= (f5 c_0) (f5 c_0)))))))
+
+(step $test_$normalize_formula_modulo_commutativity_17b true
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity
+               (or (not (= c_0 (f16 c_0 c_0 c_0)))
+                   (not (p10 c_0 c_0))))
+              ($normalize_formula_modulo_commutativity
+               (or (not (p10 c_0 c_0))
+                   (not (= c_0 (f16 c_0 c_0 c_0)))))))
+
+(step $test_$normalize_formula_modulo_commutativity_17c true
+      :rule $assert_eq
+      :args (($normalize_formula_modulo_commutativity
+               (or (not (p10 c_0 c_0)) 
+                   (not (p9 c_0)) 
+                   (not (= c_0 (f16 c_0 c_0 c_0))) 
+                   (= c_0 c_0) 
+                   (not (p3 c_0))))
+              ($normalize_formula_modulo_commutativity
+               (or (not (p10 c_0 c_0)) 
+                   (not (p9 c_0)) 
+                   (not (= c_0 (f16 c_0 c_0 c_0))) 
+                   (= c_0 c_0) 
+                   (not (p3 c_0))))))

@@ -1107,69 +1107,100 @@
 ;   - ((𝜑1 → 𝜑2) → 𝜑2) ⇒ (𝜑1 ∨ 𝜑2)
 ;   - (𝜑1 ∧ (𝜑1 → 𝜑2)) ⇒ (𝜑1 ∧ 𝜑2)
 ;   - ((𝜑1 → 𝜑2) ∧ 𝜑1) ⇒ (𝜑1 ∧ 𝜑2)
-(program $bool_simplify_small_step ((phi1 Bool) (phi2 Bool :list) (phi3 Bool :list))
+(program $bool_simplify_small_step ((phi1 Bool) (phi2 Bool :list) (phi3 Bool :list) (phi4 Bool))
   :signature (Bool) Bool
   (
+   (; This equation is included to properly handle 
+    ; desugaring of righ-assoc-nil operators.
+    ($bool_simplify_small_step (not false))
+
+    true
+    )
+
+   (; This equation is included to properly handle 
+    ; desugaring of righ-assoc-nil operators.
+    ($bool_simplify_small_step (not true))
+
+    false
+    )
+
    (
     ($bool_simplify_small_step (not (=> phi1 phi2)))
 
-    ($f_list_cons and phi1 (not phi2))
+    (and phi1 (not phi2))
     )
 
    (
     ($bool_simplify_small_step (not (or phi1 phi2)))
 
-    ($f_list_cons and (not phi1) (not phi2))
+    ($f_list_cons and 
+                  (not phi1) 
+                  ($bool_simplify_small_step (not phi2)))
     )
 
    (
     ($bool_simplify_small_step (not (and phi1 phi2)))
 
-    ($f_list_cons or (not phi1) (not phi2))
+    ($f_list_cons or 
+                  (not phi1) 
+                  ($bool_simplify_small_step (not phi2)))
     )
 
    (
-    ($bool_simplify_small_step (=> phi1 (=> phi2 phi3)))
+    ($bool_simplify_small_step (=> phi1 (=> phi4 phi3)))
     
-    (=> ($f_list_cons and phi1 phi2) phi3)
+    (=> (and phi1 phi4) phi3)
     )
 
    (
-    ($bool_simplify_small_step (=> (=> phi1 phi2) phi2))
+    ($bool_simplify_small_step (=> (=> phi1 phi4) phi4))
 
-    ($f_list_cons or phi1 phi2)
+    (or phi1 phi4)
     )
 
    (
-    ($bool_simplify_small_step (and (=> phi3 phi2) phi3))
+    ($bool_simplify_small_step (and (=> phi1 phi2) phi3))
 
-    ($f_list_cons and phi3 phi2)
+    ; Check which case we are into.
+    (eo::define
+
+     (
+      (phi3_non_nil ($to_non_nil_terminated_f_list and true phi3))
+      )
+
+     (eo::ite ($eo_is_eq phi1 phi3_non_nil)
+
+              ; Seventh case
+              ($to_nil_terminated_f_list and true (and phi1 phi2))
+              
+              ; { not ($eo_is_eq phi1 phi3_non_nil) }
+              (and (=> phi1 phi2) phi3)))
     )
 
    (; { phi1 != (=> phi3 phi2) }
-    ($bool_simplify_small_step (and phi1 phi2))
+    ($bool_simplify_small_step (and phi1 phi4))
 
     ; Check which case we are into.
-    (eo::ite ($is_implication phi2)
+    (eo::ite ($is_implication phi4)
 
              (eo::define
               
               (
-               (antecedent ($implication_get_antecedent phi2))
+               (antecedent ($implication_get_antecedent phi4))
 
-               (consequent ($implication_get_consequent phi2))
+               (consequent ($implication_get_consequent phi4))
                )
 
               (eo::ite ($eo_is_eq phi1 antecedent)
 
                        ; Sixth case of bool_simplify.
-                       ($f_list_cons and phi1 consequent)
+                       (and phi1 consequent)
 
                        ; { not ($eo_is_eq phi1 antecedent) }
-                       ($f_list_cons and phi1 phi2)))
+                       (and phi1 phi4)))
 
-             ; { not ($is_implication phi2) }
-             ($f_list_cons and phi1 phi2))
+             ; { not ($is_implication phi4) }
+             (and phi1 phi4))
     )
 
    (
