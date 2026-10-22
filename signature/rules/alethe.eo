@@ -4847,3 +4847,40 @@
   :requires ((($check_rare_rewrite flag conclusion) true))
   :conclusion-explicit conclusion
 )
+
+;-------------------
+; Rule weakening
+;-------------------
+
+; program: $check_weakening
+; args:
+; - premise Bool: Premise clause passed to rule `weakening`.
+; - conclusion Bool: Conclusion clause passed to rule `weakening`.
+; return: >
+;   A boolean indicating if `conclusion` follows from `premise` by weakening
+;   of disjunction (that is, the `conclusion` clause contains all the literals from
+;   `premise`, and one or more new literals).
+(program $check_weakening ((premise Bool) (conclusion Bool))
+         :signature (Bool Bool) Bool
+         (
+          (
+           ($check_weakening premise conclusion)
+
+           (eo::and ($f_list_contains_f_list @cl premise conclusion)
+                    (eo::gt ($f_list_count_up_to_nil @cl conclusion)
+                            ($f_list_count_up_to_nil @cl premise)))
+           )
+          )
+         )
+
+; rule: weakening
+; premises:
+; - premise Bool: A premise clause passed to the rule.
+; requires: >
+;   For the conclusion to follow from the premise, from weakening of disjnction.
+; conclusion: A conclusion clause satisfying the previous side-condition. 
+(declare-rule weakening ((premise Bool) (conclusion Bool))
+  :premises (premise)
+  :requires ((($check_weakening premise conclusion) true))
+  :conclusion-explicit conclusion
+  )
