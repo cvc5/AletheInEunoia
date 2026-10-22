@@ -4925,8 +4925,9 @@
 ; - premise Bool: Premise clause passed to rule `weakening`.
 ; - conclusion Bool: Conclusion clause passed to rule `weakening`.
 ; return: >
-;   A boolean indicating if `conclusion` follows from `premise` by eakening
-;   of disjunction.
+;   A boolean indicating if `conclusion` follows from `premise` by weakening
+;   of disjunction (that is, the `conclusion` clause contains all the literals from
+;   `premise`, and one or more new literals).
 (program $check_weakening ((premise Bool) (conclusion Bool))
          :signature (Bool Bool) Bool
          (
@@ -4934,8 +4935,8 @@
            ($check_weakening premise conclusion)
 
            (eo::and ($f_list_contains_f_list @cl premise conclusion)
-                    (eo::gt ($f_list_length @cl conclusion)
-                            ($f_list_length @cl premise)))
+                    (eo::gt ($f_list_count_up_to_nil @cl conclusion)
+                            ($f_list_count_up_to_nil @cl premise)))
            )
           )
          )
