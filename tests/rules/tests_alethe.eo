@@ -936,6 +936,52 @@
                    (ite b (= c (ite b c d)) (= d (ite b c d)))))) :rule ite_intro)
 
 ;-----------------
+; check_and_neg
+;-----------------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+
+(step $test_$check_and_neg_1 true 
+      :rule $assert_eq 
+      :args (($check_and_neg (@cl (and a b) (not a) (not b)))
+
+             true))
+
+(step $test_$check_and_neg_2 true 
+      :rule $assert_eq 
+      :args (($check_and_neg (@cl (and a b c) (not a) (not b) (not c)))
+
+             true))
+
+(step $test_$check_and_neg_3 true 
+      :rule $assert_eq 
+      :args (($check_and_neg (@cl (and a b c d) (not a) (not b) (not c) (not d)))
+
+             true))
+
+(step $test_$check_and_neg_4 true 
+      :rule $assert_eq 
+      :args (($check_and_neg (@cl (and a b false) (not a) (not b) (not false)))
+
+             true))
+
+(step $test_$check_and_neg_5 true 
+      :rule $assert_eq 
+      :args (($check_and_neg (@cl (and a false b true c) 
+                                  (not a) (not false) (not b) (not true) (not c)))
+
+             true))
+
+(step $test_$check_and_neg_6 true 
+      :rule $assert_eq 
+      :args (($check_and_neg (@cl (and a true b c d true)
+                                  (not a) (not true) (not b) (not c) (not d) (not true)))
+             true))
+
+;-----------------
 ; $check_shuffle
 ;-----------------
 
