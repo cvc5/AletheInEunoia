@@ -75,36 +75,27 @@
 
 (step $test_$de_morgan_not_and_1 true 
       :rule $assert_eq 
-      :args (($de_morgan_not_and ($f_list_cons and a b))
+      :args (($de_morgan_not_and (and a b))
 
-             ($f_list_cons  @cl (not a) (not b))))
+             (@cl (not a) (not b))))
 
 (step $test_$de_morgan_not_and_2 true 
       :rule $assert_eq 
       :args (($de_morgan_not_and (and a b))
 
-             ($f_list_cons @cl 
-                           (not a) 
-                           ($f_list_cons @cl (not b) (not true)))))
+             (@cl (not a) (not b))))
 
 (step $test_$de_morgan_not_and_3 true 
       :rule $assert_eq 
       :args (($de_morgan_not_and (and a b c))
 
-             ($f_list_cons @cl 
-                           (not a) 
-                           ($f_list_cons 
-                            @cl (not b) ($f_list_cons @cl (not c) (not true))))))
+             (@cl (not a) (not b) (not c))))
 
 (step $test_$de_morgan_not_and_4 true 
       :rule $assert_eq 
       :args (($de_morgan_not_and (and a b c false))
 
-             ($f_list_cons @cl (not a) 
-                           ($f_list_cons @cl (not b) 
-                                         ($f_list_cons @cl (not c) 
-                                                       ($f_list_cons @cl (not false) 
-                                                                     (not true)))))))
+             (@cl (not a) (not b) (not c) (not false))))
 
 ;---------------------------
 ; Contexts and substitutions
