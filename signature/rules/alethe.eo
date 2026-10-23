@@ -3518,8 +3518,8 @@
 ; - ctx Bool: Context assumed in the premise of the `onepoint` step.
 ; - lhs_body Bool: Body of the left-hand side quantified formula, in the conclusion of the onepoint step.
 ; return: >
-;   A @VarList of @Pairs, where each pair (@pair var value) corresponds to a 
-;   positive equality (= var value) that appears implying the conclusion in `lhs_body`.
+;   A `@VarList` of `@Pair`s, where each pair `(@pair var value)` corresponds to a 
+;   positive equality `(= var value)` that appears implying the conclusion in `lhs_body`.
 (program $onepoint_get_positive_equalities_as_pairs ((A Type) (B Type) (var A) (value B)
                                                      (antecedent Bool) (consequent Bool)
                                                      (eqs Bool) (conjuncts Bool :list)
