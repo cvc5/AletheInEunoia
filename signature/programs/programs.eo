@@ -826,8 +826,8 @@
 ; args:
 ; - varlist @VarList: A list of names of variables.
 ; return: >
-;   A @VarList obtained by embedding each name, from `varlist` within a @var 
-;   construction (i.e., (@var (@varlist id) id) for a name id in `varlist`).
+;   A `@VarList` obtained by embedding each name, from `varlist` within a `@var`
+;   construction (i.e., `(@var (@varlist id) id)` for a name id in `varlist`).
 ; note: >
 ;   Useful when it is required to compare a list of bounded occurrences of variables
 ;   (i.e., built with `@var`) against a list of just plain names of variables.
