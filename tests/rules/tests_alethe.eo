@@ -3905,3 +3905,48 @@
       (@cl (= (forall (@varlist a b) (forall (@varlist c) body))
               (forall (@varlist a b c) body)))
       :rule qnt_join)
+
+;-----------
+; weakening
+;-----------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+
+(assume premise_weakening_1 (@cl))
+(step $test_weakening_1
+      (@cl a)
+      :rule weakening
+      :premises (premise_weakening_1))
+
+(assume premise_weakening_1b (@cl a))
+(step $test_weakening_1b
+      (@cl a b)
+      :rule weakening
+      :premises (premise_weakening_1b))
+
+(assume premise_weakening_2 (@cl a b))
+(step $test_weakening_2
+      (@cl a b c)
+      :rule weakening
+      :premises (premise_weakening_2))
+
+(assume premise_weakening_3 (@cl b a))
+(step $test_weakening_3
+      (@cl a b c)
+      :rule weakening
+      :premises (premise_weakening_3))
+
+(assume premise_weakening_4 (@cl a b c))
+(step $test_weakening_4
+      (@cl a b c d)
+      :rule weakening
+      :premises (premise_weakening_4))
+
+(assume premise_weakening_5 (@cl a c b))
+(step $test_weakening_5
+      (@cl b a c d)
+      :rule weakening
+      :premises (premise_weakening_5))
