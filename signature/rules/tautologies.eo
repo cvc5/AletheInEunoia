@@ -847,7 +847,7 @@
 ; return: >
 ;   The result of applying one of the following equivalence-preserving 
 ;   transformations:
-;   - ⊥∨⋯∨⊥ ⇒ ⊥
+;   - ⊥ ∨ ⋯ ∨ ⊥ ⇒ ⊥
 ;   - 𝜑1 ∨ ⋯ ∨ 𝜑𝑛 ⇒ 𝜑1 ∨ ⋯ ∨ 𝜑𝑛′ where the right-hand side has some ⊥ literal 
 ;     removed.
 ;   - 𝜑1 ∨ ⋯ ∨ 𝜑𝑛 ⇒ 𝜑1 ∨ ⋯ ∨ 𝜑𝑛′ where the right-hand side has some repeated 
@@ -999,9 +999,13 @@
    (
     ($check_or_simplify lhs rhs)
 
-    ($eo_is_eq ($or_simplify_rec ($remove_leading_negations_in_disjuncts lhs))
-
-               rhs)
+    ($f_list_equal_mod_commut_and_length
+     or
+     ($to_nil_terminated_f_list or false
+                                ($or_simplify_rec 
+                                 ($remove_leading_negations_in_disjuncts lhs)))
+     rhs
+     )
     )
   )
 )

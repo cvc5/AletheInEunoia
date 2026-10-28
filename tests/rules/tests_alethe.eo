@@ -3951,3 +3951,54 @@
       (@cl (= (forall (@varlist a b) (forall (@varlist c) body))
               (forall (@varlist a b c) body)))
       :rule qnt_join)
+
+;---------
+; not_and
+;---------
+
+(declare-const a Bool)
+(declare-const b Bool)
+(declare-const c Bool)
+(declare-const d Bool)
+
+(assume premise_not_and_1 (@cl (not (and a b))))
+(step $test_not_and_1
+      (@cl (not a) (not b))
+      :rule not_and
+      :premises (premise_not_and_1))
+
+(assume premise_not_and_2 (@cl (not (and a b c))))
+(step $test_not_and_2
+      (@cl (not a) (not b) (not c))
+      :rule not_and
+      :premises (premise_not_and_2))
+
+(assume premise_not_and_3 (@cl (not (and a b c d))))
+(step $test_not_and_3
+      (@cl (not a) (not b) (not c) (not d))
+      :rule not_and
+      :premises (premise_not_and_3))
+
+(assume premise_not_and_4 (@cl (not (and a (or b b) c d))))
+(step $test_not_and_4
+      (@cl (not a) (not (or b b)) (not c) (not d))
+      :rule not_and
+      :premises (premise_not_and_4))
+
+(assume premise_not_and_5 (@cl (not (and a (or b b) c (xor c d)))))
+(step $test_not_and_5
+      (@cl (not a) (not (or b b)) (not c) (not (xor c d)))
+      :rule not_and
+      :premises (premise_not_and_5))
+
+(assume premise_not_and_6 (@cl (not (and a (or b b) (=> c (or b b)) (xor c d)))))
+(step $test_not_and_6
+      (@cl (not a) (not (or b b)) (not (=> c (or b b))) (not (xor c d)))
+      :rule not_and
+      :premises (premise_not_and_6))
+
+(assume premise_not_and_7 (@cl (not (and (and a b) (or b b) (=> c (or b b)) (xor c d)))))
+(step $test_not_and_7
+      (@cl (not (and a b)) (not (or b b)) (not (=> c (or b b))) (not (xor c d)))
+      :rule not_and
+      :premises (premise_not_and_7))
