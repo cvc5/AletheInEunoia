@@ -3160,10 +3160,7 @@
    (
     ($check_and_neg (@cl left_disjunct right_disjunct))
 
-    ; We add a false to the lhs, and (not true) to rhs, to deal with the
-    ; expansion of applications of right-assoc-nil operators.
-    ($cl_equal_mod_commut ($f_list_cons @cl false ($de_morgan_not_and left_disjunct))
-                          ($f_list_cons @cl (not true) right_disjunct))
+    ($cl_equal_mod_commut ($de_morgan_not_and left_disjunct) right_disjunct)
     )
   )
 )
@@ -3481,7 +3478,7 @@
 ;   Returns true if and only if `term` is the syntactic representation of bound
 ;   variables in our object language.
 (program $is_bound_var ((A Type) (var A) (term A))
-         :signature (Bool) Bool
+         :signature (A) Bool
          (
           (
            ($is_bound_var (@var (@varlist var) var))
