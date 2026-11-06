@@ -3589,6 +3589,8 @@
 
             ; Check if `antecedent` is a "positive equality": an equality
             ; that appears under an even number of negations.
+            ; Note that, since we removed every leading doubled negations, this 
+            ; check returns true if the occurrence of the equality is positive.
             (eo::ite ($is_equality antecedent_normalized)
 
                      ($f_list_cons @varlist
@@ -3705,10 +3707,13 @@
                         (varlist_1 @VarList) (varlist_2 @VarList))
   ; Context of the immediate premise, extends `old_context`.
   :assumption premise_context 
+
   ; We check that the body of the premise has the expected shape with regard to the conclusion.
   :premises ((@cl (= lhs rhs)))
+
   ; Context that is extended by `new_context`. It is the context of the onepoint conclusion step.
   :args (conclusion_context)
+
   :requires ((($check_onepoint conclusion_context premise_context
                                (forall varlist_1 lhs) (forall varlist_2 rhs))
               true))
